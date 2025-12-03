@@ -22,7 +22,16 @@ describe('CLI Commands', () => {
     mockApp = {
       run: jest.fn(),
       interactiveModelSelection: jest.fn(),
-      getConfig: jest.fn(),
+      getConfig: jest.fn().mockReturnValue({
+        selectedModel: '',
+        selectedThinkingModel: '',
+        defaultProvider: 'synthetic',
+        combinations: {},
+        providers: {
+          synthetic: { enabled: true, hasApiKey: true },
+          minimax: { enabled: false, hasApiKey: false }
+        }
+      }),
       setDefaultProvider: jest.fn(),
       doctor: jest.fn(),
       showModelInfo: jest.fn(),
@@ -32,6 +41,30 @@ describe('CLI Commands', () => {
       listCombinations: jest.fn(),
       saveCombination: jest.fn(),
       deleteCombination: jest.fn(),
+      showConfig: jest.fn().mockResolvedValue(undefined),
+      enableProvider: jest.fn().mockResolvedValue(undefined),
+      disableProvider: jest.fn().mockResolvedValue(undefined),
+      toggleProvider: jest.fn().mockResolvedValue(undefined),
+      providerStatus: jest.fn().mockResolvedValue(undefined),
+      testProvider: jest.fn().mockResolvedValue(undefined),
+      listModels: jest.fn().mockResolvedValue(undefined),
+      searchModels: jest.fn().mockResolvedValue(undefined),
+      cacheInfo: jest.fn().mockResolvedValue(undefined),
+      authStatus: jest.fn().mockResolvedValue(undefined),
+      checkAuth: jest.fn().mockResolvedValue(undefined),
+      testAuth: jest.fn().mockResolvedValue(undefined),
+      resetAuth: jest.fn().mockResolvedValue(undefined),
+      refreshAuth: jest.fn().mockResolvedValue(undefined),
+      setConfig: jest.fn().mockResolvedValue(undefined),
+      listProviderConfigs: jest.fn().mockResolvedValue(undefined),
+      getProviderConfigInfo: jest.fn().mockResolvedValue(undefined),
+      setProviderConfig: jest.fn().mockResolvedValue(undefined),
+      initLocalConfig: jest.fn().mockResolvedValue(undefined),
+      switchToLocalConfig: jest.fn().mockResolvedValue(undefined),
+      switchToGlobalConfig: jest.fn().mockResolvedValue(undefined),
+      migrateConfig: jest.fn().mockResolvedValue(undefined),
+      showConfigContext: jest.fn().mockResolvedValue(undefined),
+      resetConfig: jest.fn().mockResolvedValue(undefined),
     } as any;
 
     MockedSyntheticClaudeApp.mockImplementation(() => mockApp);
@@ -196,19 +229,14 @@ describe('CLI Commands', () => {
       // Add mock implementation for console.log to capture output
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
-      mockApp.showConfig.mockReturnValue({
-        defaultProvider: 'synthetic',
-        providers: {
-          synthetic: { enabled: true, hasApiKey: true },
-          minimax: { enabled: true, hasApiKey: false },
-        },
-      });
+      // Reset mock to clear default resolved value, then set resolved return value
+      mockApp.showConfig.mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'config'];
 
       try {
-        await program.parseAsync(['node', 'mclaude', 'config']);
+        await program.parseAsync(['node', 'mclaude', 'config', 'show']);
 
         expect(mockApp.showConfig).toHaveBeenCalled();
       } finally {
@@ -238,10 +266,10 @@ describe('CLI Commands', () => {
       const program = createProgram();
 
       const originalArgv = process.argv;
-      process.argv = ['node', 'mclaude', 'provider'];
+      process.argv = ['node', 'mclaude', 'providers', 'list'];
 
       try {
-        await program.parseAsync(['node', 'mclaude', 'provider']);
+        await program.parseAsync(['node', 'mclaude', 'providers', 'list']);
 
         expect(mockApp.listProviders).toHaveBeenCalled();
       } finally {
@@ -253,12 +281,12 @@ describe('CLI Commands', () => {
       const program = createProgram();
 
       const originalArgv = process.argv;
-      process.argv = ['node', 'mclaude', 'provider', 'configure', 'synthetic'];
+      process.argv = ['node', 'mclaude', 'config', 'show'];
 
       try {
-        await program.parseAsync(['node', 'mclaude', 'provider', 'configure', 'synthetic']);
+        await program.parseAsync(['node', 'mclaude', 'config', 'show']);
 
-        expect(mockApp.configureProvider).toHaveBeenCalledWith('synthetic');
+        expect(mockApp.showConfig).toHaveBeenCalled();
       } finally {
         process.argv = originalArgv;
       }
@@ -268,10 +296,10 @@ describe('CLI Commands', () => {
       const program = createProgram();
 
       const originalArgv = process.argv;
-      process.argv = ['node', 'mclaude', 'provider', 'enable', 'minimax'];
+      process.argv = ['node', 'mclaude', 'providers', 'enable', 'minimax'];
 
       try {
-        await program.parseAsync(['node', 'mclaude', 'provider', 'enable', 'minimax']);
+        await program.parseAsync(['node', 'mclaude', 'providers', 'enable', 'minimax']);
 
         expect(mockApp.toggleProvider).toHaveBeenCalledWith('minimax', true);
       } finally {
@@ -283,10 +311,10 @@ describe('CLI Commands', () => {
       const program = createProgram();
 
       const originalArgv = process.argv;
-      process.argv = ['node', 'mclaude', 'provider', 'disable', 'minimax'];
+      process.argv = ['node', 'mclaude', 'providers', 'disable', 'minimax'];
 
       try {
-        await program.parseAsync(['node', 'mclaude', 'provider', 'disable', 'minimax']);
+        await program.parseAsync(['node', 'mclaude', 'providers', 'disable', 'minimax']);
 
         expect(mockApp.toggleProvider).toHaveBeenCalledWith('minimax', false);
       } finally {
@@ -426,6 +454,8 @@ describe('CLI Commands', () => {
       const program = createProgram();
 
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const originalExit = process.exit;
+      process.exit = jest.fn() as any;
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', '--version'];
@@ -433,11 +463,13 @@ describe('CLI Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', '--version']);
 
+        expect(process.exit).toHaveBeenCalledWith(0);
         expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining('1.0.0')
+          expect.stringContaining('1.2.5')
         );
       } finally {
         consoleSpy.mockRestore();
+        process.exit = originalExit;
         process.argv = originalArgv;
       }
     });

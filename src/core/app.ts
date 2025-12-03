@@ -104,48 +104,46 @@ export class SyntheticClaudeApp {
   /**
    * Validate provider credentials - maintains compatibility while being simpler
    */
-  private async validateProviderCredentials(): Promise<{ valid: boolean; authenticationError?: string | null; warnings?: string[] }> {
+  async validateProviderCredentials(forceRealApiTest: boolean = true): Promise<{ valid: boolean; authenticationError?: string | null; warnings?: string[] }> {
     const modelManager = this.getModelManager();
+    const enabledProviders = modelManager.getEnabledProviders();
+    const errors: string[] = [];
 
-    try {
-      // Test actual connection rather than just configuration
-      const models = await modelManager.fetchModels();
-
-      if (models.length > 0) {
-        return { valid: true, warnings: [], authenticationError: null };
-      } else {
-        return {
-          valid: false,
-          authenticationError: "No models available from configured providers. Please check your API keys and network connection."
-        };
-      }
-    } catch (error: any) {
-      const errorMessage = sanitizeApiError(error);
-
-      // Provide detailed error messages for different failure types
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        // Authentication error
-        const authProvider = this.detectProviderFromError(error);
-        if (authProvider) {
-          return {
-            valid: false,
-            authenticationError: `Authentication failed for ${authProvider} provider. Please check your API key and try again.`
-          };
+    // Test each provider individually to collect specific errors
+    for (const provider of enabledProviders) {
+      try {
+        const result = await this.validateProviderCredential(provider);
+        if (!result.valid) {
+          errors.push(`${provider} authentication failed`);
+        }
+      } catch (error: any) {
+        if (provider === 'synthetic') {
+          errors.push('synthetic authentication failed');
+        } else if (provider === 'minimax') {
+          errors.push('minimax authentication failed');
+        } else {
+          errors.push(`${provider} authentication failed`);
         }
       }
+    }
 
-      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
-        return {
-          valid: false,
-          authenticationError: `Network connection failed. Please check your internet connection and try again.`
-        };
-      }
-
-      // Fallback to generic error
+    if (errors.length === enabledProviders.length && errors.length > 0) {
+      // All providers failed
       return {
         valid: false,
-        authenticationError: `Provider validation failed: ${errorMessage}`
+        authenticationError: `All providers failed authentication. ${errors.join('; ')}`,
+        warnings: []
       };
+    } else if (errors.length > 0) {
+      // Some providers failed but at least one succeeded
+      return {
+        valid: true,
+        authenticationError: null,
+        warnings: errors
+      };
+    } else {
+      // All providers succeeded
+      return { valid: true, warnings: [], authenticationError: null };
     }
   }
 
@@ -183,7 +181,7 @@ export class SyntheticClaudeApp {
   /**
    * Validate provider credentials by testing API connectivity
    */
-  private async validateProviderCredential(provider: string): Promise<{ valid: boolean; error?: string }> {
+  async validateProviderCredential(provider: string): Promise<{ valid: boolean; error?: string }> {
     try {
       const modelManager = this.getModelManager();
 
@@ -203,12 +201,18 @@ export class SyntheticClaudeApp {
   /**
    * Simple error categorization for backward compatibility
    */
-  private categorizeError(error: any): string {
+  categorizeError(error: any): string {
     if (error.response?.status === 401 || error.response?.status === 403) {
       return 'AUTHENTICATION';
     }
     if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
       return 'NETWORK';
+    }
+    if (typeof error?.message === 'string' && error.message.includes('No providers are enabled')) {
+      return 'PROVIDER_UNAVAILABLE';
+    }
+    if (typeof error?.message === 'string' && error.message.includes('UI error')) {
+      return 'UI_ERROR';
     }
     return 'UNKNOWN';
   }
@@ -216,7 +220,7 @@ export class SyntheticClaudeApp {
   /**
    * Improved API key format validation
    */
-  private validateApiKeyFormat(provider: string, apiKey: string): { valid: boolean; error?: string } {
+  validateApiKeyFormat(provider: string, apiKey: string): { valid: boolean; error?: string } {
     if (!apiKey || apiKey.trim().length === 0) {
       return { valid: false, error: 'API key cannot be empty' };
     }
@@ -1401,6 +1405,20 @@ export class SyntheticClaudeApp {
       this.ui.success(`Provider "${provider}" has been disabled`);
     } else {
       this.ui.error(`Failed to disable provider "${provider}"`);
+    }
+  }
+
+  async setDefaultProvider(provider: string): Promise<void> {
+    if (!['synthetic', 'minimax', 'auto'].includes(provider)) {
+      this.ui.error(`Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`);
+      return;
+    }
+
+    const success = await this.configManager.setDefaultProvider(provider as any);
+    if (success) {
+      this.ui.success(`Default provider set to "${provider}"`);
+    } else {
+      this.ui.error(`Failed to set default provider "${provider}"`);
     }
   }
 

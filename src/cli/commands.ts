@@ -332,6 +332,14 @@ export function createProgram(): Command {
       await app.resetConfig(options);
     });
 
+  configCmd
+    .command("set-default-provider <provider>")
+    .description("Set the default provider (synthetic, minimax, auto)")
+    .action(async (provider) => {
+      const app = new SyntheticClaudeApp();
+      await app.setDefaultProvider(provider);
+    });
+
   // Setup command
   program
     .command("setup")

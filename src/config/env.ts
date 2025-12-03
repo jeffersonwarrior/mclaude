@@ -282,6 +282,17 @@ export class EnvironmentManager {
     this.envVars = {};
     this.loadEnvironmentVariables();
   }
+
+  // Synchronous reload for immediate needs (testing)
+  syncReload(): void {
+    this.envVars = {};
+    this.loadEnvironmentVariables();
+  }
+
+  // Reset the singleton instance (for testing)
+  static resetInstance(): void {
+    EnvironmentManager.instance = undefined as any;
+  }
 }
 
 // Export singleton instance

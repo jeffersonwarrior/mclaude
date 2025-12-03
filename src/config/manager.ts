@@ -180,9 +180,10 @@ export class ConfigManager {
     if (this._config === null) {
       this._configHierarchy = this.loadConfigHierarchy();
       this._config = this.mergeConfigHierarchy(this._configHierarchy);
-      // Apply environment variable overrides each time config is accessed
-      this._config = this.applyEnvironmentOverrides(this._config);
     }
+    // Apply environment variable overrides every time config is accessed
+    // This ensures tests can modify environment variables and see the changes
+    this._config = this.applyEnvironmentOverrides(this._config);
     return this._config;
   }
 
@@ -316,6 +317,7 @@ export class ConfigManager {
   }
 
   private applyEnvironmentOverrides(config: AppConfig): AppConfig {
+    // Get fresh environment variables
     const envVars = envManager.getEnvironmentVariables();
 
     const updatedConfig = { ...config };
@@ -858,6 +860,45 @@ export class ConfigManager {
     return this.updateConfig({
       selectedThinkingModel: model,
       firstRunCompleted: true,
+    });
+  }
+
+  hasProviderApiKey(provider: string): boolean {
+    const config = this.config;
+    const providerKey = provider as keyof typeof config.providers;
+    return !!(config.providers[providerKey]?.apiKey && config.providers[providerKey]?.apiKey.length > 0);
+  }
+
+  getModelCombinations(): any[] {
+    const config = this.config;
+    const combinations = (config as any).combinations || {};
+    return Object.values(combinations) as any[];
+  }
+
+  async resetConfig(): Promise<void> {
+    this._config = null;
+    await this.updateConfig({
+      selectedModel: '',
+      selectedThinkingModel: '',
+      defaultProvider: 'synthetic',
+      providers: {
+        synthetic: {
+          apiKey: '',
+          baseUrl: 'https://api.synthetic.new',
+          anthropicBaseUrl: 'https://api.synthetic.new/anthropic',
+          modelsApiUrl: 'https://api.synthetic.new/openai/v1/models',
+          enabled: true
+        },
+        minimax: {
+          apiKey: '',
+          baseUrl: 'https://api.minimax.io',
+          anthropicBaseUrl: 'https://api.minimax.io/anthropic',
+          modelsApiUrl: 'https://api.minimax.io/v1/models',
+          enabled: false,
+          defaultModel: '',
+          groupId: ''
+        }
+      }
     });
   }
 }

@@ -297,7 +297,7 @@ export class ModelManager {
     // They only support these predefined models: https://platform.minimax.io/docs/api-reference/text-anthropic-api
     const minimaxModels = [
       {
-        id: "MiniMax-M2",
+        id: "minimax:MiniMax-M2",
         object: "model",
         created: 1704067200,
         owned_by: "minimax",
@@ -308,48 +308,21 @@ export class ModelManager {
         description: "MiniMax M2 model for general tasks",
       },
       {
-        id: "MiniMax-M2-Stable",
+        id: "minimax:MiniMax-M1",
         object: "model",
         created: 1704067200,
         owned_by: "minimax",
-        model: "MiniMax-M2-Stable",
+        model: "MiniMax-M1",
         provider: "minimax",
         context_length: 200000, // Approximate context window
         max_tokens: 8192,
-        description: "MiniMax M2 Stable model for consistent output",
-      },
-      {
-        id: "MiniMax-M2-Thinking",
-        object: "model",
-        created: 1704067200,
-        owned_by: "minimax",
-        model: "MiniMax-M2-Thinking",
-        provider: "minimax",
-        context_length: 200000,
-        max_tokens: 8192,
-        description: "MiniMax M2 Thinking model for complex reasoning",
+        description: "MiniMax M1 model for general tasks",
       }
     ];
 
     try {
-      // Set API key and Group ID for MiniMax authentication
-      this.minimaxClient.setApiKey(apiKey);
-      const groupId = this.configManager.getMinimaxGroupId();
-      if (groupId) {
-        this.minimaxClient.setGroupId(groupId);
-      }
-
-      // Validate the API key by making a test request to the messages endpoint
-      const testResponse = await this.minimaxClient.post(
-        "/v1/messages",
-        {
-          model: "MiniMax-M2",
-          max_tokens: 1,
-          messages: [{ role: "user", content: "test" }]
-        }
-      );
-
-      // If the test succeeds, return the predefined models
+      // Return the predefined models directly without validation
+      // Validation will happen separately when actually launching Claude Code
       const models: ModelInfoImpl[] = [];
       for (const modelData of minimaxModels) {
         try {
@@ -365,14 +338,7 @@ export class ModelManager {
 
       return models;
     } catch (error: any) {
-      // Handle API errors during authentication test
-      if (error.response?.status === 401) {
-        throw new ApiError("MiniMax authentication failed: Invalid API key or Group ID");
-      } else if (error.response?.status === 403) {
-        throw new ApiError("MiniMax access forbidden: Check your Group ID and permissions");
-      } else {
-        throw new ApiError(`MiniMax API error: ${sanitizeApiError(error)}`);
-      }
+      throw new ApiError(`MiniMax API error: ${sanitizeApiError(error)}`);
     }
   }
 
