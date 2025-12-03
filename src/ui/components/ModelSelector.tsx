@@ -387,7 +387,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                   >
                     {index + 1}.{provider.charAt(0).toUpperCase() + provider.slice(1)}{isActive ? '✓' : ''}
                   </Text>
-                  <Text> </Text>
+                  <Text>{" "}</Text>
                 </React.Fragment>
               );
             })}
@@ -464,7 +464,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                       {actualIndex + 1}. {model.getDisplayName()}
                     </Text>
 
-                    <Text> </Text>
+                    <Text>{" "}</Text>
                     <Text color={providerColor} bold={!isSelected}>
                       [{model.getProviderTag()}]
                     </Text>
