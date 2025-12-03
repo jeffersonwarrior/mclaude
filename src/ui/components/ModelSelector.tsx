@@ -105,7 +105,7 @@ const ProviderStatusBadge: React.FC<{
       <Text color={getStatusColor()} bold>
         {getStatusIcon()}
       </Text>
-      <Text> </Text>
+      <Text color={providerColor}>{" "}</Text>
       <Text color={providerColor} bold={available}>
         {provider.charAt(0).toUpperCase() + provider.slice(1)}
       </Text>
@@ -149,7 +149,7 @@ const ProviderStatusPanel: React.FC<{
           available={providerStatus.synthetic.available}
           lastChecked={providerStatus.synthetic.lastChecked}
         />
-        <Text> </Text>
+        <Text color="gray">{" "}</Text>
         <ProviderStatusBadge
           provider="minimax"
           available={providerStatus.minimax.available}
@@ -385,16 +385,15 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                     color={isActive ? providerColor : 'gray'}
                     bold={isActive}
                   >
-                    {index + 1}.{provider.charAt(0).toUpperCase() + provider.slice(1)}{isActive ? '✓' : ''}
+                    {index + 1}.{provider.charAt(0).toUpperCase() + provider.slice(1)}{isActive ? '✓' : ''}{" "}
                   </Text>
-                  <Text>{" "}</Text>
                 </React.Fragment>
               );
             })}
             {providerFilter.length > 0 && (
               <>
                 <Text color="gray">|</Text>
-                <Text> </Text>
+                <Text color="gray">{" "}</Text>
                 <Text color="yellow">c:Clear</Text>
               </>
             )}
@@ -461,20 +460,18 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                     <Text color={textStyle.color} bold={textStyle.bold}>
                       {isSelected ? '▸ ' : '  '}
                       {getSelectionIndicator()}
-                      {actualIndex + 1}. {model.getDisplayName()}
+                      {actualIndex + 1}. {model.getDisplayName()}{" "}
                     </Text>
-
-                    <Text>{" "}</Text>
                     <Text color={providerColor} bold={!isSelected}>
                       [{model.getProviderTag()}]
                     </Text>
 
                     {model.getProvider().toLowerCase() === 'minimax' && (
-                      <Text color="red"> 〰️</Text>
+                      <Text color="red">{" "}〰️</Text>
                     )}
 
                     {isThinkingModel && (
-                      <Text color="magenta"> 🤔</Text>
+                      <Text color="magenta">{" "}🤔</Text>
                     )}
                   </Box>
 
