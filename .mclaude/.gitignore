@@ -1,0 +1,4 @@
+.env.local
+# Local secrets
+# Template - uncomment if you want to add secrets to git ignore
+# Add other sensitive files here
