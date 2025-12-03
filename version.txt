@@ -1,7 +1,14 @@
-Mclaude V1.2.2 Minor Bug Fixes
+Mclaude V1.2.5 UI Enhancement
 
 Forked from Synclaude by jeffersonwarrior (https://github.com/jeffersonwarrior)
 Original Synclaude Author: parnexcodes (https://github.com/parnexcodes)
+
+V1.2.5 Changes (UI Enhancement):
+- Changed default selection mode from 'numbered' to 'minimal' for cleaner interface
+- Updated auto-fallback sequence to prioritize minimal UI experience
+- Modified manual mode cycling (Ctrl+F) to start with minimal mode
+- Enhanced error recovery flow with minimal-first approach
+- Improved overall user interaction with streamlined selection interface
 
 V1.2.2 Changes (Minor Bug Fixes):
 - Fixed React/Ink Text component error with space-only Text components

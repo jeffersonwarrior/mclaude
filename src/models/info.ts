@@ -126,13 +126,14 @@ export class ModelInfoImpl implements ModelInfo {
    */
   getProviderTag(): string {
     const provider = this.getProvider();
-    switch (provider) {
+    const providerName = provider.trim() || 'unknown';
+    switch (providerName) {
       case "synthetic":
         return "🤖 Synthetic";
       case "minimax":
         return "⚡ MiniMax";
       default:
-        return `❓ ${provider}`;
+        return `❓ ${providerName}`;
     }
   }
 

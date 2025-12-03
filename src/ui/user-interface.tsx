@@ -3,6 +3,7 @@ import React from 'react';
 import chalk from 'chalk';
 import { ModelInfoImpl } from '../models';
 import { ModelSelector } from './components/ModelSelector';
+import { RobustModelSelector } from './components/RobustModelSelector';
 import { StatusMessage } from './components/StatusMessage';
 import { ProgressBar } from './components/ProgressBar';
 import { ProviderStatusIndicator, type ProviderStatus, getProviderSummary } from './components/ProviderStatus';
@@ -139,7 +140,7 @@ export class UserInterface {
 
     return new Promise(resolve => {
       const { waitUntilExit } = render(
-        <ModelSelector
+        <RobustModelSelector
           models={models}
           onSelect={(regularModel, thinkingModel) => {
             const selected = regularModel || thinkingModel;
@@ -189,7 +190,7 @@ export class UserInterface {
 
     return new Promise(resolve => {
       const { waitUntilExit } = render(
-        <ModelSelector
+        <RobustModelSelector
           models={models}
           authenticationError={authenticationError}
           providerStatus={providerStatusWithTimestamp}

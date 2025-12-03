@@ -105,7 +105,6 @@ export const ProviderStatusIndicator: React.FC<ProviderStatusProps> = ({
                 <Text color={providerIndicators.color} bold>
                   {providerIndicators.icon} {providerIndicators.tag}
                 </Text>
-                <Text> </Text>
                 <Text color={statusIndicators.color}>
                   {statusIndicators.icon} {statusIndicators.status}
                 </Text>

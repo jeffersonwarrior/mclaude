@@ -89,7 +89,6 @@ export const ModelList: React.FC<ModelListProps> = ({
 
                 {showProviderBadges && (
                   <>
-                    <Text> </Text>
                     <Text color={providerColor} bold>
                       [{model.getProviderTag()}]
                     </Text>

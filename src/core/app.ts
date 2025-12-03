@@ -1,5 +1,7 @@
 import { join } from "path";
 import { homedir } from "os";
+import { readFileSync } from "fs";
+import chalk from "chalk";
 import { ConfigManager } from "../config";
 import { ModelManager } from "../models";
 import { UserInterface } from "../ui";
@@ -741,9 +743,11 @@ export class SyntheticClaudeApp {
   }
 
   async setup(): Promise<void> {
-    this.ui.minimaxWelcome(
-      "Welcome to MClaude! Let's set up your configuration.",
-    );
+    // Read version from package.json
+    const packageJsonPath = join(__dirname, "../../package.json");
+    const version = JSON.parse(readFileSync(packageJsonPath, "utf8")).version;
+
+    console.log(chalk.red(`Welcome to Minimax MClaude ${version}! Let's setup your configuration.`));
     this.ui.info("===============================================");
 
     try {

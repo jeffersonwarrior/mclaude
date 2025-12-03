@@ -1,0 +1,41 @@
+{
+  "providers": {
+    "synthetic": {
+      "apiKey": "test-synthetic-key",
+      "baseUrl": "https://api.synthetic.new",
+      "anthropicBaseUrl": "https://api.synthetic.new/anthropic",
+      "modelsApiUrl": "https://api.synthetic.new/openai/v1/models",
+      "enabled": true
+    },
+    "minimax": {
+      "apiKey": "test-minimax-key",
+      "baseUrl": "https://api.minimax.io",
+      "anthropicBaseUrl": "https://api.minimax.io/anthropic",
+      "modelsApiUrl": "https://api.minimax.io/v1/models",
+      "enabled": true,
+      "defaultModel": "MiniMax-M2"
+    }
+  },
+  "defaultProvider": "minimax",
+  "cacheDurationHours": 24,
+  "selectedModel": "synthetic:claude-3-sonnet",
+  "selectedThinkingModel": "minimax:MiniMax-M2",
+  "firstRunCompleted": true,
+  "envOverrides": {
+    "synthetic": {
+      "apiKey": "syn_b48b3206b3ba6e041522f791ce095add"
+    },
+    "minimax": {
+      "apiKey": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJHcm91cE5hbWUiOiJKZWZmZXJzb24gTnVubiIsIlVzZXJOYW1lIjoiSmVmZmVyc29uIE51bm4iLCJBY2NvdW50IjoiIiwiU3ViamVjdElEIjoiMTk1NjQ2OTYxODk5NDMyMzcwMSIsIlBob25lIjoiIiwiR3JvdXBJRCI6IjE5NTY0Njk1NTA0NjM1ODY1NTAiLCJQYWdlTmFtZSI6IiIsIk1haWwiOiJqZWZmZXJzb25AaGVpbWRhbGxzdHJhdGVneS5jb20iLCJDcmVhdGVUaW1lIjoiMjAyNS0xMi0wMyAyMzoxMzoyNSIsIlRva2VuVHlwZSI6MSwiaXNzIjoibWluaW1heCJ9.KDPCpvaVirEvGcbZOcKfTTRZnVv8-s53RzL4ogalxg1-1pd7Wm6Mw1s5DySyQ92fAOD4zAERMfUsPksiX7sfPJul3hiDCJoQm6oG4OeMiHhFdctv0KCW5D6btUto8G7po984MkIJ56HHyGF7OYD0hgK_gBnU6mSTcPEnOqAREq0rNQGOgb76JQ4XihF5IO9jge58d84BIH3wnb8PRmLBTdxafMyWpB3cWrg4AALecpCGC586H3GwQE3EFQYBsYisuFwkEJ1-fQ-nu5jI3z8PrmDoFslA-gWnifPUs_YdfS06815DBONvMmH-C0qizSw9sf3b5g6ZhUg1pUSvc7s_jQ"
+    }
+  },
+  "combination1": {
+    "name": "Fast Combo",
+    "regularModel": "synthetic:claude-3-haiku",
+    "thinkingModel": "minimax:MiniMax-M2",
+    "regularProvider": "synthetic",
+    "thinkingProvider": "minimax",
+    "createdAt": "2025-12-03T21:11:38.889Z"
+  },
+  "configVersion": 2
+}

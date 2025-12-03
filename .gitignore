@@ -97,6 +97,8 @@ jspm_packages/
 ~/.config/mclaude/
 ~/.local/share/mclaude/
 
-# Code documentation (generated)
+# Code documentation (generated and working)
 .codedocs/
 .api/
+codedocs/
+docs/working/

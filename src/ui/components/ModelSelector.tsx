@@ -105,9 +105,8 @@ const ProviderStatusBadge: React.FC<{
       <Text color={getStatusColor()} bold>
         {getStatusIcon()}
       </Text>
-      <Text color={providerColor}>{" "}</Text>
       <Text color={providerColor} bold={available}>
-        {provider.charAt(0).toUpperCase() + provider.slice(1)}
+        {" "}{provider.charAt(0).toUpperCase() + provider.slice(1)}
       </Text>
       {formatLastChecked() && (
         <Text color="gray" dimColor>
@@ -149,7 +148,6 @@ const ProviderStatusPanel: React.FC<{
           available={providerStatus.synthetic.available}
           lastChecked={providerStatus.synthetic.lastChecked}
         />
-        <Text color="gray">{" "}</Text>
         <ProviderStatusBadge
           provider="minimax"
           available={providerStatus.minimax.available}
@@ -200,14 +198,16 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(model => {
-        const searchText = [
+        const searchParts = [
           model.id.toLowerCase(),
           model.getProvider().toLowerCase(),
           model.getModelName().toLowerCase(),
           model.owned_by?.toLowerCase() || '',
           model.getProviderTag().toLowerCase(),
           model.getProviderCapabilities().join(' ').toLowerCase()
-        ].join(' ');
+        ].filter(part => part.trim().length > 0);
+
+        const searchText = searchParts.join(' ').trim();
 
         return searchText.includes(query);
       });
@@ -366,8 +366,18 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
       {/* Selection status */}
       <Box marginBottom={1}>
         <Text color="gray">
-          Regular: {selectedRegularModel ? `${selectedRegularModel.getDisplayName()} [${selectedRegularModel.getProviderTag()}]` : "none"} |
-          Thinking: {selectedThinkingModel ? `${selectedThinkingModel.getDisplayName()} [${selectedThinkingModel.getProviderTag()}]` : "none"}
+          Regular: {(() => {
+            if (!selectedRegularModel) return "none";
+            const displayName = selectedRegularModel.getDisplayName().trim();
+            const providerTag = selectedRegularModel.getProviderTag().trim();
+            return displayName && providerTag ? `${displayName} [${providerTag}]` : displayName || "unknown";
+          })()} |
+          Thinking: {(() => {
+            if (!selectedThinkingModel) return "none";
+            const displayName = selectedThinkingModel.getDisplayName().trim();
+            const providerTag = selectedThinkingModel.getProviderTag().trim();
+            return displayName && providerTag ? `${displayName} [${providerTag}]` : displayName || "unknown";
+          })()}
         </Text>
       </Box>
 
@@ -392,8 +402,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
             })}
             {providerFilter.length > 0 && (
               <>
-                <Text color="gray">|</Text>
-                <Text color="gray">{" "}</Text>
+                <Text color="gray">| </Text>
                 <Text color="yellow">c:Clear</Text>
               </>
             )}
@@ -467,11 +476,11 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
                     </Text>
 
                     {model.getProvider().toLowerCase() === 'minimax' && (
-                      <Text color="red">{" "}〰️</Text>
+                      <Text color="red"> 〰️</Text>
                     )}
 
                     {isThinkingModel && (
-                      <Text color="magenta">{" "}🤔</Text>
+                      <Text color="magenta"> 🤔</Text>
                     )}
                   </Box>
 
