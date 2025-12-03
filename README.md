@@ -1,9 +1,20 @@
 # MClaude 1.2.5
 
-**Minimax MClaude** is a modern TypeScript/Node.js interactive CLI tool that integrates Synthetic AI models with Claude Code. It provides model selection, configuration management, and seamless launching of Claude Code with various language models through synthetic endpoints.
+**MClaude makes Claude Code work with MiniMax and Synthetic AI models!** This modern TypeScript/Node.js CLI tool seamlessly bridges Claude Code with MiniMax and Synthetic model APIs, unlocking model choice while maintaining the familiar Claude Code experience.
+
+## How It Works
+
+MClaude automatically configures Claude Code's environment to connect with MiniMax and Synthetic APIs. When you select a model, MClaude sets up:
+
+- `ANTHROPIC_BASE_URL` → MiniMax or Synthetic endpoints
+- `ANTHROPIC_AUTH_TOKEN` → Proper API authentication
+- `CLAUDE_CODE_SUBAGENT_MODEL` → Your chosen model
+
+This gives you the full Claude Code experience with access to MiniMax and Synthetic AI models instead of Anthropic's native models.
 
 ## Features
 
+- 🔗 **MiniMax & Synthetic Integration**: Seamlessly bridge Claude Code with alternative AI models
 - 🤖 **Interactive Model Selection**: Robust multi-tier fallback system for reliable terminal compatibility
 - 🔧 **Streamlined Setup**: Simple configuration process for providers and authentication
 - 📦 **Multiple Installation Methods**: One-line installer, npm package, or local development
@@ -70,11 +81,19 @@ For maximum compatibility:
 mclaude --model <model-id>
 ```
 
-## Supported Providers
+## Supported AI Providers
 
-- **Synthetic** - OpenAI-compatible models
-- **Minimax** - Minimax AI models
-- More providers coming soon
+**MiniMax Models:**
+- MiniMax-M2 and other MiniMax model variants
+- Direct API integration with MiniMax platform
+- Optimized for coding and reasoning tasks
+
+**Synthetic Models:**
+- 26+ OpenAI-compatible models via Synthetic API
+- Claude-3.5 variants, GPT-4 alternatives, and more
+- Full model diversity and capability spectrum
+
+**More providers coming soon!**
 
 ## Configuration
 
@@ -157,4 +176,6 @@ MIT License - see LICENSE file for details.
 
 ---
 
-**MClaude** - Making Claude Code accessible with Synthetic AI models.
+**MClaude** - Because Claude Code deserves more model choices.
+
+*Unlock the full Claude Code experience with MiniMax and Synthetic AI models!* 🚀
