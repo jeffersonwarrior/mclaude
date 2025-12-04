@@ -171,6 +171,10 @@ class ConfigManager {
     loadConfigFile(filePath) {
         try {
             const fs = require("fs");
+            // Check if file exists before trying to read it
+            if (!fs.existsSync(filePath)) {
+                return null;
+            }
             const rawConfigData = JSON.parse(fs.readFileSync(filePath, "utf-8"));
             // Check if this is a legacy configuration
             if (!rawConfigData.configVersion || rawConfigData.configVersion < 2) {
