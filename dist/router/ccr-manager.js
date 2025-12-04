@@ -7,6 +7,8 @@ exports.ccrManager = exports.CCRManager = void 0;
 const child_process_1 = require("child_process");
 const os_1 = require("os");
 const path_1 = require("path");
+const fs_1 = require("fs");
+const crypto_1 = require("crypto");
 const axios_1 = __importDefault(require("axios"));
 const ccr_config_1 = require("./ccr-config");
 class CCRManager {
@@ -14,17 +16,52 @@ class CCRManager {
     configGenerator;
     ccrPort = 3456;
     ccrHomeDir;
+    ccrConfigPath;
+    lastConfigHash = null;
     constructor() {
         this.ccrHomeDir = (0, path_1.join)((0, os_1.homedir)(), ".claude-code-router");
+        this.ccrConfigPath = (0, path_1.join)(this.ccrHomeDir, "config.json");
         this.configGenerator = new ccr_config_1.CCRConfigGenerator();
     }
     /**
+     * Get hash of current CCR config file
+     */
+    getConfigHash() {
+        try {
+            if (!(0, fs_1.existsSync)(this.ccrConfigPath)) {
+                return null;
+            }
+            const content = (0, fs_1.readFileSync)(this.ccrConfigPath, "utf-8");
+            return (0, crypto_1.createHash)("md5").update(content).digest("hex");
+        }
+        catch {
+            return null;
+        }
+    }
+    /**
+     * Check if config has changed since last check
+     */
+    hasConfigChanged() {
+        const currentHash = this.getConfigHash();
+        if (this.lastConfigHash === null) {
+            this.lastConfigHash = currentHash;
+            return false;
+        }
+        const changed = currentHash !== this.lastConfigHash;
+        this.lastConfigHash = currentHash;
+        return changed;
+    }
+    /**
      * Generate CCR configuration from mclaude config
+     * Returns true if config was generated/changed
      */
     async generateConfig() {
         try {
+            const oldHash = this.getConfigHash();
             await this.configGenerator.generateConfig();
-            return true;
+            const newHash = this.getConfigHash();
+            this.lastConfigHash = newHash;
+            return oldHash !== newHash;
         }
         catch (error) {
             console.error("Failed to generate CCR configuration:", error);
@@ -183,10 +220,17 @@ class CCRManager {
     }
     /**
      * Ensure CCR is running before launching Claude Code
+     * Restarts if config has changed
      */
     async ensureRunning() {
         try {
+            // Generate config and check if it changed
+            const configChanged = await this.generateConfig();
             const status = await this.getStatus();
+            if (status.running && configChanged) {
+                console.info("CCR config changed, restarting...");
+                return await this.restart();
+            }
             if (status.running) {
                 return true;
             }

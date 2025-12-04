@@ -1,6 +1,8 @@
 import { spawn, ChildProcess } from "child_process";
 import { homedir } from "os";
 import { join } from "path";
+import { existsSync, statSync, readFileSync } from "fs";
+import { createHash } from "crypto";
 import axios from "axios";
 import { CCRConfigGenerator } from "./ccr-config";
 
@@ -16,19 +18,55 @@ export class CCRManager {
   private configGenerator: CCRConfigGenerator;
   private readonly ccrPort = 3456;
   private readonly ccrHomeDir: string;
+  private readonly ccrConfigPath: string;
+  private lastConfigHash: string | null = null;
 
   constructor() {
     this.ccrHomeDir = join(homedir(), ".claude-code-router");
+    this.ccrConfigPath = join(this.ccrHomeDir, "config.json");
     this.configGenerator = new CCRConfigGenerator();
   }
 
   /**
+   * Get hash of current CCR config file
+   */
+  private getConfigHash(): string | null {
+    try {
+      if (!existsSync(this.ccrConfigPath)) {
+        return null;
+      }
+      const content = readFileSync(this.ccrConfigPath, "utf-8");
+      return createHash("md5").update(content).digest("hex");
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Check if config has changed since last check
+   */
+  hasConfigChanged(): boolean {
+    const currentHash = this.getConfigHash();
+    if (this.lastConfigHash === null) {
+      this.lastConfigHash = currentHash;
+      return false;
+    }
+    const changed = currentHash !== this.lastConfigHash;
+    this.lastConfigHash = currentHash;
+    return changed;
+  }
+
+  /**
    * Generate CCR configuration from mclaude config
+   * Returns true if config was generated/changed
    */
   async generateConfig(): Promise<boolean> {
     try {
+      const oldHash = this.getConfigHash();
       await this.configGenerator.generateConfig();
-      return true;
+      const newHash = this.getConfigHash();
+      this.lastConfigHash = newHash;
+      return oldHash !== newHash;
     } catch (error) {
       console.error("Failed to generate CCR configuration:", error);
       return false;
@@ -202,10 +240,20 @@ export class CCRManager {
 
   /**
    * Ensure CCR is running before launching Claude Code
+   * Restarts if config has changed
    */
   async ensureRunning(): Promise<boolean> {
     try {
+      // Generate config and check if it changed
+      const configChanged = await this.generateConfig();
+
       const status = await this.getStatus();
+
+      if (status.running && configChanged) {
+        console.info("CCR config changed, restarting...");
+        return await this.restart();
+      }
+
       if (status.running) {
         return true;
       }

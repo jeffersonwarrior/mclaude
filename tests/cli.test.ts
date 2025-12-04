@@ -92,6 +92,7 @@ describe('CLI Commands', () => {
         expect(mockApp.run).toHaveBeenCalledWith({
           model: 'synthetic:claude-3-sonnet',
           additionalArgs: [],
+          stream: true,
         });
       } finally {
         process.argv = originalArgv;
@@ -110,6 +111,7 @@ describe('CLI Commands', () => {
         expect(mockApp.run).toHaveBeenCalledWith({
           model: 'synthetic:claude-3-sonnet',
           additionalArgs: ['--dangerously-skip-permissions'],
+          stream: true,
         });
       } finally {
         process.argv = originalArgv;
@@ -129,6 +131,7 @@ describe('CLI Commands', () => {
           model: 'synthetic:claude-3-sonnet',
           thinkingModel: 'minimax:MiniMax-M2',
           additionalArgs: [],
+          stream: true,
         });
       } finally {
         process.argv = originalArgv;
@@ -464,7 +467,7 @@ describe('CLI Commands', () => {
 
         expect(process.exit).toHaveBeenCalledWith(0);
         expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining('1.2.7')
+          expect.stringContaining('1.4.0')
         );
       } finally {
         consoleSpy.mockRestore();

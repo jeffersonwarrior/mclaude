@@ -99,7 +99,7 @@ export class ConfigManager {
           default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
           smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
           thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-          subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
+          subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
         }
       });
 
@@ -415,7 +415,7 @@ export class ConfigManager {
         default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
         smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
         thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-        subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
+        subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
       }
     });
 
@@ -626,7 +626,7 @@ export class ConfigManager {
           default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
           smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
           thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-          subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
+          subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
         },
       };
 
@@ -643,7 +643,7 @@ export class ConfigManager {
         default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
         smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
         thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-        subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
+        subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
       },
     });
   }
@@ -1508,7 +1508,7 @@ export class ConfigManager {
       default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
       smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
       thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-      subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
+      subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
     };
   }
 }

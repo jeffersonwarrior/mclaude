@@ -189,7 +189,12 @@ export class ClaudeLauncher {
     env.ANTHROPIC_DEFAULT_HAIKU_MODEL = model;
     env.ANTHROPIC_DEFAULT_HF_MODEL = model;
     env.ANTHROPIC_DEFAULT_MODEL = model;
-    env.CLAUDE_CODE_SUBAGENT_MODEL = model;
+
+    // Get subagent model from config (CCR subagent tier will handle routing)
+    const subagentModel =
+      this.configManager?.config.recommendedModels?.subagent?.primary ||
+      model;
+    env.CLAUDE_CODE_SUBAGENT_MODEL = subagentModel;
 
     // Set thinking model if provided
     // CCR will route it to the appropriate provider based on Router config

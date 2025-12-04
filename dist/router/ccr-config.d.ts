@@ -12,6 +12,7 @@ export interface CCRRouterConfig {
     default: string;
     background: string;
     think: string;
+    subagent: string;
     longContext?: string;
     longContextThreshold?: number;
 }

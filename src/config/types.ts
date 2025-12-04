@@ -295,8 +295,8 @@ export const AppConfigSchema = z.object({
         .default({}),
       subagent: z
         .object({
-          primary: z.string().default("hf:meta-llama/Llama-3.3-70B-Instruct"),
-          backup: z.string().default("hf:Qwen/Qwen3-235B-A22B-Instruct-2507"),
+          primary: z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
+          backup: z.string().default("hf:meta-llama/Llama-3.3-70B-Instruct"),
         })
         .default({}),
     })

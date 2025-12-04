@@ -22,6 +22,8 @@ TARBALL_URL="$REPO_URL/archive/main.tar.gz"
 VERBOSE="${VERBOSE:-false}"
 PATH_UPDATED="${PATH_UPDATED:-false}"
 PATH_IN_PATH="${PATH_IN_PATH:-false}"
+CCR_WAS_RUNNING="${CCR_WAS_RUNNING:-false}"
+NEEDS_UPDATE="${NEEDS_UPDATE:-false}"
 
 # Helper functions
 log() {
@@ -49,7 +51,43 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Check system dependencies
+# Check if CCR is running and stop it
+check_and_stop_ccr() {
+    if command_exists mclaude; then
+        if mclaude router status 2>/dev/null | grep -q "running"; then
+            log "CCR is running, stopping it temporarily for update..."
+            mclaude router stop >/dev/null 2>&1 || true
+            CCR_WAS_RUNNING=true
+        fi
+    fi
+}
+
+# Check for updates by comparing versions
+check_for_updates() {
+    if ! command_exists mclaude; then
+        # Fresh installation
+        return 0
+    fi
+
+    # Get current version
+    CURRENT_VERSION=$(mclaude --version 2>/dev/null | grep -oP 'v\d+\.\d+\.\d+' || echo "v0.0.0")
+    log "Current version: $CURRENT_VERSION"
+
+    # Get latest version from GitHub
+    LATEST_VERSION=$(curl -s "https://api.github.com/repos/jeffersonwarrior/mclaude/releases/latest" 2>/dev/null | grep -oP '"tag_name":\s*"v\K[0-9]+\.[0-9]+\.[0-9]+' || echo "v0.0.0")
+    log "Latest version: $LATEST_VERSION"
+
+    # Compare versions (simple string comparison works for semantic versioning)
+    if [ "$CURRENT_VERSION" = "$LATEST_VERSION" ]; then
+        warn "mclaude is already at the latest version ($CURRENT_VERSION)"
+        return 1
+    else
+        log "Update available: $CURRENT_VERSION → $LATEST_VERSION"
+        return 0
+    fi
+}
+
+# System dependencies
 check_dependencies() {
     # Check for Node.js and npm
     if ! command_exists node; then
@@ -89,9 +127,16 @@ create_directories() {
     mkdir -p "$BIN_DIR"
 }
 
-# Install synclaude package
+# Install package (only if update is needed)
 install_package() {
-    progress
+    # Check if we need to update
+    if check_for_updates; then
+        NEEDS_UPDATE=true
+        progress
+    else
+        NEEDS_UPDATE=false
+        return 0
+    fi
 
     # Clean up any existing installation
     rm -rf "$INSTALL_DIR"
@@ -177,19 +222,34 @@ verify_installation() {
         error "Please ensure $BIN_DIR is in your PATH"
         exit 1
     fi
+
+    # Restart CCR if it was running before
+    if [ "$CCR_WAS_RUNNING" = "true" ] && [ "$NEEDS_UPDATE" = "true" ]; then
+        log "Restarting CCR..."
+        mclaude router restart >/dev/null 2>&1 || warn "Failed to restart CCR"
+    fi
 }
 
 # Show final message
 show_final_message() {
     echo ""
-    echo "✓ mclaude installed successfully!"
+
+    if [ "$NEEDS_UPDATE" = "true" ]; then
+        echo "✓ mclaude updated successfully!"
+    else
+        echo "✓ mclaude is already up to date!"
+    fi
 
     if [ "$PATH_UPDATED" = "true" ]; then
         echo "⚠️  Please restart your terminal or run 'source $SHELL_CONFIG'"
     fi
 
+    if [ "$CCR_WAS_RUNNING" = "true" ] && [ "$NEEDS_UPDATE" = "true" ]; then
+        echo "✓ CCR has been restarted with the new version"
+    fi
+
     echo ""
-    echo "Run 'mclaude setup' to configure, then 'mclaude' to start."
+    echo "Run 'mclaude setup' to configure (if needed), then 'mclaude' to start."
 }
 
 # Main installation flow
@@ -198,10 +258,16 @@ main() {
 
     # Pre-installation checks
     check_dependencies
+
+    # Check and stop CCR if running
+    check_and_stop_ccr
+
     create_directories
 
-    # Installation
+    # Installation (only if update needed)
     install_package
+
+    # Update PATH if needed
     update_path
 
     # Verification

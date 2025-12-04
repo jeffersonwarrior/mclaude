@@ -55,9 +55,9 @@ export declare const ModelInfoSchema: z.ZodObject<{
     object: string;
     id: string;
     name?: string | undefined;
+    provider?: string | undefined;
     created?: number | undefined;
     owned_by?: string | undefined;
-    provider?: string | undefined;
     always_on?: boolean | undefined;
     hugging_face_id?: string | undefined;
     input_modalities?: string[] | undefined;
@@ -85,9 +85,9 @@ export declare const ModelInfoSchema: z.ZodObject<{
     id: string;
     object?: string | undefined;
     name?: string | undefined;
+    provider?: string | undefined;
     created?: number | undefined;
     owned_by?: string | undefined;
-    provider?: string | undefined;
     always_on?: boolean | undefined;
     hugging_face_id?: string | undefined;
     input_modalities?: string[] | undefined;

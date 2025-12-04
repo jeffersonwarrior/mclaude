@@ -716,8 +716,8 @@ describe('ClaudeLauncher', () => {
         [],
         expect.objectContaining({
           env: expect.objectContaining({
-            ANTHROPIC_AUTH_TOKEN: 'synthetic-key',
-            ANTHROPIC_BASE_URL: 'https://api.synthetic.new/anthropic',
+            ANTHROPIC_AUTH_TOKEN: 'mclaude',
+            ANTHROPIC_BASE_URL: 'http://127.0.0.1:3456',
           }),
         })
       );
@@ -747,7 +747,7 @@ describe('ClaudeLauncher', () => {
           env: expect.objectContaining({
             ANTHROPIC_BASE_URL: 'https://custom.override.url', // Should use override
             CUSTOM_VAR: 'custom-value',
-            ANTHROPIC_AUTH_TOKEN: 'synthetic-key', // Should still have this
+            ANTHROPIC_AUTH_TOKEN: 'mclaude', // CCR placeholder token
           }),
         })
       );

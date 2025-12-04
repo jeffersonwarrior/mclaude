@@ -51,7 +51,7 @@ class CCRConfigGenerator {
             // Create CCR config
             const ccrConfig = {
                 LOG: false,
-                API_TIMEOUT_MS: 600000, // 10 minutes
+                API_TIMEOUT_MS: 60000, // 1 minute (was 600000/10min, caused curl/MCP hangs)
                 Providers: providers,
                 Router: routerConfig,
             };
@@ -78,6 +78,7 @@ class CCRConfigGenerator {
             default: this.formatRouterModel(recommended.default?.primary || "hf:deepseek-ai/DeepSeek-V3.2"),
             background: this.formatRouterModel(recommended.smallFast?.primary || "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
             think: this.formatRouterModel(recommended.thinking?.primary || "minimax:MiniMax-M2"),
+            subagent: this.formatRouterModel(recommended.subagent?.primary || recommended.default?.primary || "hf:deepseek-ai/DeepSeek-V3.2"),
             longContext: this.formatRouterModel(recommended.default?.primary || "hf:deepseek-ai/DeepSeek-V3.2"),
             longContextThreshold: 60000,
         };

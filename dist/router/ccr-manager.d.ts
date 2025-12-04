@@ -9,9 +9,20 @@ export declare class CCRManager {
     private configGenerator;
     private readonly ccrPort;
     private readonly ccrHomeDir;
+    private readonly ccrConfigPath;
+    private lastConfigHash;
     constructor();
     /**
+     * Get hash of current CCR config file
+     */
+    private getConfigHash;
+    /**
+     * Check if config has changed since last check
+     */
+    hasConfigChanged(): boolean;
+    /**
      * Generate CCR configuration from mclaude config
+     * Returns true if config was generated/changed
      */
     generateConfig(): Promise<boolean>;
     /**
@@ -44,6 +55,7 @@ export declare class CCRManager {
     getLogs(): Promise<string>;
     /**
      * Ensure CCR is running before launching Claude Code
+     * Restarts if config has changed
      */
     ensureRunning(): Promise<boolean>;
     /**
