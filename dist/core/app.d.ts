@@ -18,8 +18,6 @@ export declare class SyntheticClaudeApp {
     private ui;
     private launcher;
     private modelManager;
-    ccrManager: any;
-    ccrConfigGenerator: any;
     constructor();
     setupLogging(options: AppOptions): Promise<void>;
     getConfig(): {
@@ -52,7 +50,7 @@ export declare class SyntheticClaudeApp {
                 responseFormat?: "text" | "json_object" | undefined;
             };
         };
-        defaultProvider: "synthetic" | "auto" | "minimax";
+        defaultProvider: "synthetic" | "minimax" | "auto";
         cacheDurationHours: number;
         selectedModel: string;
         selectedThinkingModel: string;
@@ -360,12 +358,6 @@ export declare class SyntheticClaudeApp {
         raw?: boolean;
     }): Promise<void>;
     private editSysprompt;
-    routerStatus(): Promise<void>;
-    routerRestart(): Promise<void>;
-    routerLogs(): Promise<void>;
-    routerConfig(): Promise<void>;
-    routerStart(): Promise<void>;
-    routerStop(): Promise<void>;
     manageModelCards(options?: {
         update?: boolean;
     }): Promise<void>;

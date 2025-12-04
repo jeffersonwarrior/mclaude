@@ -1,7 +1,6 @@
 import { spawn, ChildProcess } from "child_process";
 import { AppConfig, ConfigManager, ProviderType } from "../config";
 import { ModelInfoImpl } from "../models/info";
-import { ccrManager } from "../router/ccr-manager";
 
 export interface LaunchOptions {
   model: string;
@@ -90,15 +89,6 @@ export class ClaudeLauncher {
     options: LaunchOptions,
   ): Promise<LaunchResult> {
     try {
-      // Ensure CCR is running before launching Claude Code
-      const ccrStarted = await ccrManager.ensureRunning();
-      if (!ccrStarted) {
-        return {
-          success: false,
-          error: "Failed to start Claude Code Router",
-        };
-      }
-
       // Set up environment variables for Claude Code
       const env = {
         ...process.env,
@@ -172,14 +162,21 @@ export class ClaudeLauncher {
   ): Record<string, string> {
     const env: Record<string, string> = {};
 
-    // CCR handles routing - set base URL to CCR endpoint
-    env.ANTHROPIC_BASE_URL = ccrManager.getBaseUrl();
+    const provider = this.resolveProvider(options);
+    const providerConfig = this.getProviderConfig(provider);
+    const apiKey = this.getProviderApiKey(provider);
 
-    // CCR handles authentication - use a placeholder token
-    // CCR will use the API keys from its config
-    env.ANTHROPIC_AUTH_TOKEN = "mclaude";
+    if (!providerConfig) {
+      throw new Error(`No configuration found for provider: ${provider}`);
+    }
 
-    // The model will be routed by CCR based on the Router config
+    // Set Anthropic base URL to the provider's endpoint
+    env.ANTHROPIC_BASE_URL = providerConfig.anthropicBaseUrl;
+
+    // Set the provider's API key
+    env.ANTHROPIC_AUTH_TOKEN = apiKey;
+
+    // The model will be routed directly to the provider
     const model = options.model;
 
     // Set all the model environment variables to the full model identifier
@@ -190,21 +187,19 @@ export class ClaudeLauncher {
     env.ANTHROPIC_DEFAULT_HF_MODEL = model;
     env.ANTHROPIC_DEFAULT_MODEL = model;
 
-    // Get subagent model from config (CCR subagent tier will handle routing)
+    // Get subagent model from config (use same provider)
     const subagentModel =
       this.configManager?.config.recommendedModels?.subagent?.primary ||
       model;
     env.CLAUDE_CODE_SUBAGENT_MODEL = subagentModel;
 
     // Set thinking model if provided
-    // CCR will route it to the appropriate provider based on Router config
     if (options.thinkingModel) {
       env.ANTHROPIC_THINKING_MODEL = options.thinkingModel;
     }
 
-    // Provider-specific optimizations (for non-CCR scenarios)
-    // Note: Some optimizations may not apply when using CCR
-    // this.applyProviderOptimizations(env, provider, options);
+    // Apply provider-specific optimizations
+    this.applyProviderOptimizations(env, provider, options);
 
     // Disable non-essential traffic
     env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";

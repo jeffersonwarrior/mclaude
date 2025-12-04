@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ClaudeLauncher = void 0;
 const child_process_1 = require("child_process");
-const ccr_manager_1 = require("../router/ccr-manager");
 class ClaudeLauncher {
     claudePath;
     configManager;
@@ -53,14 +52,6 @@ class ClaudeLauncher {
      */
     async launchWithOptions(options) {
         try {
-            // Ensure CCR is running before launching Claude Code
-            const ccrStarted = await ccr_manager_1.ccrManager.ensureRunning();
-            if (!ccrStarted) {
-                return {
-                    success: false,
-                    error: "Failed to start Claude Code Router",
-                };
-            }
             // Set up environment variables for Claude Code
             const env = {
                 ...process.env,
@@ -115,12 +106,17 @@ class ClaudeLauncher {
     }
     createClaudeEnvironment(options) {
         const env = {};
-        // CCR handles routing - set base URL to CCR endpoint
-        env.ANTHROPIC_BASE_URL = ccr_manager_1.ccrManager.getBaseUrl();
-        // CCR handles authentication - use a placeholder token
-        // CCR will use the API keys from its config
-        env.ANTHROPIC_AUTH_TOKEN = "mclaude";
-        // The model will be routed by CCR based on the Router config
+        const provider = this.resolveProvider(options);
+        const providerConfig = this.getProviderConfig(provider);
+        const apiKey = this.getProviderApiKey(provider);
+        if (!providerConfig) {
+            throw new Error(`No configuration found for provider: ${provider}`);
+        }
+        // Set Anthropic base URL to the provider's endpoint
+        env.ANTHROPIC_BASE_URL = providerConfig.anthropicBaseUrl;
+        // Set the provider's API key
+        env.ANTHROPIC_AUTH_TOKEN = apiKey;
+        // The model will be routed directly to the provider
         const model = options.model;
         // Set all the model environment variables to the full model identifier
         // This ensures Claude Code uses the correct model regardless of which tier it requests
@@ -129,18 +125,16 @@ class ClaudeLauncher {
         env.ANTHROPIC_DEFAULT_HAIKU_MODEL = model;
         env.ANTHROPIC_DEFAULT_HF_MODEL = model;
         env.ANTHROPIC_DEFAULT_MODEL = model;
-        // Get subagent model from config (CCR subagent tier will handle routing)
+        // Get subagent model from config (use same provider)
         const subagentModel = this.configManager?.config.recommendedModels?.subagent?.primary ||
             model;
         env.CLAUDE_CODE_SUBAGENT_MODEL = subagentModel;
         // Set thinking model if provided
-        // CCR will route it to the appropriate provider based on Router config
         if (options.thinkingModel) {
             env.ANTHROPIC_THINKING_MODEL = options.thinkingModel;
         }
-        // Provider-specific optimizations (for non-CCR scenarios)
-        // Note: Some optimizations may not apply when using CCR
-        // this.applyProviderOptimizations(env, provider, options);
+        // Apply provider-specific optimizations
+        this.applyProviderOptimizations(env, provider, options);
         // Disable non-essential traffic
         env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";
         return env;
