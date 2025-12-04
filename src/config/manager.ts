@@ -559,7 +559,19 @@ export class ConfigManager {
         return AppConfigSchema.parse({ configVersion: 2 });
       }
 
-      return result.data;
+      // v1.4.3: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
+      const config = result.data;
+      if (config.recommendedModels &&
+          !config.selectedModel &&
+          config.firstRunCompleted) {
+        console.log("Migrating recommended models to selected model fields...");
+        config.selectedModel = config.recommendedModels.default?.primary || "";
+        config.selectedThinkingModel = config.recommendedModels.thinking?.primary || "";
+        // Save the migrated config
+        this.saveConfig(config);
+      }
+
+      return config;
     } catch (error) {
       console.warn("Failed to load configuration, using defaults:", error);
       // Try to recover firstRunCompleted from partial config data
