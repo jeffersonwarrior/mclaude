@@ -452,7 +452,7 @@ describe('CLI Commands', () => {
     it('should show version', async () => {
       const program = createProgram();
 
-      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const consoleSpy = jest.spyOn(process.stdout, 'write').mockImplementation();
       const originalExit = process.exit;
       process.exit = jest.fn() as any;
 
@@ -597,7 +597,7 @@ describe('CLI Commands', () => {
     it('should handle missing arguments gracefully', async () => {
       const program = createProgram();
 
-      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const stderrSpy = jest.spyOn(process.stderr, 'write').mockImplementation();
       const originalExit = process.exit;
       process.exit = jest.fn() as any;
 
@@ -606,9 +606,9 @@ describe('CLI Commands', () => {
         await program.parseAsync(['node', 'mclaude', 'combination', 'save']);
 
         expect(process.exit).toHaveBeenCalledWith(1);
-        expect(consoleSpy).toHaveBeenCalled();
+        expect(stderrSpy).toHaveBeenCalled();
       } finally {
-        consoleSpy.mockRestore();
+        stderrSpy.mockRestore();
         process.exit = originalExit;
       }
     });
