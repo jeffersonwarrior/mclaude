@@ -70,8 +70,35 @@ class ConfigManager {
                 }
             });
             const configPath = (0, path_1.join)(projectDir, 'config.json');
-            await (0, promises_1.writeFile)(configPath, JSON.stringify(defaultConfig, null, 2), 'utf-8');
-            await (0, promises_1.chmod)(configPath, 0o644); // More permissive for repo sharing
+            const configJson = JSON.stringify(defaultConfig, null, 2);
+            // Atomic write: write to .tmp file first, then rename
+            const tempPath = (0, path_1.join)(projectDir, 'config.json.tmp');
+            try {
+                await (0, promises_1.writeFile)(tempPath, configJson, 'utf-8');
+                await (0, promises_1.chmod)(tempPath, 0o644); // More permissive for repo sharing
+                // Rename to final location (atomic operation)
+                const fs = require("fs/promises");
+                await fs.rename(tempPath, configPath);
+            }
+            catch (writeError) {
+                // Clean up temp file if it exists
+                try {
+                    const fsSync = require("fs");
+                    const fsPromises = require("fs/promises");
+                    if (fsSync.existsSync(tempPath)) {
+                        await fsPromises.unlink(tempPath);
+                    }
+                }
+                catch {
+                    // Ignore cleanup errors
+                }
+                // Handle permission errors gracefully
+                if (writeError.code === 'EACCES' || writeError.code === 'EPERM') {
+                    throw new types_1.ConfigSaveError(`Permission denied when creating local config at ${configPath}. ` +
+                        `Check directory permissions.`, writeError);
+                }
+                throw writeError;
+            }
             // Create .env.local template (git-ignored)
             const envLocalPath = (0, path_1.join)(projectDir, '.env.local');
             const envTemplate = `# Local environment overrides (do not commit to git)
@@ -79,8 +106,20 @@ class ConfigManager {
 # MINIMAX_API_KEY=
 # MINIMAX_GROUP_ID=
 `;
-            await (0, promises_1.writeFile)(envLocalPath, envTemplate, 'utf-8');
-            await (0, promises_1.chmod)(envLocalPath, 0o600); // Restrictive for security
+            try {
+                await (0, promises_1.writeFile)(envLocalPath, envTemplate, 'utf-8');
+                await (0, promises_1.chmod)(envLocalPath, 0o600); // Restrictive for security
+            }
+            catch (envError) {
+                if (envError.code === 'EACCES' || envError.code === 'EPERM') {
+                    console.warn(`Permission denied when creating ${envLocalPath}. ` +
+                        `You may need to create this file manually.`, envError);
+                    // Continue anyway - this file is optional
+                }
+                else {
+                    throw envError;
+                }
+            }
             // Create .gitignore template for .mclaude directory
             const gitignorePath = (0, path_1.join)(projectDir, '.gitignore');
             const gitignoreTemplate = `.env.local
@@ -88,8 +127,20 @@ class ConfigManager {
 # Template - uncomment if you want to add secrets to git ignore
 # Add other sensitive files here
 `;
-            await (0, promises_1.writeFile)(gitignorePath, gitignoreTemplate, 'utf-8');
-            await (0, promises_1.chmod)(gitignorePath, 0o644);
+            try {
+                await (0, promises_1.writeFile)(gitignorePath, gitignoreTemplate, 'utf-8');
+                await (0, promises_1.chmod)(gitignorePath, 0o644);
+            }
+            catch (gitignoreError) {
+                if (gitignoreError.code === 'EACCES' || gitignoreError.code === 'EPERM') {
+                    console.warn(`Permission denied when creating ${gitignorePath}. ` +
+                        `You may need to create this file manually.`, gitignoreError);
+                    // Continue anyway - this file is optional
+                }
+                else {
+                    throw gitignoreError;
+                }
+            }
             // Reset cached config to reload with new local config
             this._config = null;
             this._configHierarchy = null;
@@ -126,10 +177,76 @@ class ConfigManager {
         if (!this.localProjectDir) {
             throw new types_1.ConfigLoadError("No local project configuration directory found");
         }
+        const fs = require("fs/promises");
+        const fsSync = require("fs");
+        let permissions = null;
         try {
+            // Try to preserve existing file permissions
+            if (fsSync.existsSync(this.localConfigPath)) {
+                try {
+                    const stats = fsSync.statSync(this.localConfigPath);
+                    permissions = stats.mode;
+                }
+                catch {
+                    // If we can't read permissions, default to repo-sharing mode
+                    permissions = 0o644;
+                }
+            }
+            // Atomic write strategy: write to .tmp file first, then rename
+            const tempPath = `${this.localConfigPath}.tmp`;
             const configJson = JSON.stringify(config, null, 2);
-            await (0, promises_1.writeFile)(this.localConfigPath, configJson, 'utf-8');
-            await (0, promises_1.chmod)(this.localConfigPath, 0o644); // More permissive for repo sharing
+            try {
+                // Write to temporary file first
+                await (0, promises_1.writeFile)(tempPath, configJson, 'utf-8');
+                // Set permissions on temp file before renaming
+                try {
+                    if (permissions) {
+                        await (0, promises_1.chmod)(tempPath, permissions);
+                    }
+                    else {
+                        await (0, promises_1.chmod)(tempPath, 0o644); // More permissive for repo sharing
+                    }
+                }
+                catch (chmodError) {
+                    console.warn("Failed to set permissions on local config file:", chmodError);
+                }
+                // Create backup with timestamp before overwriting
+                if (fsSync.existsSync(this.localConfigPath)) {
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const backupPath = `${this.localConfigPath}.backup.${timestamp}`;
+                    try {
+                        const existingData = await (0, promises_1.readFile)(this.localConfigPath, 'utf-8');
+                        await (0, promises_1.writeFile)(backupPath, existingData, 'utf-8');
+                    }
+                    catch (backupError) {
+                        // Backup failed, but continue with saving
+                        console.warn("Failed to create local config backup:", backupError);
+                    }
+                }
+                // Rename temp file to final location (atomic operation)
+                await fs.rename(tempPath, this.localConfigPath);
+            }
+            catch (writeError) {
+                // Clean up temp file if it exists
+                try {
+                    if (fsSync.existsSync(tempPath)) {
+                        await fs.unlink(tempPath);
+                    }
+                }
+                catch {
+                    // Ignore cleanup errors
+                }
+                // Handle permission errors gracefully
+                if (writeError.code === 'EACCES' || writeError.code === 'EPERM') {
+                    console.warn(`Permission denied when writing to ${this.localConfigPath}. ` +
+                        `Configuration will not be persisted.`, writeError);
+                    // Don't throw - allow the application to continue with in-memory config
+                    this._config = config;
+                    this._configHierarchy = null;
+                    return false;
+                }
+                throw writeError;
+            }
             // Reset cached config
             this._config = null;
             this._configHierarchy = null;
@@ -399,29 +516,73 @@ class ConfigManager {
     async saveGlobalConfig(config) {
         try {
             await this.ensureConfigDir();
-            // Create backup of existing config
-            try {
-                const fs = require("fs/promises");
-                const fsSync = require("fs");
-                if (fsSync.existsSync(this.globalConfigPath)) {
-                    const backupPath = `${this.globalConfigPath}.backup`;
+            // Create backup of existing config using atomic write strategy
+            const fs = require("fs/promises");
+            const fsSync = require("fs");
+            let permissions = null;
+            // Try to preserve existing file permissions
+            if (fsSync.existsSync(this.globalConfigPath)) {
+                try {
+                    const stats = fsSync.statSync(this.globalConfigPath);
+                    permissions = stats.mode;
+                }
+                catch {
+                    // If we can't read permissions, default to secure mode
+                    permissions = 0o600;
+                }
+                // Create backup with timestamp
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const backupPath = `${this.globalConfigPath}.backup.${timestamp}`;
+                try {
                     const existingData = await (0, promises_1.readFile)(this.globalConfigPath, "utf-8");
                     await (0, promises_1.writeFile)(backupPath, existingData, "utf-8");
                 }
+                catch (backupError) {
+                    // Backup failed, but continue with saving
+                    console.warn("Failed to create global config backup:", backupError);
+                }
             }
-            catch (backupError) {
-                // Backup failed, but continue with saving
-                console.warn("Failed to create global config backup:", backupError);
-            }
-            // Write new configuration
+            // Atomic write strategy: write to .tmp file first, then rename
+            const tempPath = `${this.globalConfigPath}.tmp`;
             const configJson = JSON.stringify(config, null, 2);
-            await (0, promises_1.writeFile)(this.globalConfigPath, configJson, "utf-8");
-            // Set secure permissions
             try {
-                await (0, promises_1.chmod)(this.globalConfigPath, 0o600);
+                // Write to temporary file first
+                await (0, promises_1.writeFile)(tempPath, configJson, "utf-8");
+                // Set permissions on temp file before renaming
+                try {
+                    if (permissions) {
+                        await (0, promises_1.chmod)(tempPath, permissions);
+                    }
+                    else {
+                        await (0, promises_1.chmod)(tempPath, 0o600);
+                    }
+                }
+                catch (chmodError) {
+                    console.warn("Failed to set permissions on temporary config file:", chmodError);
+                }
+                // Rename temp file to final location (atomic operation on most systems)
+                await fs.rename(tempPath, this.globalConfigPath);
             }
-            catch (chmodError) {
-                console.warn("Failed to set secure permissions on global config file:", chmodError);
+            catch (writeError) {
+                // Clean up temp file if it exists
+                try {
+                    if (fsSync.existsSync(tempPath)) {
+                        await fs.unlink(tempPath);
+                    }
+                }
+                catch {
+                    // Ignore cleanup errors
+                }
+                // Handle permission errors gracefully
+                if (writeError.code === 'EACCES' || writeError.code === 'EPERM') {
+                    console.warn(`Permission denied when writing to ${this.globalConfigPath}. ` +
+                        `Configuration will not be persisted.`, writeError);
+                    // Don't throw - allow the application to continue with in-memory config
+                    this._config = config;
+                    this._configHierarchy = null;
+                    return false;
+                }
+                throw writeError;
             }
             this._config = config;
             this._configHierarchy = null; // Reset hierarchy

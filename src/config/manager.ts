@@ -110,8 +110,9 @@ export class ConfigManager {
         // Clean up temp file if it exists
         try {
           const fsSync = require("fs");
+          const fsPromises = require("fs/promises");
           if (fsSync.existsSync(tempPath)) {
-            await fs.unlink(tempPath);
+            await fsPromises.unlink(tempPath);
           }
         } catch {
           // Ignore cleanup errors
