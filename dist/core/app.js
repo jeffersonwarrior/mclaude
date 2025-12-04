@@ -1060,6 +1060,9 @@ class SyntheticClaudeApp {
             try {
                 await this.configManager.updateConfig({
                     recommendedModels: recommended,
+                    selectedModel: recommended.default.primary,
+                    selectedThinkingModel: recommended.thinking.primary,
+                    firstRunCompleted: true,
                 });
                 this.ui.coloredSuccess("✓ Recommended models saved to configuration");
                 this.ui.info("You can change these later with 'mclaude models'");

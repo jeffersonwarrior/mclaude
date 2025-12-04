@@ -52,7 +52,7 @@ export declare class SyntheticClaudeApp {
                 responseFormat?: "text" | "json_object" | undefined;
             };
         };
-        defaultProvider: "synthetic" | "minimax" | "auto";
+        defaultProvider: "synthetic" | "auto" | "minimax";
         cacheDurationHours: number;
         selectedModel: string;
         selectedThinkingModel: string;
