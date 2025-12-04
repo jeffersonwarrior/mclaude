@@ -80,10 +80,9 @@ check_for_updates() {
     # Get latest version from GitHub (normalize to v prefix)
     LATEST_VERSION=$(curl -s "https://api.github.com/repos/jeffersonwarrior/mclaude/releases/latest" 2>/dev/null | grep -o '"tag_name": "[^"]*"' | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' || echo "")
 
-    # If GitHub API fails (no releases), use current script's version as fallback
+    # If GitHub API fails (no releases), use hardcoded latest version as fallback
     if [ -z "$LATEST_VERSION" ]; then
-        # Try to get version from the script itself (this file)
-        LATEST_VERSION=$(grep -oP '"version":\s*"\K[0-9]+\.[0-9]+\.[0-9]+' "$0" 2>/dev/null || echo "1.4.3")
+        LATEST_VERSION="1.4.3"
     fi
 
     # Ensure v prefix
