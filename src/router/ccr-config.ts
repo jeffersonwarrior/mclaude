@@ -46,37 +46,70 @@ export class CCRConfigGenerator {
    */
   async generateConfig(): Promise<void> {
     try {
-      const config = this.configManager.config;
+      // Reload config from disk to ensure we have the latest
+      const freshConfigManager = new ConfigManager();
+      const currentConfig = freshConfigManager.config;
+
+      console.debug("Generating CCR config with current config...");
+      console.debug("MiniMax API Key (first 50):", currentConfig.providers.minimax.apiKey.substring(0, 50));
+      console.debug("MiniMax Base URL:", currentConfig.providers.minimax.baseUrl);
+
+      // Also directly read from disk to verify
+      const fs = require("fs");
+      const configPath = require("os").homedir() + "/.config/mclaude/config.json";
+      console.debug("Config path:", configPath);
+      if (fs.existsSync(configPath)) {
+        const rawConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
+        console.debug("Raw file MiniMax key (last 20):", rawConfig.providers.minimax.apiKey.substring(rawConfig.providers.minimax.apiKey.length - 20));
+      }
+
       const providers: CCRProvider[] = [];
 
       // Add Synthetic provider if enabled
-      if (config.providers.synthetic.enabled) {
-        const syntheticApiKey = this.getEffectiveApiKey("synthetic");
+      if (currentConfig.providers.synthetic.enabled) {
+        // Get fresh API key
+        const syntheticApiKey = freshConfigManager.getEffectiveApiKey?.("synthetic") ||
+          process.env.SYNTHETIC_API_KEY ||
+          currentConfig.providers.synthetic.apiKey;
+
         if (syntheticApiKey) {
           providers.push({
             name: "synthetic",
             api_base_url: "https://api.synthetic.new/openai/v1/chat/completions",
-            api_key: syntheticApiKey, // Use actual key, not env var reference
+            api_key: syntheticApiKey,
             models: this.getSyntheticModels(),
           });
         }
       }
 
       // Add MiniMax provider if enabled
-      if (config.providers.minimax.enabled) {
-        const minimaxApiKey = this.getEffectiveApiKey("minimax");
+      if (currentConfig.providers.minimax.enabled) {
+        // Get fresh API key - use direct property access to avoid envOverrides
+        const minimaxApiKey = currentConfig.providers.minimax.apiKey;
+
+        console.debug("Fresh config manager key (last 20):", minimaxApiKey.substring(minimaxApiKey.length - 20));
+        console.debug("Current config key (last 20):", currentConfig.providers.minimax.apiKey.substring(currentConfig.providers.minimax.apiKey.length - 20));
+        console.debug("envOverrides.minimax:", JSON.stringify(currentConfig.envOverrides?.minimax));
+
         if (minimaxApiKey) {
+          // Use the OpenAI-compatible endpoint from config
+          const minimaxBaseUrl = currentConfig.providers.minimax.baseUrl;
+          const minimaxOpenAiUrl = `${minimaxBaseUrl.replace(/\/$/, '')}/v1/chat/completions`;
+
+          console.debug("Using MiniMax API URL:", minimaxOpenAiUrl);
+          console.debug("Provider API Key (last 20):", minimaxApiKey.substring(minimaxApiKey.length - 20));
+
           providers.push({
             name: "minimax",
-            api_base_url: "https://api.minimax.chat/v1/chat/completions",
-            api_key: minimaxApiKey, // Use actual key, not env var reference
+            api_base_url: minimaxOpenAiUrl,
+            api_key: minimaxApiKey,
             models: this.getMinimaxModels(),
           });
         }
       }
 
       // Build router configuration
-      const routerConfig = this.buildRouterConfig(config);
+      const routerConfig = this.buildRouterConfig(currentConfig);
 
       // Create CCR config
       const ccrConfig: CCRConfig = {
