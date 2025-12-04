@@ -379,8 +379,14 @@ export class ModelManager {
       throw new Error("Models must be provided or fetched first");
     }
 
-    // Sort models by ID for consistent display
-    return [...models].sort((a, b) => a.id.localeCompare(b.id));
+    // Sort models: minimax first, then by provider, then by ID
+    return [...models].sort((a, b) => {
+      const providerOrder: Record<string, number> = { minimax: 0, synthetic: 1 };
+      const aOrder = providerOrder[a.getProvider()] ?? 2;
+      const bOrder = providerOrder[b.getProvider()] ?? 2;
+      if (aOrder !== bOrder) return aOrder - bOrder;
+      return a.id.localeCompare(b.id);
+    });
   }
 
   async searchModels(
