@@ -29,7 +29,7 @@ class CCRConfigGenerator {
                     providers.push({
                         name: "synthetic",
                         api_base_url: "https://api.synthetic.new/openai/v1/chat/completions",
-                        api_key: `$${this.getEnvVarName("synthetic", "apiKey")}`,
+                        api_key: syntheticApiKey, // Use actual key, not env var reference
                         models: this.getSyntheticModels(),
                     });
                 }
@@ -41,7 +41,7 @@ class CCRConfigGenerator {
                     providers.push({
                         name: "minimax",
                         api_base_url: "https://api.minimax.chat/v1/chat/completions",
-                        api_key: `$${this.getEnvVarName("minimax", "apiKey")}`,
+                        api_key: minimaxApiKey, // Use actual key, not env var reference
                         models: this.getMinimaxModels(),
                     });
                 }
@@ -86,12 +86,17 @@ class CCRConfigGenerator {
      * Format model for router (provider,model)
      */
     formatRouterModel(modelId) {
-        // MiniMax models use minimax provider
+        // MiniMax models use minimax provider (both minimax: and hf:MiniMaxAI prefixes)
         if (modelId.startsWith("minimax:")) {
             const model = modelId.replace("minimax:", "");
             return `minimax,${model}`;
         }
-        // hf: prefixed models use synthetic provider (keep full model ID with hf:)
+        // hf:MiniMaxAI models should use minimax provider directly
+        if (modelId.startsWith("hf:MiniMaxAI/")) {
+            const model = modelId.replace("hf:MiniMaxAI/", "");
+            return `minimax,${model}`;
+        }
+        // Other hf: prefixed models use synthetic provider (keep full model ID with hf:)
         if (modelId.startsWith("hf:")) {
             return `synthetic,${modelId}`;
         }
