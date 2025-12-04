@@ -296,23 +296,27 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
       return;
     }
 
-    // Space to launch with selections
+    // Space to select/toggle regular model
     if (input === ' ') {
-      if (selectedRegularModel || selectedThinkingModel) {
-        onSelect(selectedRegularModel, selectedThinkingModel);
-        exit();
+      if (filteredModels.length > 0 && selectedIndex < filteredModels.length) {
+        const selectedModel = filteredModels[selectedIndex];
+        if (selectedModel) {
+          // Toggle regular model selection
+          if (selectedRegularModel?.id === selectedModel.id) {
+            setSelectedRegularModel(null);
+          } else {
+            setSelectedRegularModel(selectedModel);
+          }
+        }
       }
       return;
     }
 
-    // Enter to select as regular model and launch
+    // Enter to launch with selections
     if (key.return) {
-      if (filteredModels.length > 0 && selectedIndex < filteredModels.length) {
-        const selectedModel = filteredModels[selectedIndex];
-        if (selectedModel) {
-          onSelect(selectedModel, selectedThinkingModel);
-          exit();
-        }
+      if (selectedRegularModel || selectedThinkingModel) {
+        onSelect(selectedRegularModel, selectedThinkingModel);
+        exit();
       }
       return;
     }
@@ -524,7 +528,7 @@ export const ModelSelector: React.FC<ModelSelectorProps> = ({
 
           <Box marginTop={1}>
             <Text color="gray">
-              ↑↓ Navigate | Enter: Select Regular | t: Toggle Thinking | Space: Launch | q: Quit
+              ↑↓ Navigate | Space: Select Regular | t: Select Thinking | Enter: Launch | q: Quit
             </Text>
             {!searchQuery && availableProviders.length > 1 && (
               <Text color="gray">

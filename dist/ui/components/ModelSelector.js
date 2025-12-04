@@ -217,22 +217,27 @@ const ModelSelector = ({ models, onSelect, onCancel, searchPlaceholder = 'Search
             exit();
             return;
         }
-        // Space to launch with selections
+        // Space to select/toggle regular model
         if (input === ' ') {
-            if (selectedRegularModel || selectedThinkingModel) {
-                onSelect(selectedRegularModel, selectedThinkingModel);
-                exit();
-            }
-            return;
-        }
-        // Enter to select as regular model and launch
-        if (key.return) {
             if (filteredModels.length > 0 && selectedIndex < filteredModels.length) {
                 const selectedModel = filteredModels[selectedIndex];
                 if (selectedModel) {
-                    onSelect(selectedModel, selectedThinkingModel);
-                    exit();
+                    // Toggle regular model selection
+                    if (selectedRegularModel?.id === selectedModel.id) {
+                        setSelectedRegularModel(null);
+                    }
+                    else {
+                        setSelectedRegularModel(selectedModel);
+                    }
                 }
+            }
+            return;
+        }
+        // Enter to launch with selections
+        if (key.return) {
+            if (selectedRegularModel || selectedThinkingModel) {
+                onSelect(selectedRegularModel, selectedThinkingModel);
+                exit();
             }
             return;
         }
@@ -305,7 +310,7 @@ const ModelSelector = ({ models, onSelect, onCancel, searchPlaceholder = 'Search
                             };
                             const textStyle = getTextStyle();
                             return ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Box, { flexDirection: "column", children: [(0, jsx_runtime_1.jsxs)(ink_1.Box, { children: [(0, jsx_runtime_1.jsxs)(ink_1.Text, { color: textStyle.color, bold: textStyle.bold, children: [isSelected ? '▸ ' : '  ', getSelectionIndicator(), actualIndex + 1, ". ", model.getDisplayName(), " "] }), (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: providerColor, bold: !isSelected, children: ["[", model.getProviderTag(), "]"] }), model.getProvider().toLowerCase() === 'minimax' && ((0, jsx_runtime_1.jsx)(ink_1.Text, { color: "red", children: " \u3030\uFE0F" })), isThinkingModel && ((0, jsx_runtime_1.jsx)(ink_1.Text, { color: "magenta", children: " \uD83E\uDD14" }))] }), (0, jsx_runtime_1.jsxs)(ink_1.Box, { marginLeft: 4, flexDirection: "column", children: [(0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", dimColor: true, children: ["Provider: ", (0, jsx_runtime_1.jsx)(ink_1.Text, { color: providerColor, children: provider }), model.context_length && (0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [" | Context: ", Math.round(model.context_length / 1024), "K"] }), model.quantization && (0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [" | ", model.quantization] }), isThinkingModel && (0, jsx_runtime_1.jsx)(jsx_runtime_1.Fragment, { children: " | Type: thinking" }), model.owned_by && (0, jsx_runtime_1.jsxs)(jsx_runtime_1.Fragment, { children: [" | Owner: ", model.owned_by] })] }), !isSelected && model.getProviderCapabilities().length > 0 && ((0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", dimColor: true, children: ["Capabilities: ", model.getProviderCapabilities().slice(0, 2).join(', '), model.getProviderCapabilities().length > 2 && ` +${model.getProviderCapabilities().length - 2} more`] })), isSelected && ((0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", dimColor: true, children: ["ID: ", model.id, model.isClaudeCompatible() && (0, jsx_runtime_1.jsx)(jsx_runtime_1.Fragment, { children: " | Claude-compatible \u2713" })] }))] })] }) }, model.id));
-                        }), visibleEndIndex < filteredModels.length && ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u25BC ", filteredModels.length - visibleEndIndex, " more below"] }) })), (0, jsx_runtime_1.jsxs)(ink_1.Box, { marginTop: 1, children: [(0, jsx_runtime_1.jsx)(ink_1.Text, { color: "gray", children: "\u2191\u2193 Navigate | Enter: Select Regular | t: Toggle Thinking | Space: Launch | q: Quit" }), !searchQuery && availableProviders.length > 1 && ((0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u2502 1-", availableProviders.length, ": Toggle Provider Filters | c: Clear Filters | Type to Search"] })), searchQuery && ((0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u2502 Esc: Clear Search | Backspace: Delete char | ", availableProviders.length > 1 && 'c: Clear Filters when done'] }))] })] })) : ((0, jsx_runtime_1.jsxs)(ink_1.Box, { flexDirection: "column", children: [(0, jsx_runtime_1.jsx)(ink_1.Text, { color: "yellow", children: "No models match your search." }), (0, jsx_runtime_1.jsx)(ink_1.Text, { color: "gray", children: "Try different search terms." })] }))] }) }));
+                        }), visibleEndIndex < filteredModels.length && ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u25BC ", filteredModels.length - visibleEndIndex, " more below"] }) })), (0, jsx_runtime_1.jsxs)(ink_1.Box, { marginTop: 1, children: [(0, jsx_runtime_1.jsx)(ink_1.Text, { color: "gray", children: "\u2191\u2193 Navigate | Space: Select Regular | t: Select Thinking | Enter: Launch | q: Quit" }), !searchQuery && availableProviders.length > 1 && ((0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u2502 1-", availableProviders.length, ": Toggle Provider Filters | c: Clear Filters | Type to Search"] })), searchQuery && ((0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u2502 Esc: Clear Search | Backspace: Delete char | ", availableProviders.length > 1 && 'c: Clear Filters when done'] }))] })] })) : ((0, jsx_runtime_1.jsxs)(ink_1.Box, { flexDirection: "column", children: [(0, jsx_runtime_1.jsx)(ink_1.Text, { color: "yellow", children: "No models match your search." }), (0, jsx_runtime_1.jsx)(ink_1.Text, { color: "gray", children: "Try different search terms." })] }))] }) }));
 };
 exports.ModelSelector = ModelSelector;
 //# sourceMappingURL=ModelSelector.js.map
