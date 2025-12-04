@@ -75,8 +75,51 @@ class SyntheticClaudeApp {
         }
         // Get thinking model to use (if specified)
         const thinkingModel = await this.selectThinkingModel(options.thinkingModel);
-        // Launch Claude Code
-        await this.launchClaudeCode(model, options, thinkingModel);
+        // Apply temperature presets (v1.3.0)
+        let temperature = options.temperature;
+        if (options.preset) {
+            switch (options.preset.toLowerCase()) {
+                case "creative":
+                    temperature = 1.0;
+                    break;
+                case "precise":
+                    temperature = 0.2;
+                    break;
+                case "balanced":
+                    temperature = 0.7;
+                    break;
+                default:
+                    this.ui.warning(`Unknown preset: ${options.preset}. Using default temperature.`);
+            }
+        }
+        // Load system prompt (v1.3.0)
+        let sysprompt;
+        const { content, type, size } = await this.configManager.loadSysprompt();
+        if (content) {
+            const validation = this.configManager.validateSyspromptSize(size);
+            if (!validation.valid) {
+                this.ui.error(validation.message);
+                this.ui.info("Skipping system prompt. Run 'mclaude sysprompt' to fix.");
+            }
+            else {
+                if (validation.warning) {
+                    this.ui.warning(validation.message);
+                }
+                sysprompt = content;
+            }
+        }
+        // Launch Claude Code with enhanced options
+        await this.launchClaudeCode(model, {
+            ...options,
+            temperature,
+            topP: options.topP,
+            contextSize: options.contextSize,
+            toolChoice: options.toolChoice,
+            stream: options.stream,
+            memoryCompact: options.memory === "compact",
+            jsonMode: options.jsonMode,
+            sysprompt,
+        }, thinkingModel);
     }
     /**
      * Validate provider credentials - maintains compatibility while being simpler
@@ -1620,6 +1663,158 @@ class SyntheticClaudeApp {
     async deleteCombination(name) {
         // For simplicity, just show success message
         this.ui.success(`Model combination "${name}" deleted`);
+    }
+    // ============================================
+    // Stats Command (v1.3.0)
+    // ============================================
+    async showStats(options) {
+        if (options?.reset) {
+            const confirmed = await this.ui.confirm("Are you sure you want to reset token usage statistics?", false);
+            if (confirmed) {
+                await this.configManager.resetTokenUsage();
+                this.ui.success("Token usage statistics reset successfully");
+            }
+            else {
+                this.ui.info("Reset cancelled");
+            }
+            return;
+        }
+        const usage = this.configManager.getTokenUsage();
+        const format = options?.format || "table";
+        if (format === "json") {
+            console.log(JSON.stringify(usage, null, 2));
+            return;
+        }
+        this.ui.info("Token Usage Statistics");
+        this.ui.info("======================");
+        this.ui.info(`Total Input Tokens:  ${usage.totalInputTokens.toLocaleString()}`);
+        this.ui.info(`Total Output Tokens: ${usage.totalOutputTokens.toLocaleString()}`);
+        this.ui.info(`Total Tokens:        ${(usage.totalInputTokens + usage.totalOutputTokens).toLocaleString()}`);
+        this.ui.info(`Session Tokens:      ${usage.sessionTokens.toLocaleString()}`);
+        if (usage.history.length > 0) {
+            this.ui.info("\nRecent Usage (Last 7 Days):");
+            this.ui.info("─────────────────────────────");
+            const last7Days = usage.history.slice(-7);
+            for (const entry of last7Days) {
+                const total = entry.inputTokens + entry.outputTokens;
+                this.ui.info(`${entry.date}: ${total.toLocaleString()} tokens (${entry.inputTokens.toLocaleString()} in / ${entry.outputTokens.toLocaleString()} out)`);
+            }
+        }
+        this.ui.info("\nRun 'mclaude stats --reset' to clear statistics");
+    }
+    // ============================================
+    // System Prompt Management (v1.3.0)
+    // ============================================
+    async manageSysprompt(options) {
+        // Show current sysprompt
+        if (options?.show) {
+            const { content, type, size } = await this.configManager.loadSysprompt(!options?.raw);
+            if (!content) {
+                this.ui.info("No system prompt configured");
+                this.ui.info("Run 'mclaude sysprompt' to create one");
+                return;
+            }
+            this.ui.info(`System Prompt [${type}]:`);
+            this.ui.info("─".repeat(40));
+            console.log(content);
+            this.ui.info("─".repeat(40));
+            this.ui.info(`Size: ${(size / 1024).toFixed(2)} KB`);
+            const validation = this.configManager.validateSyspromptSize(size);
+            if (validation.warning) {
+                this.ui.warning(validation.message);
+            }
+            return;
+        }
+        // Clear sysprompt
+        if (options?.clear) {
+            const scope = options?.global ? "global" : "local";
+            const confirmed = await this.ui.confirm(`Clear ${scope} system prompt?`, false);
+            if (confirmed) {
+                const success = await this.configManager.clearSysprompt(options?.global || false);
+                if (success) {
+                    this.ui.success(`${scope.charAt(0).toUpperCase() + scope.slice(1)} system prompt cleared`);
+                }
+                else {
+                    this.ui.error(`Failed to clear ${scope} system prompt`);
+                }
+            }
+            else {
+                this.ui.info("Clear cancelled");
+            }
+            return;
+        }
+        // Edit sysprompt
+        await this.editSysprompt(options?.global || false);
+    }
+    async editSysprompt(global) {
+        const scope = global ? "global" : "local";
+        const { content, type } = await this.configManager.loadSysprompt(false);
+        // Get or create template content
+        let editContent = content || this.configManager.getDefaultSyspromptTemplate();
+        // Get editor from environment
+        const editor = process.env.EDITOR || process.env.VISUAL || "nano";
+        // Create temp file for editing
+        const os = require("os");
+        const path = require("path");
+        const fs = require("fs/promises");
+        const { spawn } = require("child_process");
+        const tempFile = path.join(os.tmpdir(), `mclaude-sysprompt-${Date.now()}.md`);
+        try {
+            // Write content to temp file
+            await fs.writeFile(tempFile, editContent, "utf-8");
+            this.ui.info(`Opening ${scope} system prompt in ${editor}...`);
+            this.ui.info("Save and close the editor when finished.");
+            // Open editor
+            await new Promise((resolve, reject) => {
+                const child = spawn(editor, [tempFile], {
+                    stdio: "inherit",
+                    shell: true,
+                });
+                child.on("close", (code) => {
+                    if (code === 0) {
+                        resolve();
+                    }
+                    else {
+                        reject(new Error(`Editor exited with code ${code}`));
+                    }
+                });
+                child.on("error", (err) => {
+                    reject(err);
+                });
+            });
+            // Read edited content
+            const newContent = await fs.readFile(tempFile, "utf-8");
+            const size = Buffer.byteLength(newContent, "utf-8");
+            // Validate size
+            const validation = this.configManager.validateSyspromptSize(size);
+            if (!validation.valid) {
+                this.ui.error(validation.message);
+                return;
+            }
+            if (validation.warning) {
+                this.ui.warning(validation.message);
+            }
+            // Save content
+            const success = await this.configManager.saveSysprompt(newContent, global);
+            if (success) {
+                this.ui.success(`${scope.charAt(0).toUpperCase() + scope.slice(1)} system prompt saved (${(size / 1024).toFixed(2)} KB)`);
+            }
+            else {
+                this.ui.error("Failed to save system prompt");
+            }
+        }
+        catch (error) {
+            this.ui.error(`Failed to edit system prompt: ${error.message}`);
+        }
+        finally {
+            // Cleanup temp file
+            try {
+                await fs.unlink(tempFile);
+            }
+            catch {
+                // Ignore cleanup errors
+            }
+        }
     }
 }
 exports.SyntheticClaudeApp = SyntheticClaudeApp;

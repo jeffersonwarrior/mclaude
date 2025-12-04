@@ -23,6 +23,12 @@ export declare const SyntheticProviderConfig: z.ZodObject<{
     enabled?: boolean | undefined;
     timeout?: number | undefined;
 }>;
+export declare const ToolChoiceEnum: z.ZodEnum<["auto", "none", "required"]>;
+export type ToolChoiceType = z.infer<typeof ToolChoiceEnum>;
+export declare const PresetEnum: z.ZodEnum<["creative", "precise", "balanced"]>;
+export type PresetType = z.infer<typeof PresetEnum>;
+export declare const ResponseFormatEnum: z.ZodEnum<["text", "json_object"]>;
+export type ResponseFormatType = z.infer<typeof ResponseFormatEnum>;
 export declare const MinimaxProviderConfig: z.ZodObject<{
     apiKey: z.ZodDefault<z.ZodString>;
     groupId: z.ZodOptional<z.ZodString>;
@@ -32,6 +38,15 @@ export declare const MinimaxProviderConfig: z.ZodObject<{
     enabled: z.ZodDefault<z.ZodBoolean>;
     defaultModel: z.ZodDefault<z.ZodString>;
     timeout: z.ZodOptional<z.ZodNumber>;
+    temperature: z.ZodOptional<z.ZodNumber>;
+    topP: z.ZodOptional<z.ZodNumber>;
+    topK: z.ZodOptional<z.ZodNumber>;
+    contextSize: z.ZodOptional<z.ZodNumber>;
+    toolChoice: z.ZodOptional<z.ZodEnum<["auto", "none", "required"]>>;
+    parallelToolCalls: z.ZodDefault<z.ZodBoolean>;
+    responseFormat: z.ZodOptional<z.ZodEnum<["text", "json_object"]>>;
+    streaming: z.ZodDefault<z.ZodBoolean>;
+    memoryCompact: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     apiKey: string;
     baseUrl: string;
@@ -39,8 +54,17 @@ export declare const MinimaxProviderConfig: z.ZodObject<{
     modelsApiUrl: string;
     enabled: boolean;
     defaultModel: string;
+    parallelToolCalls: boolean;
+    streaming: boolean;
+    memoryCompact: boolean;
     timeout?: number | undefined;
     groupId?: string | undefined;
+    temperature?: number | undefined;
+    topP?: number | undefined;
+    topK?: number | undefined;
+    contextSize?: number | undefined;
+    toolChoice?: "auto" | "none" | "required" | undefined;
+    responseFormat?: "text" | "json_object" | undefined;
 }, {
     apiKey?: string | undefined;
     baseUrl?: string | undefined;
@@ -50,6 +74,15 @@ export declare const MinimaxProviderConfig: z.ZodObject<{
     timeout?: number | undefined;
     groupId?: string | undefined;
     defaultModel?: string | undefined;
+    temperature?: number | undefined;
+    topP?: number | undefined;
+    topK?: number | undefined;
+    contextSize?: number | undefined;
+    toolChoice?: "auto" | "none" | "required" | undefined;
+    parallelToolCalls?: boolean | undefined;
+    responseFormat?: "text" | "json_object" | undefined;
+    streaming?: boolean | undefined;
+    memoryCompact?: boolean | undefined;
 }>;
 export declare const LegacyAppConfigSchema: z.ZodObject<{
     apiKey: z.ZodDefault<z.ZodString>;
@@ -100,6 +133,15 @@ export declare const AppConfigSchema: z.ZodObject<{
             enabled: z.ZodDefault<z.ZodBoolean>;
             defaultModel: z.ZodDefault<z.ZodString>;
             timeout: z.ZodOptional<z.ZodNumber>;
+            temperature: z.ZodOptional<z.ZodNumber>;
+            topP: z.ZodOptional<z.ZodNumber>;
+            topK: z.ZodOptional<z.ZodNumber>;
+            contextSize: z.ZodOptional<z.ZodNumber>;
+            toolChoice: z.ZodOptional<z.ZodEnum<["auto", "none", "required"]>>;
+            parallelToolCalls: z.ZodDefault<z.ZodBoolean>;
+            responseFormat: z.ZodOptional<z.ZodEnum<["text", "json_object"]>>;
+            streaming: z.ZodDefault<z.ZodBoolean>;
+            memoryCompact: z.ZodDefault<z.ZodBoolean>;
         }, "strip", z.ZodTypeAny, {
             apiKey: string;
             baseUrl: string;
@@ -107,8 +149,17 @@ export declare const AppConfigSchema: z.ZodObject<{
             modelsApiUrl: string;
             enabled: boolean;
             defaultModel: string;
+            parallelToolCalls: boolean;
+            streaming: boolean;
+            memoryCompact: boolean;
             timeout?: number | undefined;
             groupId?: string | undefined;
+            temperature?: number | undefined;
+            topP?: number | undefined;
+            topK?: number | undefined;
+            contextSize?: number | undefined;
+            toolChoice?: "auto" | "none" | "required" | undefined;
+            responseFormat?: "text" | "json_object" | undefined;
         }, {
             apiKey?: string | undefined;
             baseUrl?: string | undefined;
@@ -118,6 +169,15 @@ export declare const AppConfigSchema: z.ZodObject<{
             timeout?: number | undefined;
             groupId?: string | undefined;
             defaultModel?: string | undefined;
+            temperature?: number | undefined;
+            topP?: number | undefined;
+            topK?: number | undefined;
+            contextSize?: number | undefined;
+            toolChoice?: "auto" | "none" | "required" | undefined;
+            parallelToolCalls?: boolean | undefined;
+            responseFormat?: "text" | "json_object" | undefined;
+            streaming?: boolean | undefined;
+            memoryCompact?: boolean | undefined;
         }>>;
     }, "strip", z.ZodTypeAny, {
         synthetic: {
@@ -135,8 +195,17 @@ export declare const AppConfigSchema: z.ZodObject<{
             modelsApiUrl: string;
             enabled: boolean;
             defaultModel: string;
+            parallelToolCalls: boolean;
+            streaming: boolean;
+            memoryCompact: boolean;
             timeout?: number | undefined;
             groupId?: string | undefined;
+            temperature?: number | undefined;
+            topP?: number | undefined;
+            topK?: number | undefined;
+            contextSize?: number | undefined;
+            toolChoice?: "auto" | "none" | "required" | undefined;
+            responseFormat?: "text" | "json_object" | undefined;
         };
     }, {
         synthetic?: {
@@ -156,6 +225,15 @@ export declare const AppConfigSchema: z.ZodObject<{
             timeout?: number | undefined;
             groupId?: string | undefined;
             defaultModel?: string | undefined;
+            temperature?: number | undefined;
+            topP?: number | undefined;
+            topK?: number | undefined;
+            contextSize?: number | undefined;
+            toolChoice?: "auto" | "none" | "required" | undefined;
+            parallelToolCalls?: boolean | undefined;
+            responseFormat?: "text" | "json_object" | undefined;
+            streaming?: boolean | undefined;
+            memoryCompact?: boolean | undefined;
         } | undefined;
     }>>;
     defaultProvider: z.ZodDefault<z.ZodEnum<["synthetic", "minimax", "auto"]>>;
@@ -163,6 +241,58 @@ export declare const AppConfigSchema: z.ZodObject<{
     selectedModel: z.ZodDefault<z.ZodString>;
     selectedThinkingModel: z.ZodDefault<z.ZodString>;
     firstRunCompleted: z.ZodDefault<z.ZodBoolean>;
+    tokenUsage: z.ZodDefault<z.ZodObject<{
+        totalInputTokens: z.ZodDefault<z.ZodNumber>;
+        totalOutputTokens: z.ZodDefault<z.ZodNumber>;
+        sessionTokens: z.ZodDefault<z.ZodNumber>;
+        lastUpdated: z.ZodOptional<z.ZodString>;
+        history: z.ZodDefault<z.ZodArray<z.ZodObject<{
+            date: z.ZodString;
+            inputTokens: z.ZodNumber;
+            outputTokens: z.ZodNumber;
+        }, "strip", z.ZodTypeAny, {
+            date: string;
+            inputTokens: number;
+            outputTokens: number;
+        }, {
+            date: string;
+            inputTokens: number;
+            outputTokens: number;
+        }>, "many">>;
+    }, "strip", z.ZodTypeAny, {
+        totalInputTokens: number;
+        totalOutputTokens: number;
+        sessionTokens: number;
+        history: {
+            date: string;
+            inputTokens: number;
+            outputTokens: number;
+        }[];
+        lastUpdated?: string | undefined;
+    }, {
+        totalInputTokens?: number | undefined;
+        totalOutputTokens?: number | undefined;
+        sessionTokens?: number | undefined;
+        lastUpdated?: string | undefined;
+        history?: {
+            date: string;
+            inputTokens: number;
+            outputTokens: number;
+        }[] | undefined;
+    }>>;
+    responseCache: z.ZodDefault<z.ZodObject<{
+        enabled: z.ZodDefault<z.ZodBoolean>;
+        ttlMinutes: z.ZodDefault<z.ZodNumber>;
+        maxEntries: z.ZodDefault<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        enabled: boolean;
+        ttlMinutes: number;
+        maxEntries: number;
+    }, {
+        enabled?: boolean | undefined;
+        ttlMinutes?: number | undefined;
+        maxEntries?: number | undefined;
+    }>>;
     envOverrides: z.ZodDefault<z.ZodObject<{
         synthetic: z.ZodOptional<z.ZodObject<{
             apiKey: z.ZodOptional<z.ZodString>;
@@ -431,8 +561,17 @@ export declare const AppConfigSchema: z.ZodObject<{
             modelsApiUrl: string;
             enabled: boolean;
             defaultModel: string;
+            parallelToolCalls: boolean;
+            streaming: boolean;
+            memoryCompact: boolean;
             timeout?: number | undefined;
             groupId?: string | undefined;
+            temperature?: number | undefined;
+            topP?: number | undefined;
+            topK?: number | undefined;
+            contextSize?: number | undefined;
+            toolChoice?: "auto" | "none" | "required" | undefined;
+            responseFormat?: "text" | "json_object" | undefined;
         };
     };
     defaultProvider: "synthetic" | "minimax" | "auto";
@@ -440,6 +579,22 @@ export declare const AppConfigSchema: z.ZodObject<{
     selectedModel: string;
     selectedThinkingModel: string;
     firstRunCompleted: boolean;
+    tokenUsage: {
+        totalInputTokens: number;
+        totalOutputTokens: number;
+        sessionTokens: number;
+        history: {
+            date: string;
+            inputTokens: number;
+            outputTokens: number;
+        }[];
+        lastUpdated?: string | undefined;
+    };
+    responseCache: {
+        enabled: boolean;
+        ttlMinutes: number;
+        maxEntries: number;
+    };
     envOverrides: {
         synthetic?: {
             apiKey?: string | undefined;
@@ -548,6 +703,15 @@ export declare const AppConfigSchema: z.ZodObject<{
             timeout?: number | undefined;
             groupId?: string | undefined;
             defaultModel?: string | undefined;
+            temperature?: number | undefined;
+            topP?: number | undefined;
+            topK?: number | undefined;
+            contextSize?: number | undefined;
+            toolChoice?: "auto" | "none" | "required" | undefined;
+            parallelToolCalls?: boolean | undefined;
+            responseFormat?: "text" | "json_object" | undefined;
+            streaming?: boolean | undefined;
+            memoryCompact?: boolean | undefined;
         } | undefined;
     } | undefined;
     defaultProvider?: "synthetic" | "minimax" | "auto" | undefined;
@@ -555,6 +719,22 @@ export declare const AppConfigSchema: z.ZodObject<{
     selectedModel?: string | undefined;
     selectedThinkingModel?: string | undefined;
     firstRunCompleted?: boolean | undefined;
+    tokenUsage?: {
+        totalInputTokens?: number | undefined;
+        totalOutputTokens?: number | undefined;
+        sessionTokens?: number | undefined;
+        lastUpdated?: string | undefined;
+        history?: {
+            date: string;
+            inputTokens: number;
+            outputTokens: number;
+        }[] | undefined;
+    } | undefined;
+    responseCache?: {
+        enabled?: boolean | undefined;
+        ttlMinutes?: number | undefined;
+        maxEntries?: number | undefined;
+    } | undefined;
     envOverrides?: {
         synthetic?: {
             apiKey?: string | undefined;

@@ -10,6 +10,15 @@ export interface LaunchOptions {
   thinkingModel?: string | null;
   provider?: ProviderType;
   modelInfo?: ModelInfoImpl;
+  // MiniMax M2 enhancements (v1.3.0)
+  temperature?: number;
+  topP?: number;
+  contextSize?: number;
+  toolChoice?: string;
+  stream?: boolean;
+  memoryCompact?: boolean;
+  jsonMode?: boolean;
+  sysprompt?: string;
 }
 
 export interface LaunchResult {
@@ -107,6 +116,11 @@ export class ClaudeLauncher {
 
       // Prepare command arguments
       const args = [...(options.additionalArgs || [])];
+
+      // Add system prompt if provided (v1.3.0)
+      if (options.sysprompt) {
+        args.push("--append-system-prompt", options.sysprompt);
+      }
 
       return new Promise((resolve) => {
         const child = spawn(this.claudePath, args, {
@@ -350,6 +364,52 @@ export class ClaudeLauncher {
         }
         // MiniMax may benefit from smaller batch sizes
         env.CLAUDE_CODE_BATCH_SIZE = "1";
+
+        // MiniMax M2 enhancements (v1.3.0)
+        // Get minimax config for default values
+        const minimaxConfig = this.configManager?.getProviderConfig("minimax");
+
+        // Temperature
+        const temperature = options.temperature ?? (minimaxConfig as any)?.temperature;
+        if (temperature !== undefined) {
+          env.CLAUDE_CODE_TEMPERATURE = String(temperature);
+        }
+
+        // Top-P
+        const topP = options.topP ?? (minimaxConfig as any)?.topP;
+        if (topP !== undefined) {
+          env.CLAUDE_CODE_TOP_P = String(topP);
+        }
+
+        // Context size (MiniMax M2 supports up to 1M tokens)
+        const contextSize = options.contextSize ?? (minimaxConfig as any)?.contextSize;
+        if (contextSize !== undefined) {
+          env.CLAUDE_CODE_CONTEXT_SIZE = String(contextSize);
+        }
+
+        // Tool choice
+        const toolChoice = options.toolChoice ?? (minimaxConfig as any)?.toolChoice;
+        if (toolChoice !== undefined) {
+          env.CLAUDE_CODE_TOOL_CHOICE = toolChoice;
+        }
+
+        // Parallel tool calls (default true for MiniMax M2)
+        const parallelToolCalls = (minimaxConfig as any)?.parallelToolCalls ?? true;
+        if (parallelToolCalls) {
+          env.CLAUDE_CODE_PARALLEL_TOOL_CALLS = "1";
+        }
+
+        // Response format (JSON mode)
+        const responseFormat = options.jsonMode ? "json_object" : (minimaxConfig as any)?.responseFormat;
+        if (responseFormat === "json_object") {
+          env.CLAUDE_CODE_RESPONSE_FORMAT = "json_object";
+        }
+
+        // Memory compact mode
+        const memoryCompact = options.memoryCompact ?? (minimaxConfig as any)?.memoryCompact;
+        if (memoryCompact) {
+          env.CLAUDE_CODE_MEMORY_COMPACT = "1";
+        }
         break;
 
       case "synthetic":
@@ -359,7 +419,13 @@ export class ClaudeLauncher {
     }
 
     // Common optimizations
-    env.CLAUDE_CODE_ENABLE_STREAMING = "1";
+    // Streaming (can be disabled with --no-stream)
+    if (options.stream === false) {
+      env.CLAUDE_CODE_ENABLE_STREAMING = "0";
+    } else {
+      env.CLAUDE_CODE_ENABLE_STREAMING = "1";
+    }
+
     env.CLAUDE_CODE_ENABLE_THINKING = options.thinkingModel ? "1" : "0";
   }
 

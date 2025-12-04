@@ -584,6 +584,9 @@ export class ConfigManager {
             modelsApiUrl: envManager.getApiUrl("minimax", "openai"),
             enabled: true,
             defaultModel: envManager.getDefaultModel("minimax"),
+            parallelToolCalls: true,
+            streaming: true,
+            memoryCompact: false,
           },
         },
         defaultProvider: "synthetic", // Preserve existing behavior
@@ -592,6 +595,17 @@ export class ConfigManager {
         selectedThinkingModel: legacyConfig.selectedThinkingModel || "",
         firstRunCompleted: legacyConfig.firstRunCompleted || false,
         envOverrides: {},
+        tokenUsage: {
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          sessionTokens: 0,
+          history: [],
+        },
+        responseCache: {
+          enabled: false,
+          ttlMinutes: 60,
+          maxEntries: 100,
+        },
         configVersion: 2,
       };
 
@@ -1083,8 +1097,260 @@ export class ConfigManager {
           modelsApiUrl: 'https://api.minimax.io/v1/models',
           enabled: false,
           defaultModel: '',
-          groupId: ''
+          groupId: '',
+          parallelToolCalls: true,
+          streaming: true,
+          memoryCompact: false,
         }
+      }
+    });
+  }
+
+  // ============================================
+  // System Prompt Management (v1.3.0)
+  // ============================================
+
+  private getSyspromptPaths(): { global: string; local: string | null } {
+    const globalPath = join(this.globalConfigDir, "sysprompt.md");
+    const localPath = this.localProjectDir ? join(this.localProjectDir, "sysprompt.md") : null;
+    return { global: globalPath, local: localPath };
+  }
+
+  /**
+   * Get the active system prompt path (local overrides global)
+   */
+  getActiveSyspromptPath(): { path: string | null; type: 'local' | 'global' | null } {
+    const paths = this.getSyspromptPaths();
+
+    // Check local first (higher priority)
+    if (paths.local && existsSync(paths.local)) {
+      return { path: paths.local, type: 'local' };
+    }
+
+    // Fall back to global
+    if (existsSync(paths.global)) {
+      return { path: paths.global, type: 'global' };
+    }
+
+    return { path: null, type: null };
+  }
+
+  /**
+   * Load and resolve system prompt with template variables
+   */
+  async loadSysprompt(resolveVariables: boolean = true): Promise<{ content: string | null; type: 'local' | 'global' | null; size: number }> {
+    const { path, type } = this.getActiveSyspromptPath();
+
+    if (!path) {
+      return { content: null, type: null, size: 0 };
+    }
+
+    try {
+      const fs = require("fs");
+      const rawContent = fs.readFileSync(path, "utf-8");
+      const size = Buffer.byteLength(rawContent, 'utf-8');
+
+      if (!resolveVariables) {
+        return { content: rawContent, type, size };
+      }
+
+      const resolvedContent = this.resolveSyspromptVariables(rawContent);
+      return { content: resolvedContent, type, size };
+    } catch (error) {
+      console.warn(`Failed to load system prompt from ${path}:`, error);
+      return { content: null, type: null, size: 0 };
+    }
+  }
+
+  /**
+   * Resolve template variables in system prompt
+   */
+  private resolveSyspromptVariables(content: string): string {
+    const config = this.config;
+    const os = require("os");
+    const path = require("path");
+
+    // Get project name from package.json or folder name
+    let projectName = path.basename(process.cwd());
+    try {
+      const packageJsonPath = join(process.cwd(), "package.json");
+      if (existsSync(packageJsonPath)) {
+        const packageJson = JSON.parse(require("fs").readFileSync(packageJsonPath, "utf-8"));
+        projectName = packageJson.name || projectName;
+      }
+    } catch {
+      // Use folder name as fallback
+    }
+
+    const variables: Record<string, string> = {
+      "{{model}}": config.selectedModel || "not selected",
+      "{{provider}}": config.defaultProvider || "auto",
+      "{{date}}": new Date().toISOString().split("T")[0] || new Date().toISOString().substring(0, 10),
+      "{{time}}": new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" }),
+      "{{cwd}}": process.cwd(),
+      "{{project}}": projectName,
+      "{{user}}": os.userInfo().username,
+      "{{os}}": process.platform,
+    };
+
+    let resolved = content;
+    for (const [variable, value] of Object.entries(variables)) {
+      resolved = resolved.replace(new RegExp(variable.replace(/[{}]/g, "\\$&"), "g"), value);
+    }
+
+    return resolved;
+  }
+
+  /**
+   * Validate system prompt size
+   */
+  validateSyspromptSize(size: number): { valid: boolean; warning: boolean; message: string } {
+    const WARN_SIZE = 4 * 1024; // 4KB
+    const ERROR_SIZE = 8 * 1024; // 8KB
+
+    if (size > ERROR_SIZE) {
+      return { valid: false, warning: false, message: `System prompt exceeds 8KB limit (${(size / 1024).toFixed(1)}KB)` };
+    }
+
+    if (size > WARN_SIZE) {
+      return { valid: true, warning: true, message: `System prompt is large (${(size / 1024).toFixed(1)}KB). Consider reducing size.` };
+    }
+
+    return { valid: true, warning: false, message: "" };
+  }
+
+  /**
+   * Save system prompt content
+   */
+  async saveSysprompt(content: string, global: boolean = false): Promise<boolean> {
+    const paths = this.getSyspromptPaths();
+    const targetPath = global ? paths.global : (paths.local || paths.global);
+
+    try {
+      const fs = require("fs/promises");
+      const fsSync = require("fs");
+      const dir = require("path").dirname(targetPath);
+
+      // Ensure directory exists
+      if (!fsSync.existsSync(dir)) {
+        await fs.mkdir(dir, { recursive: true });
+      }
+
+      await fs.writeFile(targetPath, content, "utf-8");
+      return true;
+    } catch (error) {
+      console.error(`Failed to save system prompt to ${targetPath}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Clear system prompt
+   */
+  async clearSysprompt(global: boolean = false): Promise<boolean> {
+    const paths = this.getSyspromptPaths();
+    const targetPath = global ? paths.global : paths.local;
+
+    if (!targetPath) {
+      return false;
+    }
+
+    try {
+      const fs = require("fs/promises");
+      const fsSync = require("fs");
+
+      if (fsSync.existsSync(targetPath)) {
+        await fs.unlink(targetPath);
+      }
+      return true;
+    } catch (error) {
+      console.error(`Failed to clear system prompt at ${targetPath}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Get default system prompt template
+   */
+  getDefaultSyspromptTemplate(): string {
+    return `# MClaude System Prompt
+# Available variables:
+# {{model}}     - Current model ID (e.g., minimax-m2)
+# {{provider}}  - Provider name (minimax, synthetic)
+# {{date}}      - Current date (YYYY-MM-DD)
+# {{time}}      - Current time (HH:MM)
+# {{cwd}}       - Current working directory
+# {{project}}   - Project name from package.json or folder name
+# {{user}}      - System username
+# {{os}}        - Operating system (linux, darwin, win32)
+
+# Your custom instructions below:
+
+`;
+  }
+
+  // ============================================
+  // Token Usage Tracking (v1.3.0)
+  // ============================================
+
+  /**
+   * Get current token usage statistics
+   */
+  getTokenUsage(): { totalInputTokens: number; totalOutputTokens: number; sessionTokens: number; history: any[] } {
+    const config = this.config;
+    return {
+      totalInputTokens: config.tokenUsage?.totalInputTokens || 0,
+      totalOutputTokens: config.tokenUsage?.totalOutputTokens || 0,
+      sessionTokens: config.tokenUsage?.sessionTokens || 0,
+      history: config.tokenUsage?.history || [],
+    };
+  }
+
+  /**
+   * Update token usage
+   */
+  async updateTokenUsage(inputTokens: number, outputTokens: number): Promise<boolean> {
+    const currentUsage = this.getTokenUsage();
+    const today = new Date().toISOString().split("T")[0];
+
+    // Update or create today's entry in history
+    const history = [...currentUsage.history];
+    const todayIndex = history.findIndex(h => h.date === today);
+
+    if (todayIndex >= 0) {
+      history[todayIndex].inputTokens += inputTokens;
+      history[todayIndex].outputTokens += outputTokens;
+    } else {
+      history.push({ date: today, inputTokens, outputTokens });
+    }
+
+    // Keep only last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const filteredHistory = history.filter(h => new Date(h.date) >= thirtyDaysAgo);
+
+    return this.updateConfig({
+      tokenUsage: {
+        totalInputTokens: currentUsage.totalInputTokens + inputTokens,
+        totalOutputTokens: currentUsage.totalOutputTokens + outputTokens,
+        sessionTokens: currentUsage.sessionTokens + inputTokens + outputTokens,
+        lastUpdated: new Date().toISOString(),
+        history: filteredHistory,
+      }
+    });
+  }
+
+  /**
+   * Reset token usage statistics
+   */
+  async resetTokenUsage(): Promise<boolean> {
+    return this.updateConfig({
+      tokenUsage: {
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        sessionTokens: 0,
+        lastUpdated: new Date().toISOString(),
+        history: [],
       }
     });
   }

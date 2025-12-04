@@ -26,6 +26,18 @@ export const SyntheticProviderConfig = z.object({
   timeout: z.number().optional().describe("Request timeout in milliseconds"),
 });
 
+// Tool choice enum for MiniMax and other providers
+export const ToolChoiceEnum = z.enum(["auto", "none", "required"]);
+export type ToolChoiceType = z.infer<typeof ToolChoiceEnum>;
+
+// Preset enum for temperature/sampling presets
+export const PresetEnum = z.enum(["creative", "precise", "balanced"]);
+export type PresetType = z.infer<typeof PresetEnum>;
+
+// Response format enum for structured output
+export const ResponseFormatEnum = z.enum(["text", "json_object"]);
+export type ResponseFormatType = z.infer<typeof ResponseFormatEnum>;
+
 export const MinimaxProviderConfig = z.object({
   apiKey: z.string().default("").describe("MiniMax API key"),
   groupId: z.string().optional().describe("MiniMax Group ID"),
@@ -50,6 +62,16 @@ export const MinimaxProviderConfig = z.object({
     .default("MiniMax-M2")
     .describe("Default MiniMax model"),
   timeout: z.number().optional().describe("Request timeout in milliseconds"),
+  // MiniMax M2 specific options
+  temperature: z.number().min(0).max(2).optional().describe("Sampling temperature (0.0-2.0)"),
+  topP: z.number().min(0).max(1).optional().describe("Top-p sampling parameter (0.0-1.0)"),
+  topK: z.number().min(1).optional().describe("Top-k sampling parameter"),
+  contextSize: z.number().min(1).max(1000000).optional().describe("Context window size (up to 1M for MiniMax M2)"),
+  toolChoice: ToolChoiceEnum.optional().describe("Tool choice mode: auto, none, or required"),
+  parallelToolCalls: z.boolean().default(true).describe("Enable parallel tool execution"),
+  responseFormat: ResponseFormatEnum.optional().describe("Response format: text or json_object for structured output"),
+  streaming: z.boolean().default(true).describe("Enable streaming responses"),
+  memoryCompact: z.boolean().default(false).describe("Enable memory compaction for long conversations"),
 });
 
 // Legacy configuration schema for backward compatibility
@@ -97,6 +119,35 @@ export const AppConfigSchema = z.object({
     .boolean()
     .default(false)
     .describe("Whether first-time setup has been completed"),
+  // Token usage tracking
+  tokenUsage: z
+    .object({
+      totalInputTokens: z.number().default(0).describe("Total input tokens used"),
+      totalOutputTokens: z.number().default(0).describe("Total output tokens used"),
+      sessionTokens: z.number().default(0).describe("Tokens used in current session"),
+      lastUpdated: z.string().optional().describe("Last usage update timestamp"),
+      history: z
+        .array(
+          z.object({
+            date: z.string().describe("Usage date"),
+            inputTokens: z.number().describe("Input tokens for this period"),
+            outputTokens: z.number().describe("Output tokens for this period"),
+          })
+        )
+        .default([])
+        .describe("Historical token usage"),
+    })
+    .default({})
+    .describe("Token usage tracking"),
+  // Response caching configuration
+  responseCache: z
+    .object({
+      enabled: z.boolean().default(false).describe("Enable response caching"),
+      ttlMinutes: z.number().min(1).max(1440).default(60).describe("Cache TTL in minutes"),
+      maxEntries: z.number().min(1).max(1000).default(100).describe("Maximum cached entries"),
+    })
+    .default({})
+    .describe("Response caching configuration"),
   // Environment variable overrides
   envOverrides: z
     .object({

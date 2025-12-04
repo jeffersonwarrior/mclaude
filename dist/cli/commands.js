@@ -20,6 +20,15 @@ function createProgram() {
         .option("-t, --thinking-model <model>", "Use specific thinking model (for Claude thinking mode)")
         .option("-v, --verbose", "Enable verbose logging")
         .option("-q, --quiet", "Suppress non-error output")
+        // MiniMax M2 enhancements
+        .option("--temperature <value>", "Sampling temperature (0.0-2.0)")
+        .option("--top-p <value>", "Top-p sampling parameter (0.0-1.0)")
+        .option("--preset <preset>", "Temperature preset: creative, precise, balanced")
+        .option("--context-size <size>", "Context window size (up to 1M for MiniMax M2)")
+        .option("--tool-choice <mode>", "Tool choice mode: auto, none, required")
+        .option("--no-stream", "Disable streaming responses")
+        .option("--memory <mode>", "Memory mode: compact")
+        .option("--json-mode", "Enable JSON structured output mode")
         .allowUnknownOption(true)
         .passThroughOptions(true);
     // Main command (launch Claude Code)
@@ -34,6 +43,14 @@ function createProgram() {
             "--quiet",
             "--help",
             "--version",
+            "--temperature",
+            "--top-p",
+            "--preset",
+            "--context-size",
+            "--tool-choice",
+            "--no-stream",
+            "--memory",
+            "--json-mode",
             "-m",
             "-t",
             "-v",
@@ -73,7 +90,7 @@ function createProgram() {
                 return;
             }
             // Check if this looks like an invalid command (not a subcommand we know about)
-            const isKnownSubcommand = ['model', 'thinking-model', 'providers', 'models', 'search', 'config', 'setup', 'doctor', 'dangerously', 'dangerous', 'danger', 'cache', 'combination', 'list', 'info', 'clear-cache', 'enable', 'disable', 'status', 'test', 'show', 'set', 'provider', 'init', 'local', 'global', 'migrate', 'whoami', 'reset', 'set-default-provider', 'save', 'delete'].includes(potentialCommand);
+            const isKnownSubcommand = ['model', 'thinking-model', 'providers', 'models', 'search', 'config', 'setup', 'doctor', 'dangerously', 'dangerous', 'danger', 'cache', 'combination', 'list', 'info', 'clear-cache', 'enable', 'disable', 'status', 'test', 'show', 'set', 'provider', 'init', 'local', 'global', 'migrate', 'whoami', 'reset', 'set-default-provider', 'save', 'delete', 'stats', 'sysprompt', 'auth'].includes(potentialCommand);
             if (!isKnownSubcommand) {
                 console.error(`Unknown command: ${potentialCommand}`);
                 console.log('\nShowing available commands:');
@@ -460,6 +477,29 @@ function createProgram() {
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
         await app.authStatus(options);
+    });
+    // Stats command - Token usage tracking
+    program
+        .command("stats")
+        .description("Show token usage statistics")
+        .option("--reset", "Reset token usage statistics")
+        .option("--format <format>", "Output format (table, json)", "table")
+        .action(async (options) => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.showStats(options);
+    });
+    // System prompt management command
+    const syspromptCmd = program
+        .command("sysprompt")
+        .description("Manage custom system prompts for Claude Code");
+    syspromptCmd
+        .option("--global", "Edit global system prompt (~/.config/mclaude/sysprompt.md)")
+        .option("--show", "Display current active system prompt (with variables resolved)")
+        .option("--clear", "Remove system prompt (revert to Claude default)")
+        .option("--raw", "Show raw system prompt without resolving variables")
+        .action(async (options) => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.manageSysprompt(options);
     });
     // Help commands are handled in the main action
     // This prevents double registration and cleaner handling

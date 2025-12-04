@@ -4,6 +4,14 @@ export interface AppOptions {
     quiet?: boolean;
     additionalArgs?: string[];
     thinkingModel?: string;
+    temperature?: number;
+    topP?: number;
+    preset?: string;
+    contextSize?: number;
+    toolChoice?: string;
+    stream?: boolean;
+    memory?: string;
+    jsonMode?: boolean;
 }
 export declare class SyntheticClaudeApp {
     private configManager;
@@ -29,8 +37,17 @@ export declare class SyntheticClaudeApp {
                 modelsApiUrl: string;
                 enabled: boolean;
                 defaultModel: string;
+                parallelToolCalls: boolean;
+                streaming: boolean;
+                memoryCompact: boolean;
                 timeout?: number | undefined;
                 groupId?: string | undefined;
+                temperature?: number | undefined;
+                topP?: number | undefined;
+                topK?: number | undefined;
+                contextSize?: number | undefined;
+                toolChoice?: "auto" | "none" | "required" | undefined;
+                responseFormat?: "text" | "json_object" | undefined;
             };
         };
         defaultProvider: "synthetic" | "minimax" | "auto";
@@ -38,6 +55,22 @@ export declare class SyntheticClaudeApp {
         selectedModel: string;
         selectedThinkingModel: string;
         firstRunCompleted: boolean;
+        tokenUsage: {
+            totalInputTokens: number;
+            totalOutputTokens: number;
+            sessionTokens: number;
+            history: {
+                date: string;
+                inputTokens: number;
+                outputTokens: number;
+            }[];
+            lastUpdated?: string | undefined;
+        };
+        responseCache: {
+            enabled: boolean;
+            ttlMinutes: number;
+            maxEntries: number;
+        };
         envOverrides: {
             synthetic?: {
                 apiKey?: string | undefined;
@@ -286,5 +319,16 @@ export declare class SyntheticClaudeApp {
     listCombinations(): Promise<void>;
     saveCombination(name: string, model: string, thinkingModel?: string): Promise<void>;
     deleteCombination(name: string): Promise<void>;
+    showStats(options?: {
+        reset?: boolean;
+        format?: string;
+    }): Promise<void>;
+    manageSysprompt(options?: {
+        global?: boolean;
+        show?: boolean;
+        clear?: boolean;
+        raw?: boolean;
+    }): Promise<void>;
+    private editSysprompt;
 }
 //# sourceMappingURL=app.d.ts.map

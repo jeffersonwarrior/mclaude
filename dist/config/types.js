@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ConfigSaveError = exports.ConfigLoadError = exports.ConfigValidationError = exports.AppConfigSchema = exports.LegacyAppConfigSchema = exports.MinimaxProviderConfig = exports.SyntheticProviderConfig = exports.ProviderEnum = void 0;
+exports.ConfigSaveError = exports.ConfigLoadError = exports.ConfigValidationError = exports.AppConfigSchema = exports.LegacyAppConfigSchema = exports.MinimaxProviderConfig = exports.ResponseFormatEnum = exports.PresetEnum = exports.ToolChoiceEnum = exports.SyntheticProviderConfig = exports.ProviderEnum = void 0;
 const zod_1 = require("zod");
 // Provider enumeration
 exports.ProviderEnum = zod_1.z.enum(["synthetic", "minimax", "auto"]);
@@ -25,6 +25,12 @@ exports.SyntheticProviderConfig = zod_1.z.object({
         .describe("Whether synthetic provider is enabled"),
     timeout: zod_1.z.number().optional().describe("Request timeout in milliseconds"),
 });
+// Tool choice enum for MiniMax and other providers
+exports.ToolChoiceEnum = zod_1.z.enum(["auto", "none", "required"]);
+// Preset enum for temperature/sampling presets
+exports.PresetEnum = zod_1.z.enum(["creative", "precise", "balanced"]);
+// Response format enum for structured output
+exports.ResponseFormatEnum = zod_1.z.enum(["text", "json_object"]);
 exports.MinimaxProviderConfig = zod_1.z.object({
     apiKey: zod_1.z.string().default("").describe("MiniMax API key"),
     groupId: zod_1.z.string().optional().describe("MiniMax Group ID"),
@@ -49,6 +55,16 @@ exports.MinimaxProviderConfig = zod_1.z.object({
         .default("MiniMax-M2")
         .describe("Default MiniMax model"),
     timeout: zod_1.z.number().optional().describe("Request timeout in milliseconds"),
+    // MiniMax M2 specific options
+    temperature: zod_1.z.number().min(0).max(2).optional().describe("Sampling temperature (0.0-2.0)"),
+    topP: zod_1.z.number().min(0).max(1).optional().describe("Top-p sampling parameter (0.0-1.0)"),
+    topK: zod_1.z.number().min(1).optional().describe("Top-k sampling parameter"),
+    contextSize: zod_1.z.number().min(1).max(1000000).optional().describe("Context window size (up to 1M for MiniMax M2)"),
+    toolChoice: exports.ToolChoiceEnum.optional().describe("Tool choice mode: auto, none, or required"),
+    parallelToolCalls: zod_1.z.boolean().default(true).describe("Enable parallel tool execution"),
+    responseFormat: exports.ResponseFormatEnum.optional().describe("Response format: text or json_object for structured output"),
+    streaming: zod_1.z.boolean().default(true).describe("Enable streaming responses"),
+    memoryCompact: zod_1.z.boolean().default(false).describe("Enable memory compaction for long conversations"),
 });
 // Legacy configuration schema for backward compatibility
 exports.LegacyAppConfigSchema = zod_1.z.object({
@@ -92,6 +108,33 @@ exports.AppConfigSchema = zod_1.z.object({
         .boolean()
         .default(false)
         .describe("Whether first-time setup has been completed"),
+    // Token usage tracking
+    tokenUsage: zod_1.z
+        .object({
+        totalInputTokens: zod_1.z.number().default(0).describe("Total input tokens used"),
+        totalOutputTokens: zod_1.z.number().default(0).describe("Total output tokens used"),
+        sessionTokens: zod_1.z.number().default(0).describe("Tokens used in current session"),
+        lastUpdated: zod_1.z.string().optional().describe("Last usage update timestamp"),
+        history: zod_1.z
+            .array(zod_1.z.object({
+            date: zod_1.z.string().describe("Usage date"),
+            inputTokens: zod_1.z.number().describe("Input tokens for this period"),
+            outputTokens: zod_1.z.number().describe("Output tokens for this period"),
+        }))
+            .default([])
+            .describe("Historical token usage"),
+    })
+        .default({})
+        .describe("Token usage tracking"),
+    // Response caching configuration
+    responseCache: zod_1.z
+        .object({
+        enabled: zod_1.z.boolean().default(false).describe("Enable response caching"),
+        ttlMinutes: zod_1.z.number().min(1).max(1440).default(60).describe("Cache TTL in minutes"),
+        maxEntries: zod_1.z.number().min(1).max(1000).default(100).describe("Maximum cached entries"),
+    })
+        .default({})
+        .describe("Response caching configuration"),
     // Environment variable overrides
     envOverrides: zod_1.z
         .object({

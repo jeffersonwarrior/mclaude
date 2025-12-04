@@ -8,6 +8,14 @@ export interface LaunchOptions {
     thinkingModel?: string | null;
     provider?: ProviderType;
     modelInfo?: ModelInfoImpl;
+    temperature?: number;
+    topP?: number;
+    contextSize?: number;
+    toolChoice?: string;
+    stream?: boolean;
+    memoryCompact?: boolean;
+    jsonMode?: boolean;
+    sysprompt?: string;
 }
 export interface LaunchResult {
     success: boolean;

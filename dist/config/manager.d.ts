@@ -131,5 +131,62 @@ export declare class ConfigManager {
     hasProviderApiKey(provider: string): boolean;
     getModelCombinations(): any[];
     resetConfig(): Promise<void>;
+    private getSyspromptPaths;
+    /**
+     * Get the active system prompt path (local overrides global)
+     */
+    getActiveSyspromptPath(): {
+        path: string | null;
+        type: 'local' | 'global' | null;
+    };
+    /**
+     * Load and resolve system prompt with template variables
+     */
+    loadSysprompt(resolveVariables?: boolean): Promise<{
+        content: string | null;
+        type: 'local' | 'global' | null;
+        size: number;
+    }>;
+    /**
+     * Resolve template variables in system prompt
+     */
+    private resolveSyspromptVariables;
+    /**
+     * Validate system prompt size
+     */
+    validateSyspromptSize(size: number): {
+        valid: boolean;
+        warning: boolean;
+        message: string;
+    };
+    /**
+     * Save system prompt content
+     */
+    saveSysprompt(content: string, global?: boolean): Promise<boolean>;
+    /**
+     * Clear system prompt
+     */
+    clearSysprompt(global?: boolean): Promise<boolean>;
+    /**
+     * Get default system prompt template
+     */
+    getDefaultSyspromptTemplate(): string;
+    /**
+     * Get current token usage statistics
+     */
+    getTokenUsage(): {
+        totalInputTokens: number;
+        totalOutputTokens: number;
+        sessionTokens: number;
+        history: any[];
+    };
+    /**
+     * Update token usage
+     */
+    updateTokenUsage(inputTokens: number, outputTokens: number): Promise<boolean>;
+    /**
+     * Reset token usage statistics
+     */
+    resetTokenUsage(): Promise<boolean>;
 }
 //# sourceMappingURL=manager.d.ts.map

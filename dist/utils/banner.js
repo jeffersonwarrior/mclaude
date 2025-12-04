@@ -50,6 +50,13 @@ function createBanner(options = {}) {
     if (options.verbose) {
         activeOptions.push("Verbose");
     }
+    // Check for system prompt
+    const syspromptInfo = configManager.getActiveSyspromptPath();
+    let syspromptDisplay = "None";
+    if (syspromptInfo.type) {
+        syspromptDisplay = syspromptInfo.type;
+        activeOptions.push(`sysprompt: ${syspromptInfo.type}`);
+    }
     const defaultModel = config.selectedModel || "None";
     const thinkingModel = config.selectedThinkingModel || "None";
     const optionsStr = activeOptions.length > 0 ? activeOptions.join(", ") : "None";
