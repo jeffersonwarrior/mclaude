@@ -54,12 +54,9 @@ export class CCRConfigGenerator {
         if (syntheticApiKey) {
           providers.push({
             name: "synthetic",
-            api_base_url: config.providers.synthetic.anthropicBaseUrl || "https://api.synthetic.new/anthropic/v1/messages",
+            api_base_url: "https://api.synthetic.new/openai/v1/chat/completions",
             api_key: `$${this.getEnvVarName("synthetic", "apiKey")}`,
             models: this.getSyntheticModels(),
-            transformer: {
-              use: ["anthropic"],
-            },
           });
         }
       }
@@ -70,12 +67,9 @@ export class CCRConfigGenerator {
         if (minimaxApiKey) {
           providers.push({
             name: "minimax",
-            api_base_url: config.providers.minimax.anthropicBaseUrl || "https://api.minimax.chat/v1/text/chatcompletion_v2",
+            api_base_url: "https://api.minimax.chat/v1/chat/completions",
             api_key: `$${this.getEnvVarName("minimax", "apiKey")}`,
             models: this.getMinimaxModels(),
-            transformer: {
-              use: ["anthropic"],
-            },
           });
         }
       }
