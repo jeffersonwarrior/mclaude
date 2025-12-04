@@ -120,7 +120,7 @@ const MinimalArrowSelector = ({ models, onSelect, onCancel }) => {
                     setSelectedRegularModel(selectedModel);
                 }
                 else {
-                    onSelect(selectedModel, selectedThinkingModel);
+                    onSelect(selectedRegularModel, selectedThinkingModel);
                     exit();
                 }
             }

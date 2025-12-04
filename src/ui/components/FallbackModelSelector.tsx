@@ -190,7 +190,7 @@ export const MinimalArrowSelector: React.FC<FallbackModelSelectorProps> = ({
         if (!selectedRegularModel) {
           setSelectedRegularModel(selectedModel);
         } else {
-          onSelect(selectedModel, selectedThinkingModel);
+          onSelect(selectedRegularModel, selectedThinkingModel);
           exit();
         }
       }
