@@ -195,7 +195,13 @@ function createProgram() {
         await app.testProvider(provider);
     });
     // Models command group
-    const modelsCmd = program.command("models").description("List available models");
+    const modelsCmd = program.command("models")
+        .description("List available models")
+        .option("--refresh", "Force refresh model cache")
+        .action(async (options) => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.listModels(options);
+    });
     modelsCmd
         .command("list")
         .description("List available models")
