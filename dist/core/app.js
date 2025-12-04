@@ -2078,12 +2078,14 @@ class SyntheticClaudeApp {
     async routerConfig() {
         this.ui.info("Generating CCR configuration...");
         const configGenerated = await this.ccrManager.generateConfig();
-        if (!configGenerated) {
-            this.ui.error("Failed to generate CCR configuration");
-            return;
+        if (configGenerated) {
+            this.ui.success("✓ CCR Configuration generated");
+            this.ui.info(`Config location: ${this.ccrConfigGenerator.getConfigPath()}`);
         }
-        this.ui.success("CCR configuration generated");
-        this.ui.info(`Config location: ${this.ccrConfigGenerator.getConfigPath()}`);
+        else {
+            this.ui.info("CCR configuration is up to date (no changes needed)");
+            this.ui.info(`Config location: ${this.ccrConfigGenerator.getConfigPath()}`);
+        }
         // Show the config
         const config = await this.ccrConfigGenerator.readConfig();
         if (config) {
