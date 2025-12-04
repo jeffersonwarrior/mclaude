@@ -59,17 +59,25 @@ export class CCRManager {
   /**
    * Generate CCR configuration from mclaude config
    * Returns true if config was generated/changed
+   * Throws error only on actual failure, returns false when config hasn't changed
    */
   async generateConfig(): Promise<boolean> {
     try {
       const oldHash = this.getConfigHash();
+      console.debug("Generating CCR config, old hash:", oldHash);
       await this.configGenerator.generateConfig();
       const newHash = this.getConfigHash();
+      console.debug("New config hash:", newHash);
       this.lastConfigHash = newHash;
-      return oldHash !== newHash;
+      const changed = oldHash !== newHash;
+      console.debug("Config changed:", changed);
+      return changed;
     } catch (error) {
       console.error("Failed to generate CCR configuration:", error);
-      return false;
+      console.error("Error stack:", error.stack);
+      // Only re-throw if it's not a "no change" situation
+      // In practice, this means always re-throw since we only get here on actual errors
+      throw error;
     }
   }
 
@@ -85,11 +93,8 @@ export class CCRManager {
         return true;
       }
 
-      // Generate config before starting
-      const configGenerated = await this.generateConfig();
-      if (!configGenerated) {
-        throw new Error("Failed to generate CCR configuration");
-      }
+      // Generate config before starting (throws on error)
+      await this.generateConfig();
 
       console.info("Starting Claude Code Router...");
 
@@ -262,6 +267,7 @@ export class CCRManager {
       return await this.start();
     } catch (error) {
       console.error("Failed to ensure CCR is running:", error);
+      console.error("Stack trace:", error.stack);
       return false;
     }
   }
