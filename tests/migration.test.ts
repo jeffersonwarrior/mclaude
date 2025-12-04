@@ -7,9 +7,14 @@ import { tmpdir } from 'os';
 describe('Configuration Migration and Backward Compatibility', () => {
   let tempDir: string;
   let originalEnv: typeof process.env;
+  let originalCwd: string;
 
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), 'mclaude-migration-test-'));
+    originalCwd = process.cwd();
+
+    // Change to temp directory to avoid picking up local .mclaude config
+    process.chdir(tempDir);
 
     // Clear environment variables to avoid contamination
     originalEnv = { ...process.env };
@@ -26,6 +31,9 @@ describe('Configuration Migration and Backward Compatibility', () => {
   });
 
   afterEach(async () => {
+    // Restore working directory
+    process.chdir(originalCwd);
+
     try {
       await rm(tempDir, { recursive: true, force: true });
     } catch (error) {

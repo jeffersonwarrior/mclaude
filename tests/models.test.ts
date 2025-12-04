@@ -123,9 +123,15 @@ describe('ModelManager', () => {
   let configManager: ConfigManager;
   let tempDir: string;
   let mockMiniMaxClient: jest.Mocked<MiniMaxClient>;
+  let originalCwd: string;
 
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), 'mclaude-model-test-'));
+    originalCwd = process.cwd();
+
+    // Change to temp directory to avoid picking up local .mclaude config
+    process.chdir(tempDir);
+
     configManager = new ConfigManager(join(tempDir, '.config', 'mclaude'));
 
     // Set up API keys for testing
@@ -151,6 +157,9 @@ describe('ModelManager', () => {
   });
 
   afterEach(async () => {
+    // Restore working directory
+    process.chdir(originalCwd);
+
     try {
       await rm(tempDir, { recursive: true, force: true });
     } catch (error) {
