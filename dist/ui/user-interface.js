@@ -133,7 +133,7 @@ class UserInterface {
         });
     }
     // Interactive dual model selection using Ink
-    async selectDualModels(models, authenticationError) {
+    async selectDualModels(models, authenticationError, onSelectSubagent, onSelectFast) {
         if (models.length === 0 && !authenticationError) {
             this.error('No models available for selection');
             return { regular: null, thinking: null };
@@ -153,7 +153,7 @@ class UserInterface {
             }
         };
         return new Promise(resolve => {
-            const { waitUntilExit } = (0, ink_1.render)((0, jsx_runtime_1.jsx)(RobustModelSelector_1.RobustModelSelector, { models: models, authenticationError: authenticationError, providerStatus: providerStatusWithTimestamp, onSelect: (regularModel, thinkingModel) => {
+            const { waitUntilExit } = (0, ink_1.render)((0, jsx_runtime_1.jsx)(RobustModelSelector_1.RobustModelSelector, { models: models, authenticationError: authenticationError, providerStatus: providerStatusWithTimestamp, onSelectSubagent: onSelectSubagent, onSelectFast: onSelectFast, onSelect: (regularModel, thinkingModel) => {
                     if (regularModel || thinkingModel) {
                         if (regularModel)
                             this.success(`Regular model: ${regularModel.getDisplayName()}`);

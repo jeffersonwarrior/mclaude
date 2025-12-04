@@ -21,7 +21,7 @@ export declare class UserInterface {
     debug(message: string, ...args: any[]): void;
     showModelList(models: ModelInfoImpl[], selectedIndex?: number): void;
     selectModel(models: ModelInfoImpl[]): Promise<ModelInfoImpl | null>;
-    selectDualModels(models: ModelInfoImpl[], authenticationError?: string | null): Promise<{
+    selectDualModels(models: ModelInfoImpl[], authenticationError?: string | null, onSelectSubagent?: (model: ModelInfoImpl | null) => void, onSelectFast?: (model: ModelInfoImpl | null) => void): Promise<{
         regular: ModelInfoImpl | null;
         thinking: ModelInfoImpl | null;
     }>;

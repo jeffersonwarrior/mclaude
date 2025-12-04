@@ -166,7 +166,12 @@ export class UserInterface {
   }
 
   // Interactive dual model selection using Ink
-  async selectDualModels(models: ModelInfoImpl[], authenticationError?: string | null): Promise<{regular: ModelInfoImpl | null, thinking: ModelInfoImpl | null}> {
+  async selectDualModels(
+    models: ModelInfoImpl[],
+    authenticationError?: string | null,
+    onSelectSubagent?: (model: ModelInfoImpl | null) => void,
+    onSelectFast?: (model: ModelInfoImpl | null) => void
+  ): Promise<{regular: ModelInfoImpl | null, thinking: ModelInfoImpl | null}> {
     if (models.length === 0 && !authenticationError) {
       this.error('No models available for selection');
       return { regular: null, thinking: null };
@@ -194,6 +199,8 @@ export class UserInterface {
           models={models}
           authenticationError={authenticationError}
           providerStatus={providerStatusWithTimestamp}
+          onSelectSubagent={onSelectSubagent}
+          onSelectFast={onSelectFast}
           onSelect={(regularModel, thinkingModel) => {
             if (regularModel || thinkingModel) {
               if (regularModel) this.success(`Regular model: ${regularModel.getDisplayName()}`);

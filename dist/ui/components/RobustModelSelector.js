@@ -44,7 +44,7 @@ const ink_1 = require("ink");
 const FallbackModelSelector_1 = require("./FallbackModelSelector");
 // Import the original ModelSelector for fallback (but without complex Text components)
 const ModelSelector_1 = require("./ModelSelector");
-const RobustModelSelector = ({ models, onSelect, onCancel, ...restProps }) => {
+const RobustModelSelector = ({ models, onSelect, onSelectSubagent, onSelectFast, onCancel, ...restProps }) => {
     const [selectionMode, setSelectionMode] = (0, react_1.useState)('minimal');
     const [errorCount, setErrorCount] = (0, react_1.useState)(0);
     const [lastError, setLastError] = (0, react_1.useState)(null);
@@ -101,6 +101,8 @@ const RobustModelSelector = ({ models, onSelect, onCancel, ...restProps }) => {
             const commonProps = {
                 models: models,
                 onSelect,
+                onSelectSubagent,
+                onSelectFast,
                 onCancel
             };
             switch (selectionMode) {
@@ -123,7 +125,7 @@ const RobustModelSelector = ({ models, onSelect, onCancel, ...restProps }) => {
         catch (error) {
             console.error('Critical error in renderSelector:', error);
             // Final fallback - always works
-            return (0, jsx_runtime_1.jsx)(FallbackModelSelector_1.MinimalArrowSelector, { models: models, onSelect: onSelect, onCancel: onCancel });
+            return (0, jsx_runtime_1.jsx)(FallbackModelSelector_1.MinimalArrowSelector, { models: models, onSelect: onSelect, onSelectSubagent: onSelectSubagent, onSelectFast: onSelectFast, onCancel: onCancel });
         }
     };
     // Status display

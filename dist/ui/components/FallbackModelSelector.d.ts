@@ -7,6 +7,8 @@ import { ModelInfoImpl } from '../../models';
 interface FallbackModelSelectorProps {
     models: ModelInfoImpl[];
     onSelect: (regularModel: ModelInfoImpl | null, thinkingModel: ModelInfoImpl | null) => void;
+    onSelectSubagent?: (subagentModel: ModelInfoImpl | null) => void;
+    onSelectFast?: (fastModel: ModelInfoImpl | null) => void;
     onCancel: () => void;
 }
 export declare const SimpleNumberedListSelector: React.FC<FallbackModelSelectorProps>;

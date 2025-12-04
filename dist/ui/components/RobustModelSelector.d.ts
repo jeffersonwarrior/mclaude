@@ -7,6 +7,8 @@ import { ModelInfoImpl } from '../../models';
 interface RobustModelSelectorProps {
     models: ModelInfoImpl[];
     onSelect: (regularModel: ModelInfoImpl | null, thinkingModel: ModelInfoImpl | null) => void;
+    onSelectSubagent?: (model: ModelInfoImpl | null) => void;
+    onSelectFast?: (model: ModelInfoImpl | null) => void;
     onCancel: () => void;
     searchPlaceholder?: string;
     initialRegularModel?: ModelInfoImpl | null;

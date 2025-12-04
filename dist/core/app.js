@@ -498,7 +498,34 @@ class SyntheticClaudeApp {
             const sortedModels = modelManager.getModels(models);
             this.ui.info(`Found ${sortedModels.length} available models`);
             // Select models
-            const { regular: selectedRegularModel, thinking: selectedThinkingModel } = await this.ui.selectDualModels(sortedModels);
+            const { regular: selectedRegularModel, thinking: selectedThinkingModel } = await this.ui.selectDualModels(sortedModels, undefined, // authenticationError
+            async (subagentModel) => {
+                if (subagentModel) {
+                    await this.configManager.updateConfig({
+                        recommendedModels: {
+                            ...this.configManager.config.recommendedModels,
+                            subagent: {
+                                primary: subagentModel.id,
+                                backup: this.configManager.config.recommendedModels?.subagent?.backup || "hf:deepseek-ai/DeepSeek-V3.2"
+                            }
+                        }
+                    });
+                    this.ui.coloredSuccess(`Subagent model saved: ${subagentModel.getDisplayName()}`);
+                }
+            }, async (fastModel) => {
+                if (fastModel) {
+                    await this.configManager.updateConfig({
+                        recommendedModels: {
+                            ...this.configManager.config.recommendedModels,
+                            smallFast: {
+                                primary: fastModel.id,
+                                backup: this.configManager.config.recommendedModels?.smallFast?.backup || "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"
+                            }
+                        }
+                    });
+                    this.ui.coloredSuccess(`Fast model saved: ${fastModel.getDisplayName()}`);
+                }
+            });
             if (!selectedRegularModel && !selectedThinkingModel) {
                 this.ui.info("Model selection cancelled");
                 return false;

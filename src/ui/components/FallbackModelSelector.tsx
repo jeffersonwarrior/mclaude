@@ -10,6 +10,8 @@ import { ModelInfoImpl } from '../../models';
 interface FallbackModelSelectorProps {
   models: ModelInfoImpl[];
   onSelect: (regularModel: ModelInfoImpl | null, thinkingModel: ModelInfoImpl | null) => void;
+  onSelectSubagent?: (subagentModel: ModelInfoImpl | null) => void;
+  onSelectFast?: (fastModel: ModelInfoImpl | null) => void;
   onCancel: () => void;
 }
 
@@ -165,11 +167,15 @@ export const SimpleNumberedListSelector: React.FC<FallbackModelSelectorProps> = 
 export const MinimalArrowSelector: React.FC<FallbackModelSelectorProps> = ({
   models,
   onSelect,
+  onSelectSubagent,
+  onSelectFast,
   onCancel
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [selectedRegularModel, setSelectedRegularModel] = useState<ModelInfoImpl | null>(null);
   const [selectedThinkingModel, setSelectedThinkingModel] = useState<ModelInfoImpl | null>(null);
+  const [selectedSubagentModel, setSelectedSubagentModel] = useState<ModelInfoImpl | null>(null);
+  const [selectedFastModel, setSelectedFastModel] = useState<ModelInfoImpl | null>(null);
   const { exit } = useApp();
 
   useInput((input, key) => {
@@ -210,6 +216,36 @@ export const MinimalArrowSelector: React.FC<FallbackModelSelectorProps> = ({
       return;
     }
 
+    // s to toggle subagent
+    if (input === 's') {
+      const selectedModel = models[selectedIndex];
+      if (selectedModel) {
+        if (selectedSubagentModel?.id === selectedModel.id) {
+          setSelectedSubagentModel(null);
+          if (onSelectSubagent) onSelectSubagent(null);
+        } else {
+          setSelectedSubagentModel(selectedModel);
+          if (onSelectSubagent) onSelectSubagent(selectedModel);
+        }
+      }
+      return;
+    }
+
+    // f to toggle fast
+    if (input === 'f') {
+      const selectedModel = models[selectedIndex];
+      if (selectedModel) {
+        if (selectedFastModel?.id === selectedModel.id) {
+          setSelectedFastModel(null);
+          if (onSelectFast) onSelectFast(null);
+        } else {
+          setSelectedFastModel(selectedModel);
+          if (onSelectFast) onSelectFast(selectedModel);
+        }
+      }
+      return;
+    }
+
     // Space to launch
     if (input === ' ') {
       if (selectedRegularModel || selectedThinkingModel) {
@@ -239,7 +275,9 @@ export const MinimalArrowSelector: React.FC<FallbackModelSelectorProps> = ({
       <Box marginBottom={1}>
         <Text color="gray">
           Regular: {selectedRegularModel?.getDisplayName() || 'none'} |
-          Thinking: {selectedThinkingModel?.getDisplayName() || 'none'}
+          Thinking: {selectedThinkingModel?.getDisplayName() || 'none'} |
+          Subagent: {selectedSubagentModel?.getDisplayName() || 'none'} |
+          Fast: {selectedFastModel?.getDisplayName() || 'none'}
         </Text>
       </Box>
 
@@ -254,11 +292,15 @@ export const MinimalArrowSelector: React.FC<FallbackModelSelectorProps> = ({
         const isSelected = actualIndex === selectedIndex;
         const isRegularSelected = selectedRegularModel?.id === model.id;
         const isThinkingSelected = selectedThinkingModel?.id === model.id;
+        const isSubagentSelected = selectedSubagentModel?.id === model.id;
+        const isFastSelected = selectedFastModel?.id === model.id;
 
         let prefix = '  ';
         if (isSelected) prefix = '▶ ';
         else if (isRegularSelected) prefix = 'R ';
         else if (isThinkingSelected) prefix = 'T ';
+        else if (isSubagentSelected) prefix = 'S ';
+        else if (isFastSelected) prefix = 'F ';
 
         return (
           <Box key={model.id}>
@@ -277,7 +319,7 @@ export const MinimalArrowSelector: React.FC<FallbackModelSelectorProps> = ({
 
       <Box marginTop={1}>
         <Text color="gray">
-          ↑↓ Navigate | Enter: Select/Launch | t: Toggle thinking | Space: Launch | q: Quit
+          ↑↓ Navigate | Enter: Select/Launch | t: Toggle thinking | s: Subagent | f: Fast | Space: Launch | q: Quit
         </Text>
       </Box>
     </Box>

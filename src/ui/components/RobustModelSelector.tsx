@@ -18,6 +18,8 @@ import { ModelSelector } from './ModelSelector';
 interface RobustModelSelectorProps {
   models: ModelInfoImpl[];
   onSelect: (regularModel: ModelInfoImpl | null, thinkingModel: ModelInfoImpl | null) => void;
+  onSelectSubagent?: (model: ModelInfoImpl | null) => void;
+  onSelectFast?: (model: ModelInfoImpl | null) => void;
   onCancel: () => void;
   searchPlaceholder?: string;
   initialRegularModel?: ModelInfoImpl | null;
@@ -35,6 +37,8 @@ type SelectionMode = 'advanced' | 'numbered' | 'minimal' | 'console';
 export const RobustModelSelector: React.FC<RobustModelSelectorProps> = ({
   models,
   onSelect,
+  onSelectSubagent,
+  onSelectFast,
   onCancel,
   ...restProps
 }) => {
@@ -101,6 +105,8 @@ export const RobustModelSelector: React.FC<RobustModelSelectorProps> = ({
       const commonProps = {
         models: models,
         onSelect,
+        onSelectSubagent,
+        onSelectFast,
         onCancel
       };
 
@@ -139,7 +145,7 @@ export const RobustModelSelector: React.FC<RobustModelSelectorProps> = ({
     } catch (error) {
       console.error('Critical error in renderSelector:', error);
       // Final fallback - always works
-      return <MinimalArrowSelector models={models} onSelect={onSelect} onCancel={onCancel} />;
+      return <MinimalArrowSelector models={models} onSelect={onSelect} onSelectSubagent={onSelectSubagent} onSelectFast={onSelectFast} onCancel={onCancel} />;
     }
   };
 

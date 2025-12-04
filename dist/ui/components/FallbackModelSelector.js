@@ -98,10 +98,12 @@ const SimpleNumberedListSelector = ({ models, onSelect, onCancel }) => {
 };
 exports.SimpleNumberedListSelector = SimpleNumberedListSelector;
 // Minimal arrow-key selector (Option 2)
-const MinimalArrowSelector = ({ models, onSelect, onCancel }) => {
+const MinimalArrowSelector = ({ models, onSelect, onSelectSubagent, onSelectFast, onCancel }) => {
     const [selectedIndex, setSelectedIndex] = (0, react_1.useState)(0);
     const [selectedRegularModel, setSelectedRegularModel] = (0, react_1.useState)(null);
     const [selectedThinkingModel, setSelectedThinkingModel] = (0, react_1.useState)(null);
+    const [selectedSubagentModel, setSelectedSubagentModel] = (0, react_1.useState)(null);
+    const [selectedFastModel, setSelectedFastModel] = (0, react_1.useState)(null);
     const { exit } = (0, ink_1.useApp)();
     (0, ink_1.useInput)((input, key) => {
         if (key.upArrow) {
@@ -139,6 +141,40 @@ const MinimalArrowSelector = ({ models, onSelect, onCancel }) => {
             }
             return;
         }
+        // s to toggle subagent
+        if (input === 's') {
+            const selectedModel = models[selectedIndex];
+            if (selectedModel) {
+                if (selectedSubagentModel?.id === selectedModel.id) {
+                    setSelectedSubagentModel(null);
+                    if (onSelectSubagent)
+                        onSelectSubagent(null);
+                }
+                else {
+                    setSelectedSubagentModel(selectedModel);
+                    if (onSelectSubagent)
+                        onSelectSubagent(selectedModel);
+                }
+            }
+            return;
+        }
+        // f to toggle fast
+        if (input === 'f') {
+            const selectedModel = models[selectedIndex];
+            if (selectedModel) {
+                if (selectedFastModel?.id === selectedModel.id) {
+                    setSelectedFastModel(null);
+                    if (onSelectFast)
+                        onSelectFast(null);
+                }
+                else {
+                    setSelectedFastModel(selectedModel);
+                    if (onSelectFast)
+                        onSelectFast(selectedModel);
+                }
+            }
+            return;
+        }
         // Space to launch
         if (input === ' ') {
             if (selectedRegularModel || selectedThinkingModel) {
@@ -156,11 +192,13 @@ const MinimalArrowSelector = ({ models, onSelect, onCancel }) => {
     const visibleStartIndex = Math.max(0, selectedIndex - 3);
     const visibleEndIndex = Math.min(models.length, selectedIndex + 4);
     const visibleModels = models.slice(visibleStartIndex, visibleEndIndex);
-    return ((0, jsx_runtime_1.jsxs)(ink_1.Box, { flexDirection: "column", children: [(0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsx)(ink_1.Text, { color: "cyan", children: "Minimal Arrow Selection (Fallback Mode)" }) }), (0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["Regular: ", selectedRegularModel?.getDisplayName() || 'none', " | Thinking: ", selectedThinkingModel?.getDisplayName() || 'none'] }) }), visibleStartIndex > 0 && ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u25B2 ", visibleStartIndex, " more above"] }) })), visibleModels.map((model, index) => {
+    return ((0, jsx_runtime_1.jsxs)(ink_1.Box, { flexDirection: "column", children: [(0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsx)(ink_1.Text, { color: "cyan", children: "Minimal Arrow Selection (Fallback Mode)" }) }), (0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["Regular: ", selectedRegularModel?.getDisplayName() || 'none', " | Thinking: ", selectedThinkingModel?.getDisplayName() || 'none', " | Subagent: ", selectedSubagentModel?.getDisplayName() || 'none', " | Fast: ", selectedFastModel?.getDisplayName() || 'none'] }) }), visibleStartIndex > 0 && ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u25B2 ", visibleStartIndex, " more above"] }) })), visibleModels.map((model, index) => {
                 const actualIndex = visibleStartIndex + index;
                 const isSelected = actualIndex === selectedIndex;
                 const isRegularSelected = selectedRegularModel?.id === model.id;
                 const isThinkingSelected = selectedThinkingModel?.id === model.id;
+                const isSubagentSelected = selectedSubagentModel?.id === model.id;
+                const isFastSelected = selectedFastModel?.id === model.id;
                 let prefix = '  ';
                 if (isSelected)
                     prefix = '▶ ';
@@ -168,8 +206,12 @@ const MinimalArrowSelector = ({ models, onSelect, onCancel }) => {
                     prefix = 'R ';
                 else if (isThinkingSelected)
                     prefix = 'T ';
+                else if (isSubagentSelected)
+                    prefix = 'S ';
+                else if (isFastSelected)
+                    prefix = 'F ';
                 return ((0, jsx_runtime_1.jsx)(ink_1.Box, { children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: isSelected ? 'green' : 'white', children: [prefix, model.getDisplayName(), " [", model.getProviderTag(), "]"] }) }, model.id));
-            }), visibleEndIndex < models.length && ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u25BC ", models.length - visibleEndIndex, " more below"] }) })), (0, jsx_runtime_1.jsx)(ink_1.Box, { marginTop: 1, children: (0, jsx_runtime_1.jsx)(ink_1.Text, { color: "gray", children: "\u2191\u2193 Navigate | Enter: Select/Launch | t: Toggle thinking | Space: Launch | q: Quit" }) })] }));
+            }), visibleEndIndex < models.length && ((0, jsx_runtime_1.jsx)(ink_1.Box, { marginBottom: 1, children: (0, jsx_runtime_1.jsxs)(ink_1.Text, { color: "gray", children: ["\u25BC ", models.length - visibleEndIndex, " more below"] }) })), (0, jsx_runtime_1.jsx)(ink_1.Box, { marginTop: 1, children: (0, jsx_runtime_1.jsx)(ink_1.Text, { color: "gray", children: "\u2191\u2193 Navigate | Enter: Select/Launch | t: Toggle thinking | s: Subagent | f: Fast | Space: Launch | q: Quit" }) })] }));
 };
 exports.MinimalArrowSelector = MinimalArrowSelector;
 // Console-based selection (Option 3 - uses stdout directly)
