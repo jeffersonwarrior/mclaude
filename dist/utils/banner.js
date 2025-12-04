@@ -57,8 +57,10 @@ function createBanner(options = {}) {
         syspromptDisplay = syspromptInfo.type;
         activeOptions.push(`sysprompt: ${syspromptInfo.type}`);
     }
-    const defaultModel = config.selectedModel || "None";
-    const thinkingModel = config.selectedThinkingModel || "None";
+    const defaultModel = config.selectedModel || config.recommendedModels?.default?.primary || "None";
+    const thinkingModel = config.selectedThinkingModel || config.recommendedModels?.thinking?.primary || "None";
+    const subagentModel = config.recommendedModels?.subagent?.primary || "None";
+    const fastModel = config.recommendedModels?.smallFast?.primary || "None";
     const optionsStr = activeOptions.length > 0 ? activeOptions.join(", ") : "None";
     // Use atomic provider state to ensure consistent network display
     const networkDisplay = configManager.getNetworkDisplay();
@@ -67,6 +69,8 @@ function createBanner(options = {}) {
         chalk_1.default.gray("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"),
         `${chalk_1.default.blue("Model:")}     ${chalk_1.default.cyan(defaultModel)}`,
         `${chalk_1.default.magenta("Thinking:")}  ${chalk_1.default.magenta(thinkingModel)}`,
+        `${chalk_1.default.cyan("Subagent:")}  ${chalk_1.default.cyan(subagentModel)}`,
+        `${chalk_1.default.cyan("Fast:")}      ${chalk_1.default.cyan(fastModel)}`,
         `${chalk_1.default.green("Network:")}    ${chalk_1.default.green(networkDisplay)}`,
         `${chalk_1.default.yellow("Options:")}    ${chalk_1.default.yellow(optionsStr)}`,
         "",

@@ -65,8 +65,10 @@ export function createBanner(options: BannerOptions = {}): string {
     activeOptions.push(`sysprompt: ${syspromptInfo.type}`);
   }
 
-  const defaultModel = config.selectedModel || "None";
-  const thinkingModel = config.selectedThinkingModel || "None";
+  const defaultModel = config.selectedModel || config.recommendedModels?.default?.primary || "None";
+  const thinkingModel = config.selectedThinkingModel || config.recommendedModels?.thinking?.primary || "None";
+  const subagentModel = config.recommendedModels?.subagent?.primary || "None";
+  const fastModel = config.recommendedModels?.smallFast?.primary || "None";
   const optionsStr =
     activeOptions.length > 0 ? activeOptions.join(", ") : "None";
 
@@ -80,6 +82,8 @@ export function createBanner(options: BannerOptions = {}): string {
     ),
     `${chalk.blue("Model:")}     ${chalk.cyan(defaultModel)}`,
     `${chalk.magenta("Thinking:")}  ${chalk.magenta(thinkingModel)}`,
+    `${chalk.cyan("Subagent:")}  ${chalk.cyan(subagentModel)}`,
+    `${chalk.cyan("Fast:")}      ${chalk.cyan(fastModel)}`,
     `${chalk.green("Network:")}    ${chalk.green(networkDisplay)}`,
     `${chalk.yellow("Options:")}    ${chalk.yellow(optionsStr)}`,
     "",
