@@ -1,4 +1,4 @@
-# MClaude 1.2.5
+# MClaude 1.2.7
 
 **MClaude makes Claude Code work with MiniMax and Synthetic AI models!** This modern TypeScript/Node.js CLI tool seamlessly bridges Claude Code with MiniMax and Synthetic model APIs, unlocking model choice while maintaining the familiar Claude Code experience.
 
@@ -155,14 +155,13 @@ If you encounter "Text string must be rendered inside Text component" errors:
 
 ## Version Information
 
-**Current Version**: 1.2.5
+**Current Version**: 1.2.7
 
 ### Recent Changes
 
-- Implemented robust multi-tier fallback system
-- Changed default to minimal arrow selection UI
-- Enhanced terminal compatibility across xterm environments
-- Improved error recovery and user guidance
+- Fixed permissions handling with atomic writes and backup strategies
+- Local-first config resolution (.mclaude/config.json before global)
+- Improved error recovery for EACCES/EPERM errors
 
 ## License
 
