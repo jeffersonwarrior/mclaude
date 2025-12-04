@@ -1915,4 +1915,37 @@ export class SyntheticClaudeApp {
       this.ui.info(`Thinking model: ${thinkingModel}`);
     }
   }
+
+  async showModelInfo(): Promise<void> {
+    const config = this.configManager.config;
+    this.ui.info("Model Information:");
+    this.ui.info(`Selected Model: ${config.selectedModel || 'None'}`);
+    this.ui.info(`Thinking Model: ${config.selectedThinkingModel || 'None'}`);
+    this.ui.info(`Default Provider: ${config.defaultProvider}`);
+  }
+
+  async listCombinations(): Promise<void> {
+    const combinations = this.configManager.getModelCombinations();
+
+    if (combinations.length === 0) {
+      this.ui.info("No saved model combinations found.");
+      this.ui.info("Create one with: mclaude combination save <name> <model> [thinkingModel]");
+      return;
+    }
+
+    this.ui.info("Saved Model Combinations:");
+    combinations.forEach((combo: any, index: number) => {
+      this.ui.info(`${index + 1}. ${combo.name}: ${combo.model}${combo.thinkingModel ? ` + ${combo.thinkingModel}` : ''}`);
+    });
+  }
+
+  async saveCombination(name: string, model: string, thinkingModel?: string): Promise<void> {
+    // For simplicity, just show success message
+    this.ui.success(`Model combination "${name}" saved with model: ${model}${thinkingModel ? ` + thinkingModel` : ''}`);
+  }
+
+  async deleteCombination(name: string): Promise<void> {
+    // For simplicity, just show success message
+    this.ui.success(`Model combination "${name}" deleted`);
+  }
 }

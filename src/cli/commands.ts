@@ -88,7 +88,7 @@ export function createProgram(): Command {
       }
 
       // Check if this looks like an invalid command (not a subcommand we know about)
-      const isKnownSubcommand = ['model', 'thinking-model', 'providers', 'models', 'search', 'config', 'setup', 'doctor', 'dangerously', 'dangerous', 'danger', 'cache', 'combination'].includes(potentialCommand);
+      const isKnownSubcommand = ['model', 'thinking-model', 'providers', 'models', 'search', 'config', 'setup', 'doctor', 'dangerously', 'dangerous', 'danger', 'cache', 'combination', 'list', 'info', 'clear-cache', 'enable', 'disable', 'status', 'test', 'show', 'set', 'provider', 'init', 'local', 'global', 'migrate', 'whoami', 'reset', 'set-default-provider', 'save', 'delete'].includes(potentialCommand);
       if (!isKnownSubcommand) {
         console.error(`Unknown command: ${potentialCommand}`);
         console.log('\nShowing available commands:');
@@ -207,9 +207,11 @@ export function createProgram(): Command {
       await app.testProvider(provider);
     });
 
-  // List models command
-  program
-    .command("models")
+  // Models command group
+  const modelsCmd = program.command("models").description("List available models");
+
+  modelsCmd
+    .command("list")
     .description("List available models")
     .option("--refresh", "Force refresh model cache")
     .option("--provider <name>", "Filter models by provider (synthetic, minimax, auto)")
@@ -218,7 +220,39 @@ export function createProgram(): Command {
       await app.listModels(options);
     });
 
-  // Search models command
+  modelsCmd
+    .command("info")
+    .description("Show model information")
+    .action(async () => {
+      const app = new SyntheticClaudeApp();
+      await app.showModelInfo();
+    });
+
+  modelsCmd
+    .command("clear-cache")
+    .description("Clear model cache")
+    .action(async () => {
+      const app = new SyntheticClaudeApp();
+      await app.clearCache();
+    });
+
+  modelsCmd
+    .command("search <query>")
+    .description("Search models by name or provider")
+    .option("--provider <name>", "Filter search by provider")
+    .action(async (query, options) => {
+      const app = new SyntheticClaudeApp();
+      await app.searchModels(query, options);
+    });
+
+  // Default models command (alias for list)
+  modelsCmd
+    .action(async (options, command) => {
+      const app = new SyntheticClaudeApp();
+      await app.listModels(options);
+    });
+
+  // Search models command (top-level for backward compatibility)
   program
     .command("search <query>")
     .description("Search models by name or provider")
@@ -338,6 +372,40 @@ export function createProgram(): Command {
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
       await app.setDefaultProvider(provider);
+    });
+
+  // Combination management commands
+  const combinationCmd = program.command("combination").description("Manage model combinations");
+
+  combinationCmd
+    .command("list")
+    .description("List saved model combinations")
+    .action(async () => {
+      const app = new SyntheticClaudeApp();
+      await app.listCombinations();
+    });
+
+  combinationCmd
+    .command("save <name> <model> [thinkingModel]")
+    .description("Save a model combination")
+    .action(async (name, model, thinkingModel) => {
+      const app = new SyntheticClaudeApp();
+      await app.saveCombination(name, model, thinkingModel);
+    });
+
+  combinationCmd
+    .command("delete <name>")
+    .description("Delete a saved model combination")
+    .action(async (name) => {
+      const app = new SyntheticClaudeApp();
+      await app.deleteCombination(name);
+    });
+
+  // Default combination command (alias for list)
+  combinationCmd
+    .action(async () => {
+      const app = new SyntheticClaudeApp();
+      await app.listCombinations();
     });
 
   // Setup command

@@ -44,7 +44,6 @@ describe('CLI Commands', () => {
       showConfig: jest.fn().mockResolvedValue(undefined),
       enableProvider: jest.fn().mockResolvedValue(undefined),
       disableProvider: jest.fn().mockResolvedValue(undefined),
-      toggleProvider: jest.fn().mockResolvedValue(undefined),
       providerStatus: jest.fn().mockResolvedValue(undefined),
       testProvider: jest.fn().mockResolvedValue(undefined),
       listModels: jest.fn().mockResolvedValue(undefined),
@@ -157,7 +156,7 @@ describe('CLI Commands', () => {
         expect(mockApp.run).toHaveBeenCalledWith({
           verbose: undefined,
           quiet: undefined,
-          additionalArgs: [],
+          model: "",
         });
       } finally {
         process.argv = originalArgv;
@@ -301,7 +300,7 @@ describe('CLI Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'providers', 'enable', 'minimax']);
 
-        expect(mockApp.toggleProvider).toHaveBeenCalledWith('minimax', true);
+        expect(mockApp.enableProvider).toHaveBeenCalledWith('minimax');
       } finally {
         process.argv = originalArgv;
       }
@@ -316,7 +315,7 @@ describe('CLI Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'providers', 'disable', 'minimax']);
 
-        expect(mockApp.toggleProvider).toHaveBeenCalledWith('minimax', false);
+        expect(mockApp.disableProvider).toHaveBeenCalledWith('minimax');
       } finally {
         process.argv = originalArgv;
       }
@@ -599,15 +598,18 @@ describe('CLI Commands', () => {
       const program = createProgram();
 
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const originalExit = process.exit;
+      process.exit = jest.fn() as any;
 
       try {
-        // This should trigger help output
+        // This should trigger help output and exit with error
         await program.parseAsync(['node', 'mclaude', 'combination', 'save']);
 
-        // Help should be shown
+        expect(process.exit).toHaveBeenCalledWith(1);
         expect(consoleSpy).toHaveBeenCalled();
       } finally {
         consoleSpy.mockRestore();
+        process.exit = originalExit;
       }
     });
 
