@@ -80,6 +80,24 @@ export declare class SyntheticClaudeApp {
             } | undefined;
         };
         configVersion: number;
+        recommendedModels: {
+            default: {
+                primary: string;
+                backup: string;
+            };
+            smallFast: {
+                primary: string;
+                backup: string;
+            };
+            thinking: {
+                primary: string;
+                backup: string;
+            };
+            subagent: {
+                primary: string;
+                backup: string;
+            };
+        };
         combination1?: {
             name?: string | undefined;
             regularModel?: string | undefined;
@@ -160,9 +178,15 @@ export declare class SyntheticClaudeApp {
             thinkingProvider?: string | undefined;
             createdAt?: string | undefined;
         } | undefined;
+        lastUpdateCheck?: number | undefined;
     };
     private getModelManager;
     run(options: AppOptions & LaunchOptions): Promise<void>;
+    /**
+     * v1.3.1: Silent update check on launch (Option C from spec)
+     * Non-blocking, 3 second timeout, silent catch
+     */
+    private performSilentUpdate;
     /**
      * Validate provider credentials - maintains compatibility while being simpler
      */
@@ -273,6 +297,10 @@ export declare class SyntheticClaudeApp {
      */
     private setupModelSelection;
     /**
+     * v1.3.1: Check availability of recommended models
+     */
+    private checkRecommendedModelAvailability;
+    /**
      * Step 4: Finalize setup
      */
     private setupFinalization;
@@ -315,7 +343,7 @@ export declare class SyntheticClaudeApp {
         force?: boolean;
     }): Promise<void>;
     showConfigContext(): Promise<void>;
-    showModelInfo(): Promise<void>;
+    showModelInfo(modelId?: string): Promise<void>;
     listCombinations(): Promise<void>;
     saveCombination(name: string, model: string, thinkingModel?: string): Promise<void>;
     deleteCombination(name: string): Promise<void>;
@@ -330,5 +358,8 @@ export declare class SyntheticClaudeApp {
         raw?: boolean;
     }): Promise<void>;
     private editSysprompt;
+    manageModelCards(options?: {
+        update?: boolean;
+    }): Promise<void>;
 }
 //# sourceMappingURL=app.d.ts.map

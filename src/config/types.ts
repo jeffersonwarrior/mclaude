@@ -272,6 +272,40 @@ export const AppConfigSchema = z.object({
     })
     .optional(),
   configVersion: z.number().default(2).describe("Configuration schema version"),
+  // v1.3.1: Recommended models and update checking
+  recommendedModels: z
+    .object({
+      default: z
+        .object({
+          primary: z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
+          backup: z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+        })
+        .default({}),
+      smallFast: z
+        .object({
+          primary: z.string().default("hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
+          backup: z.string().default("hf:meta-llama/Llama-3.1-8B-Instruct"),
+        })
+        .default({}),
+      thinking: z
+        .object({
+          primary: z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+          backup: z.string().default("hf:deepseek-ai/DeepSeek-R1"),
+        })
+        .default({}),
+      subagent: z
+        .object({
+          primary: z.string().default("hf:meta-llama/Llama-3.3-70B-Instruct"),
+          backup: z.string().default("hf:Qwen/Qwen3-235B-A22B-Instruct-2507"),
+        })
+        .default({}),
+    })
+    .default({})
+    .describe("Recommended model configurations for each role"),
+  lastUpdateCheck: z
+    .number()
+    .optional()
+    .describe("Timestamp of last update check"),
 });
 
 export type AppConfig = z.infer<typeof AppConfigSchema>;
@@ -279,6 +313,51 @@ export type Provider = ProviderType;
 export type SyntheticProviderConfig = z.infer<typeof SyntheticProviderConfig>;
 export type MinimaxProviderConfig = z.infer<typeof MinimaxProviderConfig>;
 export type LegacyAppConfig = z.infer<typeof LegacyAppConfigSchema>;
+
+// ============================================
+// Model Card System (v1.3.1)
+// ============================================
+
+export const ModelCardSchema = z.object({
+  id: z.string().describe("Model ID"),
+  name: z.string().optional().describe("Model display name"),
+  aliases: z.array(z.string()).optional().describe("Alternative model IDs"),
+  roles: z.array(z.string()).optional().describe("Roles this model is recommended for"),
+  priority: z.number().default(1).describe("Priority for this model (lower = higher priority)"),
+  preferProvider: z.string().optional().describe("Preferred provider for this model"),
+  capabilities: z
+    .object({
+      tools: z.boolean().default(true),
+      json_mode: z.boolean().default(true),
+      thinking: z.boolean().default(false),
+      streaming: z.boolean().default(true),
+      parallel_tools: z.boolean().default(true),
+    })
+    .default({})
+    .describe("Model capabilities"),
+  limits: z
+    .object({
+      context: z.number().optional().describe("Context window size"),
+      max_output: z.number().optional().describe("Maximum output tokens"),
+    })
+    .default({})
+    .describe("Model limits"),
+  parameters: z.array(z.string()).optional().describe("Supported parameters"),
+  speed_tier: z.enum(["fast", "medium", "slow"]).default("medium").describe("Speed tier"),
+  provider: z.string().describe("Provider name"),
+  verified: z.string().optional().describe("Verification date"),
+});
+
+export type ModelCard = z.infer<typeof ModelCardSchema>;
+
+export const ModelCardsSchema = z.object({
+  version: z.string().default("1.0"),
+  updated: z.string().optional(),
+  providerPriority: z.array(z.string()).default(["minimax", "synthetic"]),
+  cards: z.array(ModelCardSchema).default([]),
+});
+
+export type ModelCards = z.infer<typeof ModelCardsSchema>;
 
 export class ConfigValidationError extends Error {
   constructor(

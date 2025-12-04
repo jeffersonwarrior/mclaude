@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ConfigSaveError = exports.ConfigLoadError = exports.ConfigValidationError = exports.AppConfigSchema = exports.LegacyAppConfigSchema = exports.MinimaxProviderConfig = exports.ResponseFormatEnum = exports.PresetEnum = exports.ToolChoiceEnum = exports.SyntheticProviderConfig = exports.ProviderEnum = void 0;
+exports.ConfigSaveError = exports.ConfigLoadError = exports.ConfigValidationError = exports.ModelCardsSchema = exports.ModelCardSchema = exports.AppConfigSchema = exports.LegacyAppConfigSchema = exports.MinimaxProviderConfig = exports.ResponseFormatEnum = exports.PresetEnum = exports.ToolChoiceEnum = exports.SyntheticProviderConfig = exports.ProviderEnum = void 0;
 const zod_1 = require("zod");
 // Provider enumeration
 exports.ProviderEnum = zod_1.z.enum(["synthetic", "minimax", "auto"]);
@@ -259,6 +259,78 @@ exports.AppConfigSchema = zod_1.z.object({
     })
         .optional(),
     configVersion: zod_1.z.number().default(2).describe("Configuration schema version"),
+    // v1.3.1: Recommended models and update checking
+    recommendedModels: zod_1.z
+        .object({
+        default: zod_1.z
+            .object({
+            primary: zod_1.z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
+            backup: zod_1.z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+        })
+            .default({}),
+        smallFast: zod_1.z
+            .object({
+            primary: zod_1.z.string().default("hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
+            backup: zod_1.z.string().default("hf:meta-llama/Llama-3.1-8B-Instruct"),
+        })
+            .default({}),
+        thinking: zod_1.z
+            .object({
+            primary: zod_1.z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+            backup: zod_1.z.string().default("hf:deepseek-ai/DeepSeek-R1"),
+        })
+            .default({}),
+        subagent: zod_1.z
+            .object({
+            primary: zod_1.z.string().default("hf:meta-llama/Llama-3.3-70B-Instruct"),
+            backup: zod_1.z.string().default("hf:Qwen/Qwen3-235B-A22B-Instruct-2507"),
+        })
+            .default({}),
+    })
+        .default({})
+        .describe("Recommended model configurations for each role"),
+    lastUpdateCheck: zod_1.z
+        .number()
+        .optional()
+        .describe("Timestamp of last update check"),
+});
+// ============================================
+// Model Card System (v1.3.1)
+// ============================================
+exports.ModelCardSchema = zod_1.z.object({
+    id: zod_1.z.string().describe("Model ID"),
+    name: zod_1.z.string().optional().describe("Model display name"),
+    aliases: zod_1.z.array(zod_1.z.string()).optional().describe("Alternative model IDs"),
+    roles: zod_1.z.array(zod_1.z.string()).optional().describe("Roles this model is recommended for"),
+    priority: zod_1.z.number().default(1).describe("Priority for this model (lower = higher priority)"),
+    preferProvider: zod_1.z.string().optional().describe("Preferred provider for this model"),
+    capabilities: zod_1.z
+        .object({
+        tools: zod_1.z.boolean().default(true),
+        json_mode: zod_1.z.boolean().default(true),
+        thinking: zod_1.z.boolean().default(false),
+        streaming: zod_1.z.boolean().default(true),
+        parallel_tools: zod_1.z.boolean().default(true),
+    })
+        .default({})
+        .describe("Model capabilities"),
+    limits: zod_1.z
+        .object({
+        context: zod_1.z.number().optional().describe("Context window size"),
+        max_output: zod_1.z.number().optional().describe("Maximum output tokens"),
+    })
+        .default({})
+        .describe("Model limits"),
+    parameters: zod_1.z.array(zod_1.z.string()).optional().describe("Supported parameters"),
+    speed_tier: zod_1.z.enum(["fast", "medium", "slow"]).default("medium").describe("Speed tier"),
+    provider: zod_1.z.string().describe("Provider name"),
+    verified: zod_1.z.string().optional().describe("Verification date"),
+});
+exports.ModelCardsSchema = zod_1.z.object({
+    version: zod_1.z.string().default("1.0"),
+    updated: zod_1.z.string().optional(),
+    providerPriority: zod_1.z.array(zod_1.z.string()).default(["minimax", "synthetic"]),
+    cards: zod_1.z.array(exports.ModelCardSchema).default([]),
 });
 class ConfigValidationError extends Error {
     cause;

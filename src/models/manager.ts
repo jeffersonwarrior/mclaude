@@ -344,6 +344,7 @@ export class ModelManager {
 
   /**
    * Remove duplicate models, preferring providers in priority order
+   * v1.3.1: Use provider priority from model cards or default to minimax > synthetic for MiniMax models
    */
   private deduplicateModels(models: ModelInfoImpl[]): ModelInfoImpl[] {
     const seen = new Map<string, ModelInfoImpl>();
@@ -354,8 +355,12 @@ export class ModelManager {
       if (!existing) {
         seen.set(model.id, model);
       } else {
-        // Priority: synthetic > minimax (synthetic is preferred as it's the primary provider)
-        const providerPriority = { synthetic: 2, minimax: 1 };
+        // v1.3.1: Provider priority with MiniMax preference for MiniMax models
+        const isMiniMaxModel = model.id.includes('MiniMax') || existing.id.includes('MiniMax');
+        const providerPriority = isMiniMaxModel
+          ? { minimax: 2, synthetic: 1 } // MiniMax models prefer minimax provider
+          : { synthetic: 2, minimax: 1 }; // Other models prefer synthetic
+
         const existingPriority =
           providerPriority[
             existing.getProvider() as keyof typeof providerPriority
@@ -372,6 +377,52 @@ export class ModelManager {
     }
 
     return Array.from(seen.values());
+  }
+
+  /**
+   * v1.3.1: Get model card for a model ID
+   */
+  async getModelCard(modelId: string): Promise<any> {
+    try {
+      const modelCards = await this.configManager.loadModelCards();
+      if (!modelCards) {
+        return null;
+      }
+
+      // Direct match
+      let card = modelCards.cards.find(c => c.id === modelId);
+      if (card) {
+        return card;
+      }
+
+      // Check aliases
+      card = modelCards.cards.find(c => c.aliases?.includes(modelId));
+      if (card) {
+        return card;
+      }
+
+      return null;
+    } catch (error) {
+      console.warn("Failed to get model card:", error);
+      return null;
+    }
+  }
+
+  /**
+   * v1.3.1: Get provider priority from model cards
+   */
+  async getProviderPriority(): Promise<string[]> {
+    try {
+      const modelCards = await this.configManager.loadModelCards();
+      if (modelCards && modelCards.providerPriority) {
+        return modelCards.providerPriority;
+      }
+    } catch (error) {
+      // Ignore and use default
+    }
+
+    // Default priority: minimax first for M1/M2, then synthetic
+    return ["minimax", "synthetic"];
   }
 
   getModels(models?: ModelInfoImpl[]): ModelInfoImpl[] {

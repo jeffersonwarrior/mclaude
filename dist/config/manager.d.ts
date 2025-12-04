@@ -1,4 +1,4 @@
-import { AppConfig, Provider, SyntheticProviderConfig, MinimaxProviderConfig } from "./types";
+import { AppConfig, Provider, SyntheticProviderConfig, MinimaxProviderConfig, ModelCards } from "./types";
 export interface ConfigHierarchy {
     localProjectConfig?: AppConfig | null;
     LocalProjectEnv?: AppConfig | null;
@@ -188,5 +188,50 @@ export declare class ConfigManager {
      * Reset token usage statistics
      */
     resetTokenUsage(): Promise<boolean>;
+    /**
+     * Get the path for model cards file
+     */
+    private getModelCardsPath;
+    /**
+     * Load model cards from file
+     */
+    loadModelCards(): Promise<ModelCards | null>;
+    /**
+     * Save model cards to file
+     */
+    saveModelCards(modelCards: ModelCards): Promise<boolean>;
+    /**
+     * Fetch model cards from remote URL and save them
+     */
+    fetchAndSaveModelCards(cardsUrl: string, timeout?: number): Promise<boolean>;
+    /**
+     * Update the last update check timestamp
+     */
+    updateLastCheck(): Promise<boolean>;
+    /**
+     * Check if an update check is needed (24h threshold)
+     */
+    needsUpdateCheck(): boolean;
+    /**
+     * Get recommended models from config
+     */
+    getRecommendedModels(): {
+        default: {
+            primary: string;
+            backup: string;
+        };
+        smallFast: {
+            primary: string;
+            backup: string;
+        };
+        thinking: {
+            primary: string;
+            backup: string;
+        };
+        subagent: {
+            primary: string;
+            backup: string;
+        };
+    };
 }
 //# sourceMappingURL=manager.d.ts.map

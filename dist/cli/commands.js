@@ -214,9 +214,10 @@ function createProgram() {
     modelsCmd
         .command("info")
         .description("Show model information")
-        .action(async () => {
+        .argument("[modelId]", "Model ID to show info for")
+        .action(async (modelId) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.showModelInfo();
+        await app.showModelInfo(modelId);
     });
     modelsCmd
         .command("clear-cache")
@@ -224,6 +225,14 @@ function createProgram() {
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
         await app.clearCache();
+    });
+    modelsCmd
+        .command("cards")
+        .description("Manage model cards")
+        .option("--update", "Force update model cards from GitHub")
+        .action(async (options) => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.manageModelCards(options);
     });
     modelsCmd
         .command("search <query>")

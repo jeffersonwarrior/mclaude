@@ -12,6 +12,9 @@ import {
   Provider,
   SyntheticProviderConfig,
   MinimaxProviderConfig,
+  ModelCards,
+  ModelCardsSchema,
+  ModelCard,
 } from "./types";
 import { envManager } from "./env";
 
@@ -91,6 +94,12 @@ export class ConfigManager {
         providers: {
           synthetic: { enabled: true },
           minimax: { enabled: true }
+        },
+        recommendedModels: {
+          default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
+          smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
+          thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
+          subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
         }
       });
 
@@ -401,6 +410,12 @@ export class ConfigManager {
       providers: {
         synthetic: { enabled: true },
         minimax: { enabled: true }
+      },
+      recommendedModels: {
+        default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
+        smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
+        thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
+        subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
       }
     });
 
@@ -607,6 +622,12 @@ export class ConfigManager {
           maxEntries: 100,
         },
         configVersion: 2,
+        recommendedModels: {
+          default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
+          smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
+          thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
+          subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
+        },
       };
 
       return migratedConfig;
@@ -618,6 +639,12 @@ export class ConfigManager {
       selectedThinkingModel: legacyConfig.selectedThinkingModel || "",
       firstRunCompleted: legacyConfig.firstRunCompleted || false,
       configVersion: 2,
+      recommendedModels: {
+        default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
+        smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
+        thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
+        subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
+      },
     });
   }
 
@@ -1353,5 +1380,135 @@ export class ConfigManager {
         history: [],
       }
     });
+  }
+
+  // ============================================
+  // Model Card Management (v1.3.1)
+  // ============================================
+
+  /**
+   * Get the path for model cards file
+   */
+  private getModelCardsPath(): string {
+    return join(this.globalConfigDir, "model-cards.json");
+  }
+
+  /**
+   * Load model cards from file
+   */
+  async loadModelCards(): Promise<ModelCards | null> {
+    try {
+      const cardsPath = this.getModelCardsPath();
+
+      if (!existsSync(cardsPath)) {
+        // Return default model cards structure if file doesn't exist
+        return ModelCardsSchema.parse({});
+      }
+
+      const fs = require("fs");
+      const rawData = fs.readFileSync(cardsPath, "utf-8");
+      const data = JSON.parse(rawData);
+
+      const result = ModelCardsSchema.safeParse(data);
+      if (!result.success) {
+        console.warn(
+          "Model cards validation failed:",
+          result.error.message,
+        );
+        return ModelCardsSchema.parse({});
+      }
+
+      return result.data;
+    } catch (error) {
+      console.warn("Failed to load model cards:", error);
+      return ModelCardsSchema.parse({});
+    }
+  }
+
+  /**
+   * Save model cards to file
+   */
+  async saveModelCards(modelCards: ModelCards): Promise<boolean> {
+    try {
+      const cardsPath = this.getModelCardsPath();
+
+      // Ensure directory exists
+      await this.ensureConfigDir();
+
+      const data = JSON.stringify(modelCards, null, 2);
+
+      // Atomic write strategy
+      const tempPath = `${cardsPath}.tmp`;
+      const fs = require("fs/promises");
+
+      await fs.writeFile(tempPath, data, "utf-8");
+      await fs.rename(tempPath, cardsPath);
+
+      return true;
+    } catch (error) {
+      console.error("Failed to save model cards:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Fetch model cards from remote URL and save them
+   */
+  async fetchAndSaveModelCards(cardsUrl: string, timeout: number = 3000): Promise<boolean> {
+    try {
+      const axios = require("axios");
+      const response = await axios.get(cardsUrl, { timeout });
+      const data = response.data;
+
+      const result = ModelCardsSchema.safeParse(data);
+      if (!result.success) {
+        console.warn("Remote model cards validation failed:", result.error.message);
+        return false;
+      }
+
+      return await this.saveModelCards(result.data);
+    } catch (error) {
+      // Silent fail for update checks
+      return false;
+    }
+  }
+
+  /**
+   * Update the last update check timestamp
+   */
+  async updateLastCheck(): Promise<boolean> {
+    try {
+      return this.updateConfig({
+        lastUpdateCheck: Date.now()
+      });
+    } catch (error) {
+      console.warn("Failed to update last check timestamp:", error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if an update check is needed (24h threshold)
+   */
+  needsUpdateCheck(): boolean {
+    const config = this.config;
+    const lastCheck = config.lastUpdateCheck || 0;
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    return (now - lastCheck) > oneDayMs;
+  }
+
+  /**
+   * Get recommended models from config
+   */
+  getRecommendedModels() {
+    const config = this.config;
+    return config.recommendedModels || {
+      default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
+      smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
+      thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
+      subagent: { primary: "hf:meta-llama/Llama-3.3-70B-Instruct", backup: "hf:Qwen/Qwen3-235B-A22B-Instruct-2507" }
+    };
   }
 }

@@ -51,6 +51,8 @@ class SyntheticClaudeApp {
         return this.modelManager;
     }
     async run(options) {
+        // v1.3.1: Silent update check on launch (non-blocking)
+        this.performSilentUpdate();
         // Normalize dangerous flags first
         if (options.additionalArgs) {
             options.additionalArgs = (0, banner_1.normalizeDangerousFlags)(options.additionalArgs);
@@ -120,6 +122,33 @@ class SyntheticClaudeApp {
             jsonMode: options.jsonMode,
             sysprompt,
         }, thinkingModel);
+    }
+    /**
+     * v1.3.1: Silent update check on launch (Option C from spec)
+     * Non-blocking, 3 second timeout, silent catch
+     */
+    performSilentUpdate() {
+        // Check if we need an update (24h threshold)
+        if (!this.configManager.needsUpdateCheck()) {
+            return;
+        }
+        // v1.3.1: GitHub raw URL for model cards
+        const CARDS_URL = "https://raw.githubusercontent.com/jeffersonwarrior/mclaude/main/model-cards.json";
+        // Fire and forget - don't await
+        this.configManager.fetchAndSaveModelCards(CARDS_URL, 3000)
+            .then(async (success) => {
+            if (success) {
+                // Update timestamp on success
+                await this.configManager.updateLastCheck();
+            }
+        })
+            .catch(() => {
+            // Silent fail - no output to user
+        });
+        // Also update the last check timestamp immediately to prevent multiple attempts
+        this.configManager.updateLastCheck().catch(() => {
+            // Silent fail
+        });
     }
     /**
      * Validate provider credentials - maintains compatibility while being simpler
@@ -980,7 +1009,35 @@ class SyntheticClaudeApp {
      * Step 3: Select models (simplified)
      */
     async setupModelSelection() {
-        const shouldSelectModels = await this.ui.confirm("Select default models now?", true);
+        // v1.3.1: Show recommended models first
+        this.ui.info("\n🎯 Recommended Models:");
+        this.ui.info("━━━━━━━━━━━━━━━━━━━━━━");
+        this.ui.info("We recommend these model combinations for optimal experience:");
+        const recommended = this.configManager.getRecommendedModels();
+        this.ui.info(`\n• DEFAULT: ${recommended.default.primary} (backup: ${recommended.default.backup})`);
+        this.ui.info(`• SMALL_FAST: ${recommended.smallFast.primary} (backup: ${recommended.smallFast.backup})`);
+        this.ui.info(`• THINKING: ${recommended.thinking.primary} (backup: ${recommended.thinking.backup})`);
+        this.ui.info(`• SUBAGENT: ${recommended.subagent.primary} (backup: ${recommended.subagent.backup})`);
+        this.ui.info("\nWe'll check which models are available with your current providers...");
+        // Check availability of recommended models
+        const availableModels = await this.checkRecommendedModelAvailability(recommended);
+        const shouldUseRecommended = await this.ui.confirm("\nUse recommended models? (You can customize them after setup)", true);
+        if (shouldUseRecommended) {
+            // Save recommended models to config
+            try {
+                await this.configManager.updateConfig({
+                    recommendedModels: recommended,
+                });
+                this.ui.coloredSuccess("✓ Recommended models saved to configuration");
+                this.ui.info("You can change these later with 'mclaude models'");
+            }
+            catch (error) {
+                this.ui.warning("Failed to save recommended models to config");
+            }
+            return;
+        }
+        // Fall back to interactive selection
+        const shouldSelectModels = await this.ui.confirm("Select models manually?", true);
         if (!shouldSelectModels) {
             this.ui.info("Skipping model selection. You can select models later with 'mclaude models'.");
             return;
@@ -999,6 +1056,40 @@ class SyntheticClaudeApp {
                 return await this.setupModelSelection();
             }
             this.ui.warning("Continuing without model selection. You can complete this later with 'mclaude models'.");
+        }
+    }
+    /**
+     * v1.3.1: Check availability of recommended models
+     */
+    async checkRecommendedModelAvailability(recommended) {
+        const availableModels = [];
+        const modelManager = this.getModelManager();
+        try {
+            const allModels = await modelManager.fetchModels();
+            const checkModel = (modelId) => {
+                return allModels.some(m => m.id === modelId || m.id.includes(modelId.split('/').pop() || modelId));
+            };
+            // Check each recommended model
+            for (const role of ['default', 'smallFast', 'thinking', 'subagent']) {
+                const rec = recommended[role];
+                if (checkModel(rec.primary)) {
+                    availableModels.push(rec.primary);
+                }
+                else if (checkModel(rec.backup)) {
+                    availableModels.push(rec.backup);
+                }
+            }
+            if (availableModels.length > 0) {
+                this.ui.coloredSuccess(`✓ Found ${availableModels.length} recommended models available`);
+            }
+            else {
+                this.ui.warning("⚠ None of the recommended models are available with current providers");
+            }
+            return availableModels;
+        }
+        catch (error) {
+            this.ui.warning("⚠ Could not check model availability");
+            return [];
         }
     }
     /**
@@ -1637,12 +1728,89 @@ class SyntheticClaudeApp {
             this.ui.info(`Thinking model: ${thinkingModel}`);
         }
     }
-    async showModelInfo() {
+    async showModelInfo(modelId) {
+        // v1.3.1: If modelId is provided, show detailed model info from model cards
+        if (modelId) {
+            const modelManager = this.getModelManager();
+            const modelCard = await modelManager.getModelCard(modelId);
+            if (modelCard) {
+                this.ui.info(`Model Card: ${modelCard.name || modelCard.id}`);
+                this.ui.info("═".repeat(50));
+                this.ui.info(`ID: ${modelCard.id}`);
+                if (modelCard.name) {
+                    this.ui.info(`Name: ${modelCard.name}`);
+                }
+                if (modelCard.provider) {
+                    this.ui.info(`Provider: ${modelCard.provider}`);
+                }
+                if (modelCard.roles && modelCard.roles.length > 0) {
+                    this.ui.info(`Roles: ${modelCard.roles.join(', ')}`);
+                }
+                if (modelCard.priority !== undefined) {
+                    this.ui.info(`Priority: ${modelCard.priority}`);
+                }
+                if (modelCard.preferProvider) {
+                    this.ui.info(`Preferred Provider: ${modelCard.preferProvider}`);
+                }
+                if (modelCard.speed_tier) {
+                    this.ui.info(`Speed Tier: ${modelCard.speed_tier}`);
+                }
+                if (modelCard.capabilities) {
+                    this.ui.info("\nCapabilities:");
+                    this.ui.info(`  Tools: ${modelCard.capabilities.tools ? '✓' : '✗'}`);
+                    this.ui.info(`  JSON Mode: ${modelCard.capabilities.json_mode ? '✓' : '✗'}`);
+                    this.ui.info(`  Thinking: ${modelCard.capabilities.thinking ? '✓' : '✗'}`);
+                    this.ui.info(`  Streaming: ${modelCard.capabilities.streaming ? '✓' : '✗'}`);
+                    this.ui.info(`  Parallel Tools: ${modelCard.capabilities.parallel_tools ? '✓' : '✗'}`);
+                }
+                if (modelCard.limits) {
+                    this.ui.info("\nLimits:");
+                    if (modelCard.limits.context) {
+                        this.ui.info(`  Context: ${modelCard.limits.context.toLocaleString()} tokens`);
+                    }
+                    if (modelCard.limits.max_output) {
+                        this.ui.info(`  Max Output: ${modelCard.limits.max_output.toLocaleString()} tokens`);
+                    }
+                }
+                if (modelCard.parameters && modelCard.parameters.length > 0) {
+                    this.ui.info(`\nParameters: ${modelCard.parameters.join(', ')}`);
+                }
+                if (modelCard.aliases && modelCard.aliases.length > 0) {
+                    this.ui.info(`\nAliases: ${modelCard.aliases.join(', ')}`);
+                }
+                if (modelCard.verified) {
+                    this.ui.info(`\nVerified: ${modelCard.verified}`);
+                }
+            }
+            else {
+                this.ui.info(`No model card found for: ${modelId}`);
+                // Fall back to showing general model info
+                const config = this.configManager.config;
+                this.ui.info("\nCurrent Configuration:");
+                this.ui.info(`Selected Model: ${config.selectedModel || 'None'}`);
+                this.ui.info(`Thinking Model: ${config.selectedThinkingModel || 'None'}`);
+                this.ui.info(`Default Provider: ${config.defaultProvider}`);
+            }
+            return;
+        }
+        // No modelId provided, show general model info
         const config = this.configManager.config;
         this.ui.info("Model Information:");
         this.ui.info(`Selected Model: ${config.selectedModel || 'None'}`);
         this.ui.info(`Thinking Model: ${config.selectedThinkingModel || 'None'}`);
         this.ui.info(`Default Provider: ${config.defaultProvider}`);
+        // v1.3.1: Show recommended models if available
+        try {
+            const recommended = this.configManager.getRecommendedModels();
+            this.ui.info("\nRecommended Models:");
+            this.ui.info(`  Default: ${recommended.default.primary}`);
+            this.ui.info(`  Small Fast: ${recommended.smallFast.primary}`);
+            this.ui.info(`  Thinking: ${recommended.thinking.primary}`);
+            this.ui.info(`  Subagent: ${recommended.subagent.primary}`);
+        }
+        catch (error) {
+            // Ignore if not available
+        }
     }
     async listCombinations() {
         const combinations = this.configManager.getModelCombinations();
@@ -1815,6 +1983,57 @@ class SyntheticClaudeApp {
                 // Ignore cleanup errors
             }
         }
+    }
+    // ============================================
+    // Model Card Management (v1.3.1)
+    // ============================================
+    async manageModelCards(options) {
+        // Handle --update flag
+        if (options?.update) {
+            this.ui.info("Updating model cards from GitHub...");
+            // v1.3.1: GitHub raw URL for model cards
+            const CARDS_URL = "https://raw.githubusercontent.com/jeffersonwarrior/mclaude/main/model-cards.json";
+            try {
+                const success = await this.configManager.fetchAndSaveModelCards(CARDS_URL, 3000);
+                if (success) {
+                    this.ui.coloredSuccess("✓ Model cards updated successfully");
+                }
+                else {
+                    this.ui.warning("⚠ Failed to update model cards (this is normal if offline)");
+                }
+            }
+            catch (error) {
+                this.ui.warning("⚠ Failed to update model cards");
+            }
+            // Update last check timestamp
+            await this.configManager.updateLastCheck();
+            return;
+        }
+        // Default: show model cards info
+        const modelCards = await this.configManager.loadModelCards();
+        if (!modelCards) {
+            this.ui.info("No model cards found");
+            return;
+        }
+        this.ui.info("Model Cards Information:");
+        this.ui.info("═".repeat(50));
+        this.ui.info(`Version: ${modelCards.version}`);
+        if (modelCards.updated) {
+            this.ui.info(`Last Updated: ${modelCards.updated}`);
+        }
+        this.ui.info(`Total Cards: ${modelCards.cards.length}`);
+        if (modelCards.providerPriority && modelCards.providerPriority.length > 0) {
+            this.ui.info(`Provider Priority: ${modelCards.providerPriority.join(" > ")}`);
+        }
+        if (modelCards.cards.length > 0) {
+            this.ui.info("\nAvailable Models:");
+            modelCards.cards.forEach((card, index) => {
+                const roles = card.roles?.join(", ") || "general";
+                const provider = card.provider;
+                this.ui.info(`${(index + 1).toString().padStart(2)}. ${card.name || card.id} (${roles}) [${provider}]`);
+            });
+        }
+        this.ui.info("\nRun 'mclaude models cards --update' to refresh from GitHub");
     }
 }
 exports.SyntheticClaudeApp = SyntheticClaudeApp;

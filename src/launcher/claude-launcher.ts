@@ -180,15 +180,11 @@ export class ClaudeLauncher {
     // Set authentication based on provider
     env.ANTHROPIC_AUTH_TOKEN = this.getProviderApiKey(provider);
 
-    // Set all the model environment variables to the full model identifier
-    // This ensures Claude Code uses the correct model regardless of which tier it requests
-    env.ANTHROPIC_DEFAULT_OPUS_MODEL = model;
-    env.ANTHROPIC_DEFAULT_SONNET_MODEL = model;
-    env.ANTHROPIC_DEFAULT_HAIKU_MODEL = model;
-    env.ANTHROPIC_DEFAULT_HF_MODEL = model;
+    // v1.3.1: Set all 4 model environment variables to the full model identifier
+    // This ensures Claude Code uses the correct model for each role
     env.ANTHROPIC_DEFAULT_MODEL = model;
-
-    // Set Claude Code subagent model
+    env.ANTHROPIC_DEFAULT_SMALL_FAST_MODEL = model;
+    env.ANTHROPIC_DEFAULT_THINKING_MODEL = options.thinkingModel || model;
     env.CLAUDE_CODE_SUBAGENT_MODEL = model;
 
     // Set thinking model if provided

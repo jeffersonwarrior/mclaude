@@ -42,8 +42,17 @@ export declare class ModelManager {
     private fetchFromMiniMaxApi;
     /**
      * Remove duplicate models, preferring providers in priority order
+     * v1.3.1: Use provider priority from model cards or default to minimax > synthetic for MiniMax models
      */
     private deduplicateModels;
+    /**
+     * v1.3.1: Get model card for a model ID
+     */
+    getModelCard(modelId: string): Promise<any>;
+    /**
+     * v1.3.1: Get provider priority from model cards
+     */
+    getProviderPriority(): Promise<string[]>;
     getModels(models?: ModelInfoImpl[]): ModelInfoImpl[];
     searchModels(query: string, models?: ModelInfoImpl[]): Promise<ModelInfoImpl[]>;
     getModelById(modelId: string, models?: ModelInfoImpl[]): Promise<ModelInfoImpl | null>;

@@ -246,9 +246,10 @@ export function createProgram(): Command {
   modelsCmd
     .command("info")
     .description("Show model information")
-    .action(async () => {
+    .argument("[modelId]", "Model ID to show info for")
+    .action(async (modelId) => {
       const app = new SyntheticClaudeApp();
-      await app.showModelInfo();
+      await app.showModelInfo(modelId);
     });
 
   modelsCmd
@@ -257,6 +258,15 @@ export function createProgram(): Command {
     .action(async () => {
       const app = new SyntheticClaudeApp();
       await app.clearCache();
+    });
+
+  modelsCmd
+    .command("cards")
+    .description("Manage model cards")
+    .option("--update", "Force update model cards from GitHub")
+    .action(async (options) => {
+      const app = new SyntheticClaudeApp();
+      await app.manageModelCards(options);
     });
 
   modelsCmd

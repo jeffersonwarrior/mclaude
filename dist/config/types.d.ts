@@ -544,6 +544,83 @@ export declare const AppConfigSchema: z.ZodObject<{
         createdAt?: string | undefined;
     }>>;
     configVersion: z.ZodDefault<z.ZodNumber>;
+    recommendedModels: z.ZodDefault<z.ZodObject<{
+        default: z.ZodDefault<z.ZodObject<{
+            primary: z.ZodDefault<z.ZodString>;
+            backup: z.ZodDefault<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            primary: string;
+            backup: string;
+        }, {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        }>>;
+        smallFast: z.ZodDefault<z.ZodObject<{
+            primary: z.ZodDefault<z.ZodString>;
+            backup: z.ZodDefault<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            primary: string;
+            backup: string;
+        }, {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        }>>;
+        thinking: z.ZodDefault<z.ZodObject<{
+            primary: z.ZodDefault<z.ZodString>;
+            backup: z.ZodDefault<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            primary: string;
+            backup: string;
+        }, {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        }>>;
+        subagent: z.ZodDefault<z.ZodObject<{
+            primary: z.ZodDefault<z.ZodString>;
+            backup: z.ZodDefault<z.ZodString>;
+        }, "strip", z.ZodTypeAny, {
+            primary: string;
+            backup: string;
+        }, {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        }>>;
+    }, "strip", z.ZodTypeAny, {
+        default: {
+            primary: string;
+            backup: string;
+        };
+        smallFast: {
+            primary: string;
+            backup: string;
+        };
+        thinking: {
+            primary: string;
+            backup: string;
+        };
+        subagent: {
+            primary: string;
+            backup: string;
+        };
+    }, {
+        default?: {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        } | undefined;
+        smallFast?: {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        } | undefined;
+        thinking?: {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        } | undefined;
+        subagent?: {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        } | undefined;
+    }>>;
+    lastUpdateCheck: z.ZodOptional<z.ZodNumber>;
 }, "strip", z.ZodTypeAny, {
     providers: {
         synthetic: {
@@ -604,6 +681,24 @@ export declare const AppConfigSchema: z.ZodObject<{
         } | undefined;
     };
     configVersion: number;
+    recommendedModels: {
+        default: {
+            primary: string;
+            backup: string;
+        };
+        smallFast: {
+            primary: string;
+            backup: string;
+        };
+        thinking: {
+            primary: string;
+            backup: string;
+        };
+        subagent: {
+            primary: string;
+            backup: string;
+        };
+    };
     combination1?: {
         name?: string | undefined;
         regularModel?: string | undefined;
@@ -684,6 +779,7 @@ export declare const AppConfigSchema: z.ZodObject<{
         thinkingProvider?: string | undefined;
         createdAt?: string | undefined;
     } | undefined;
+    lastUpdateCheck?: number | undefined;
 }, {
     providers?: {
         synthetic?: {
@@ -824,12 +920,262 @@ export declare const AppConfigSchema: z.ZodObject<{
         createdAt?: string | undefined;
     } | undefined;
     configVersion?: number | undefined;
+    recommendedModels?: {
+        default?: {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        } | undefined;
+        smallFast?: {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        } | undefined;
+        thinking?: {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        } | undefined;
+        subagent?: {
+            primary?: string | undefined;
+            backup?: string | undefined;
+        } | undefined;
+    } | undefined;
+    lastUpdateCheck?: number | undefined;
 }>;
 export type AppConfig = z.infer<typeof AppConfigSchema>;
 export type Provider = ProviderType;
 export type SyntheticProviderConfig = z.infer<typeof SyntheticProviderConfig>;
 export type MinimaxProviderConfig = z.infer<typeof MinimaxProviderConfig>;
 export type LegacyAppConfig = z.infer<typeof LegacyAppConfigSchema>;
+export declare const ModelCardSchema: z.ZodObject<{
+    id: z.ZodString;
+    name: z.ZodOptional<z.ZodString>;
+    aliases: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    roles: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    priority: z.ZodDefault<z.ZodNumber>;
+    preferProvider: z.ZodOptional<z.ZodString>;
+    capabilities: z.ZodDefault<z.ZodObject<{
+        tools: z.ZodDefault<z.ZodBoolean>;
+        json_mode: z.ZodDefault<z.ZodBoolean>;
+        thinking: z.ZodDefault<z.ZodBoolean>;
+        streaming: z.ZodDefault<z.ZodBoolean>;
+        parallel_tools: z.ZodDefault<z.ZodBoolean>;
+    }, "strip", z.ZodTypeAny, {
+        streaming: boolean;
+        thinking: boolean;
+        tools: boolean;
+        json_mode: boolean;
+        parallel_tools: boolean;
+    }, {
+        streaming?: boolean | undefined;
+        thinking?: boolean | undefined;
+        tools?: boolean | undefined;
+        json_mode?: boolean | undefined;
+        parallel_tools?: boolean | undefined;
+    }>>;
+    limits: z.ZodDefault<z.ZodObject<{
+        context: z.ZodOptional<z.ZodNumber>;
+        max_output: z.ZodOptional<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        context?: number | undefined;
+        max_output?: number | undefined;
+    }, {
+        context?: number | undefined;
+        max_output?: number | undefined;
+    }>>;
+    parameters: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+    speed_tier: z.ZodDefault<z.ZodEnum<["fast", "medium", "slow"]>>;
+    provider: z.ZodString;
+    verified: z.ZodOptional<z.ZodString>;
+}, "strip", z.ZodTypeAny, {
+    id: string;
+    priority: number;
+    capabilities: {
+        streaming: boolean;
+        thinking: boolean;
+        tools: boolean;
+        json_mode: boolean;
+        parallel_tools: boolean;
+    };
+    limits: {
+        context?: number | undefined;
+        max_output?: number | undefined;
+    };
+    speed_tier: "fast" | "medium" | "slow";
+    provider: string;
+    name?: string | undefined;
+    aliases?: string[] | undefined;
+    roles?: string[] | undefined;
+    preferProvider?: string | undefined;
+    parameters?: string[] | undefined;
+    verified?: string | undefined;
+}, {
+    id: string;
+    provider: string;
+    name?: string | undefined;
+    aliases?: string[] | undefined;
+    roles?: string[] | undefined;
+    priority?: number | undefined;
+    preferProvider?: string | undefined;
+    capabilities?: {
+        streaming?: boolean | undefined;
+        thinking?: boolean | undefined;
+        tools?: boolean | undefined;
+        json_mode?: boolean | undefined;
+        parallel_tools?: boolean | undefined;
+    } | undefined;
+    limits?: {
+        context?: number | undefined;
+        max_output?: number | undefined;
+    } | undefined;
+    parameters?: string[] | undefined;
+    speed_tier?: "fast" | "medium" | "slow" | undefined;
+    verified?: string | undefined;
+}>;
+export type ModelCard = z.infer<typeof ModelCardSchema>;
+export declare const ModelCardsSchema: z.ZodObject<{
+    version: z.ZodDefault<z.ZodString>;
+    updated: z.ZodOptional<z.ZodString>;
+    providerPriority: z.ZodDefault<z.ZodArray<z.ZodString, "many">>;
+    cards: z.ZodDefault<z.ZodArray<z.ZodObject<{
+        id: z.ZodString;
+        name: z.ZodOptional<z.ZodString>;
+        aliases: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        roles: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        priority: z.ZodDefault<z.ZodNumber>;
+        preferProvider: z.ZodOptional<z.ZodString>;
+        capabilities: z.ZodDefault<z.ZodObject<{
+            tools: z.ZodDefault<z.ZodBoolean>;
+            json_mode: z.ZodDefault<z.ZodBoolean>;
+            thinking: z.ZodDefault<z.ZodBoolean>;
+            streaming: z.ZodDefault<z.ZodBoolean>;
+            parallel_tools: z.ZodDefault<z.ZodBoolean>;
+        }, "strip", z.ZodTypeAny, {
+            streaming: boolean;
+            thinking: boolean;
+            tools: boolean;
+            json_mode: boolean;
+            parallel_tools: boolean;
+        }, {
+            streaming?: boolean | undefined;
+            thinking?: boolean | undefined;
+            tools?: boolean | undefined;
+            json_mode?: boolean | undefined;
+            parallel_tools?: boolean | undefined;
+        }>>;
+        limits: z.ZodDefault<z.ZodObject<{
+            context: z.ZodOptional<z.ZodNumber>;
+            max_output: z.ZodOptional<z.ZodNumber>;
+        }, "strip", z.ZodTypeAny, {
+            context?: number | undefined;
+            max_output?: number | undefined;
+        }, {
+            context?: number | undefined;
+            max_output?: number | undefined;
+        }>>;
+        parameters: z.ZodOptional<z.ZodArray<z.ZodString, "many">>;
+        speed_tier: z.ZodDefault<z.ZodEnum<["fast", "medium", "slow"]>>;
+        provider: z.ZodString;
+        verified: z.ZodOptional<z.ZodString>;
+    }, "strip", z.ZodTypeAny, {
+        id: string;
+        priority: number;
+        capabilities: {
+            streaming: boolean;
+            thinking: boolean;
+            tools: boolean;
+            json_mode: boolean;
+            parallel_tools: boolean;
+        };
+        limits: {
+            context?: number | undefined;
+            max_output?: number | undefined;
+        };
+        speed_tier: "fast" | "medium" | "slow";
+        provider: string;
+        name?: string | undefined;
+        aliases?: string[] | undefined;
+        roles?: string[] | undefined;
+        preferProvider?: string | undefined;
+        parameters?: string[] | undefined;
+        verified?: string | undefined;
+    }, {
+        id: string;
+        provider: string;
+        name?: string | undefined;
+        aliases?: string[] | undefined;
+        roles?: string[] | undefined;
+        priority?: number | undefined;
+        preferProvider?: string | undefined;
+        capabilities?: {
+            streaming?: boolean | undefined;
+            thinking?: boolean | undefined;
+            tools?: boolean | undefined;
+            json_mode?: boolean | undefined;
+            parallel_tools?: boolean | undefined;
+        } | undefined;
+        limits?: {
+            context?: number | undefined;
+            max_output?: number | undefined;
+        } | undefined;
+        parameters?: string[] | undefined;
+        speed_tier?: "fast" | "medium" | "slow" | undefined;
+        verified?: string | undefined;
+    }>, "many">>;
+}, "strip", z.ZodTypeAny, {
+    version: string;
+    providerPriority: string[];
+    cards: {
+        id: string;
+        priority: number;
+        capabilities: {
+            streaming: boolean;
+            thinking: boolean;
+            tools: boolean;
+            json_mode: boolean;
+            parallel_tools: boolean;
+        };
+        limits: {
+            context?: number | undefined;
+            max_output?: number | undefined;
+        };
+        speed_tier: "fast" | "medium" | "slow";
+        provider: string;
+        name?: string | undefined;
+        aliases?: string[] | undefined;
+        roles?: string[] | undefined;
+        preferProvider?: string | undefined;
+        parameters?: string[] | undefined;
+        verified?: string | undefined;
+    }[];
+    updated?: string | undefined;
+}, {
+    version?: string | undefined;
+    updated?: string | undefined;
+    providerPriority?: string[] | undefined;
+    cards?: {
+        id: string;
+        provider: string;
+        name?: string | undefined;
+        aliases?: string[] | undefined;
+        roles?: string[] | undefined;
+        priority?: number | undefined;
+        preferProvider?: string | undefined;
+        capabilities?: {
+            streaming?: boolean | undefined;
+            thinking?: boolean | undefined;
+            tools?: boolean | undefined;
+            json_mode?: boolean | undefined;
+            parallel_tools?: boolean | undefined;
+        } | undefined;
+        limits?: {
+            context?: number | undefined;
+            max_output?: number | undefined;
+        } | undefined;
+        parameters?: string[] | undefined;
+        speed_tier?: "fast" | "medium" | "slow" | undefined;
+        verified?: string | undefined;
+    }[] | undefined;
+}>;
+export type ModelCards = z.infer<typeof ModelCardsSchema>;
 export declare class ConfigValidationError extends Error {
     cause?: unknown | undefined;
     constructor(message: string, cause?: unknown | undefined);
