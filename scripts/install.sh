@@ -82,7 +82,7 @@ check_for_updates() {
 
     # If GitHub API fails (no releases), use hardcoded latest version as fallback
     if [ -z "$LATEST_VERSION" ]; then
-        LATEST_VERSION="1.4.3"
+        LATEST_VERSION="1.4.4"
     fi
 
     # Ensure v prefix
