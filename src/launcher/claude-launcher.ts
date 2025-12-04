@@ -1,6 +1,7 @@
 import { spawn, ChildProcess } from "child_process";
 import { AppConfig, ConfigManager, ProviderType } from "../config";
 import { ModelInfoImpl } from "../models/info";
+import { ccrManager } from "../router/ccr-manager";
 
 export interface LaunchOptions {
   model: string;
@@ -89,6 +90,15 @@ export class ClaudeLauncher {
     options: LaunchOptions,
   ): Promise<LaunchResult> {
     try {
+      // Ensure CCR is running before launching Claude Code
+      const ccrStarted = await ccrManager.ensureRunning();
+      if (!ccrStarted) {
+        return {
+          success: false,
+          error: "Failed to start Claude Code Router",
+        };
+      }
+
       // Set up environment variables for Claude Code
       const env = {
         ...process.env,
@@ -162,54 +172,34 @@ export class ClaudeLauncher {
   ): Record<string, string> {
     const env: Record<string, string> = {};
 
-    // Determine the provider for the model
-    const provider = this.resolveProvider(options);
+    // CCR handles routing - set base URL to CCR endpoint
+    env.ANTHROPIC_BASE_URL = ccrManager.getBaseUrl();
 
-    // Get provider-specific configuration
-    const providerConfig = this.getProviderConfig(provider);
+    // CCR handles authentication - use a placeholder token
+    // CCR will use the API keys from its config
+    env.ANTHROPIC_AUTH_TOKEN = "mclaude";
 
-    if (!providerConfig) {
-      throw new Error(`Provider configuration not found for: ${provider}`);
-    }
-
+    // The model will be routed by CCR based on the Router config
     const model = options.model;
 
-    // Set provider-specific Anthropic-compatible endpoint
-    env.ANTHROPIC_BASE_URL = providerConfig.anthropicBaseUrl;
-
-    // Set authentication based on provider
-    env.ANTHROPIC_AUTH_TOKEN = this.getProviderApiKey(provider);
-
-    // v1.3.1: Set all 4 model environment variables to the full model identifier
-    // This ensures Claude Code uses the correct model for each role
+    // Set all the model environment variables to the full model identifier
+    // This ensures Claude Code uses the correct model regardless of which tier it requests
+    env.ANTHROPIC_DEFAULT_OPUS_MODEL = model;
+    env.ANTHROPIC_DEFAULT_SONNET_MODEL = model;
+    env.ANTHROPIC_DEFAULT_HAIKU_MODEL = model;
+    env.ANTHROPIC_DEFAULT_HF_MODEL = model;
     env.ANTHROPIC_DEFAULT_MODEL = model;
-    env.ANTHROPIC_DEFAULT_SMALL_FAST_MODEL = model;
-    env.ANTHROPIC_DEFAULT_THINKING_MODEL = options.thinkingModel || model;
     env.CLAUDE_CODE_SUBAGENT_MODEL = model;
 
     // Set thinking model if provided
+    // CCR will route it to the appropriate provider based on Router config
     if (options.thinkingModel) {
-      // Handle hybrid case where thinking model might be from different provider
-      const thinkingProvider = this.resolveThinkingProvider(
-        options.thinkingModel,
-        provider,
-      );
-      const thinkingConfig = this.getProviderConfig(thinkingProvider);
-
-      if (thinkingConfig && thinkingProvider !== provider) {
-        // Hybrid scenario: different providers for regular and thinking models
-        env.ANTHROPIC_THINKING_MODEL = options.thinkingModel;
-        env.ANTHROPIC_THINKING_BASE_URL = thinkingConfig.anthropicBaseUrl;
-        env.ANTHROPIC_THINKING_AUTH_TOKEN =
-          this.getProviderApiKey(thinkingProvider);
-      } else {
-        // Same provider for both models
-        env.ANTHROPIC_THINKING_MODEL = options.thinkingModel;
-      }
+      env.ANTHROPIC_THINKING_MODEL = options.thinkingModel;
     }
 
-    // Provider-specific optimizations
-    this.applyProviderOptimizations(env, provider, options);
+    // Provider-specific optimizations (for non-CCR scenarios)
+    // Note: Some optimizations may not apply when using CCR
+    // this.applyProviderOptimizations(env, provider, options);
 
     // Disable non-essential traffic
     env.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC = "1";

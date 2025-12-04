@@ -10,6 +10,8 @@ import { ModelInfoImpl } from "../models";
 import { setupLogging, log } from "../utils/logger";
 import { createBanner, normalizeDangerousFlags } from "../utils/banner";
 import { sanitizeApiError, isAuthError, getAuthErrorMessage, getAuthProvider, isNetworkError } from "../utils/error-sanitizer";
+import { ccrManager, CCRStatus } from "../router/ccr-manager";
+import { CCRConfigGenerator } from "../router/ccr-config";
 
 export interface AppOptions {
   verbose?: boolean;
@@ -32,6 +34,8 @@ export class SyntheticClaudeApp {
   private ui: UserInterface;
   private launcher: ClaudeLauncher;
   private modelManager: ModelManager | null = null;
+  public ccrManager: any;
+  public ccrConfigGenerator: any;
 
   constructor() {
     this.configManager = new ConfigManager();
@@ -42,6 +46,8 @@ export class SyntheticClaudeApp {
         : false,
     }, this.configManager);
     this.launcher = new ClaudeLauncher(undefined, this.configManager);
+    this.ccrManager = ccrManager;
+    this.ccrConfigGenerator = new CCRConfigGenerator(this.configManager);
   }
 
   async setupLogging(options: AppOptions): Promise<void> {
@@ -1328,10 +1334,23 @@ export class SyntheticClaudeApp {
       throw new Error("Setup completed but no providers are available. This shouldn't happen - please report this issue.");
     }
 
+    // Generate CCR configuration (v1.4.0)
+    this.ui.info("\n📋 Generating CCR Configuration...");
+    const configGenerator = new CCRConfigGenerator(this.configManager);
+    try {
+      await configGenerator.generateConfig();
+      this.ui.coloredSuccess("✓ CCR Configuration generated");
+      this.ui.info(`  Location: ${configGenerator.getConfigPath()}`);
+    } catch (error) {
+      this.ui.warning("⚠ Failed to generate CCR configuration");
+      this.ui.info("  You can generate it later with 'mclaude router config'");
+    }
+
     // Show final configuration summary
     this.ui.info("\n📋 Setup Summary:");
     this.ui.info("=================");
     this.ui.info(`✓ Available Providers: ${availableProviders}`);
+    this.ui.info(`✓ Multi-Provider Routing: CCR enabled`);
 
     if (this.configManager.hasSavedModel()) {
       this.ui.info(`✓ Default Model: ${this.configManager.getSavedModel()}`);
@@ -2361,6 +2380,100 @@ export class SyntheticClaudeApp {
       } catch {
         // Ignore cleanup errors
       }
+    }
+  }
+
+  // ============================================
+  // Router Management (v1.4.0)
+  // ============================================
+
+  async routerStatus(): Promise<void> {
+    this.ui.info("Checking CCR status...");
+    const status = await this.ccrManager.getStatus();
+
+    this.ui.info("\nClaude Code Router Status:");
+    this.ui.info("═".repeat(50));
+    this.ui.info(`Status: ${status.running ? chalk.green("Running") : chalk.red("Stopped")}`);
+    this.ui.info(`Port: ${status.port}`);
+    if (status.pid) {
+      this.ui.info(`PID: ${status.pid}`);
+    }
+    if (status.url) {
+      this.ui.info(`URL: ${status.url}`);
+    }
+
+    if (status.running) {
+      this.ui.success("\nCCR is running and ready");
+    } else {
+      this.ui.warning("\nCCR is not running");
+      this.ui.info("Run 'mclaude router start' to start CCR");
+    }
+  }
+
+  async routerRestart(): Promise<void> {
+    this.ui.info("Restarting CCR...");
+    const success = await this.ccrManager.restart();
+
+    if (success) {
+      this.ui.success("CCR restarted successfully");
+    } else {
+      this.ui.error("Failed to restart CCR");
+    }
+  }
+
+  async routerLogs(): Promise<void> {
+    this.ui.info("Fetching CCR logs...");
+    const logs = await this.ccrManager.getLogs();
+
+    this.ui.info("\nCCR Logs:");
+    this.ui.info("═".repeat(50));
+    console.log(logs);
+    this.ui.info("═".repeat(50));
+  }
+
+  async routerConfig(): Promise<void> {
+    this.ui.info("Generating CCR configuration...");
+    const configGenerated = await this.ccrManager.generateConfig();
+
+    if (!configGenerated) {
+      this.ui.error("Failed to generate CCR configuration");
+      return;
+    }
+
+    this.ui.success("CCR configuration generated");
+    this.ui.info(`Config location: ${this.ccrConfigGenerator.getConfigPath()}`);
+
+    // Show the config
+    const config = await this.ccrConfigGenerator.readConfig();
+    if (config) {
+      this.ui.info("\nGenerated CCR Configuration:");
+      this.ui.info("═".repeat(50));
+      console.log(JSON.stringify(config, null, 2));
+      this.ui.info("═".repeat(50));
+    }
+  }
+
+  async routerStart(): Promise<void> {
+    this.ui.info("Starting CCR...");
+    const success = await this.ccrManager.start();
+
+    if (success) {
+      this.ui.success("CCR started successfully");
+      const status = await this.ccrManager.getStatus();
+      this.ui.info(`Running on ${status.url}`);
+    } else {
+      this.ui.error("Failed to start CCR");
+    }
+  }
+
+  async routerStop(): Promise<void> {
+    this.ui.info("Stopping CCR...");
+    const success = await this.ccrManager.stop();
+
+    if (success) {
+      this.ui.success("CCR stopped");
+    } else {
+      this.ui.error("Failed to stop CCR");
     }
   }
 

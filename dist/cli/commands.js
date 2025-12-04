@@ -516,6 +516,52 @@ function createProgram() {
         const app = new app_1.SyntheticClaudeApp();
         await app.manageSysprompt(options);
     });
+    // Router management command
+    const routerCmd = program
+        .command("router")
+        .description("Manage Claude Code Router (CCR)");
+    routerCmd
+        .command("status")
+        .description("Check CCR status")
+        .action(async () => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.routerStatus();
+    });
+    routerCmd
+        .command("restart")
+        .description("Restart CCR")
+        .action(async () => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.routerRestart();
+    });
+    routerCmd
+        .command("logs")
+        .description("Show CCR logs")
+        .action(async () => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.routerLogs();
+    });
+    routerCmd
+        .command("config")
+        .description("Show generated CCR configuration")
+        .action(async () => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.routerConfig();
+    });
+    routerCmd
+        .command("start")
+        .description("Start CCR")
+        .action(async () => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.routerStart();
+    });
+    routerCmd
+        .command("stop")
+        .description("Stop CCR")
+        .action(async () => {
+        const app = new app_1.SyntheticClaudeApp();
+        await app.routerStop();
+    });
     // Help commands are handled in the main action
     // This prevents double registration and cleaner handling
     return program;
