@@ -92,12 +92,12 @@ class CCRConfigGenerator {
      * Format model for router (provider,model)
      */
     formatRouterModel(modelId) {
-        // If model already has provider prefix, keep it
-        if (modelId.includes(":")) {
-            const [provider, model] = modelId.split(":", 2);
-            return `${provider},${model}`;
+        // MiniMax models use minimax provider
+        if (modelId.startsWith("minimax:")) {
+            const model = modelId.replace("minimax:", "");
+            return `minimax,${model}`;
         }
-        // Default to synthetic for hf: prefixed models
+        // hf: prefixed models use synthetic provider (keep full model ID with hf:)
         if (modelId.startsWith("hf:")) {
             return `synthetic,${modelId}`;
         }
