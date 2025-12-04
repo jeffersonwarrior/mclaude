@@ -146,9 +146,12 @@ install_package() {
     # Check if we need to update
     if check_for_updates; then
         NEEDS_UPDATE=true
+        echo ""
         progress
     else
         NEEDS_UPDATE=false
+        echo ""
+        echo "✓ mclaude is already up to date!"
         return 0
     fi
 
