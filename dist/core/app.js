@@ -500,7 +500,7 @@ class SyntheticClaudeApp {
                             ...this.configManager.config.recommendedModels,
                             subagent: {
                                 primary: subagentModel.id,
-                                backup: this.configManager.config.recommendedModels?.subagent?.backup || "hf:deepseek-ai/DeepSeek-V3.2"
+                                backup: this.configManager.config.recommendedModels?.subagent?.backup || "synthetic:deepseek-ai/DeepSeek-V3.2"
                             }
                         }
                     });
@@ -1141,7 +1141,7 @@ class SyntheticClaudeApp {
         this.ui.info("\n📋 Setup Summary:");
         this.ui.info("=================");
         this.ui.info(`✓ Available Providers: ${availableProviders}`);
-        this.ui.info(`✓ Multi-Provider Routing: Direct provider routing (v1.5.0)`);
+        this.ui.info(`✓ Multi-Provider Routing: Direct provider routing (v1.5.1)`);
         if (this.configManager.hasSavedModel()) {
             this.ui.info(`✓ Default Model: ${this.configManager.getSavedModel()}`);
         }

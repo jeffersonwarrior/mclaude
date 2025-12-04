@@ -72,7 +72,7 @@ class ConfigManager {
                     default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
                     smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
                     thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-                    subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
+                    subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
                 }
             });
             const configPath = (0, path_1.join)(projectDir, 'config.json');
@@ -355,7 +355,7 @@ class ConfigManager {
                 default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
                 smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
                 thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-                subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
+                subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
             }
         });
         // Deep merge with priority order
@@ -538,7 +538,7 @@ class ConfigManager {
                     default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
                     smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
                     thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-                    subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
+                    subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
                 },
             };
             return migratedConfig;
@@ -553,7 +553,7 @@ class ConfigManager {
                 default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
                 smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
                 thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-                subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
+                subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
             },
         });
     }
@@ -1268,7 +1268,7 @@ class ConfigManager {
             default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
             smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
             thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-            subagent: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:meta-llama/Llama-3.3-70B-Instruct" }
+            subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
         };
     }
 }
