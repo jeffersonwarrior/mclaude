@@ -377,7 +377,7 @@ export class ConfigManager {
         return null;
       }
 
-      // v1.4.3: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
+      // v1.4.4: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
       const config = result.data;
       if (config.recommendedModels &&
           !config.selectedModel &&
@@ -559,7 +559,7 @@ export class ConfigManager {
         return AppConfigSchema.parse({ configVersion: 2 });
       }
 
-      // v1.4.3: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
+      // v1.4.4: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
       const config = result.data;
       if (config.recommendedModels &&
           !config.selectedModel &&

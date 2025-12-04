@@ -308,7 +308,7 @@ class ConfigManager {
                 console.warn(`Configuration validation failed for ${filePath}:`, result.error.message);
                 return null;
             }
-            // v1.4.3: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
+            // v1.4.4: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
             const config = result.data;
             if (config.recommendedModels &&
                 !config.selectedModel &&
@@ -454,7 +454,7 @@ class ConfigManager {
                 }
                 return types_1.AppConfigSchema.parse({ configVersion: 2 });
             }
-            // v1.4.3: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
+            // v1.4.4: Migration - if recommendedModels exist but selectedModel doesn't, migrate them
             const config = result.data;
             if (config.recommendedModels &&
                 !config.selectedModel &&

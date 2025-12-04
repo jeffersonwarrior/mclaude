@@ -155,7 +155,7 @@ If you encounter "Text string must be rendered inside Text component" errors:
 
 ## Version Information
 
-**Current Version**: 1.2.7
+**Current Version**: 1.4.4
 
 ### Recent Changes
 

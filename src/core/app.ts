@@ -1372,7 +1372,7 @@ export class SyntheticClaudeApp {
       throw new Error("Setup completed but no providers are available. This shouldn't happen - please report this issue.");
     }
 
-    // Generate CCR configuration (v1.4.0)
+    // Generate CCR configuration (v1.4.4)
     this.ui.info("\n📋 Generating CCR Configuration...");
     const configGenerator = new CCRConfigGenerator(this.configManager);
     try {
@@ -2422,7 +2422,7 @@ export class SyntheticClaudeApp {
   }
 
   // ============================================
-  // Router Management (v1.4.0)
+  // Router Management (v1.4.4)
   // ============================================
 
   async routerStatus(): Promise<void> {

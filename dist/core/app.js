@@ -1143,7 +1143,7 @@ class SyntheticClaudeApp {
         if (availableProviders === 0) {
             throw new Error("Setup completed but no providers are available. This shouldn't happen - please report this issue.");
         }
-        // Generate CCR configuration (v1.4.0)
+        // Generate CCR configuration (v1.4.4)
         this.ui.info("\n📋 Generating CCR Configuration...");
         const configGenerator = new ccr_config_1.CCRConfigGenerator(this.configManager);
         try {
@@ -2034,7 +2034,7 @@ class SyntheticClaudeApp {
         }
     }
     // ============================================
-    // Router Management (v1.4.0)
+    // Router Management (v1.4.4)
     // ============================================
     async routerStatus() {
         this.ui.info("Checking CCR status...");
