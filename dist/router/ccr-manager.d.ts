@@ -23,6 +23,7 @@ export declare class CCRManager {
     /**
      * Generate CCR configuration from mclaude config
      * Returns true if config was generated/changed
+     * Throws error only on actual failure, returns false when config hasn't changed
      */
     generateConfig(): Promise<boolean>;
     /**

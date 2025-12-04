@@ -23,8 +23,6 @@ export declare class SyntheticClaudeApp {
     constructor();
     setupLogging(options: AppOptions): Promise<void>;
     getConfig(): {
-        selectedModel: string;
-        selectedThinkingModel: string;
         providers: {
             synthetic: {
                 apiKey: string;
@@ -50,12 +48,14 @@ export declare class SyntheticClaudeApp {
                 topP?: number | undefined;
                 topK?: number | undefined;
                 contextSize?: number | undefined;
-                toolChoice?: "none" | "auto" | "required" | undefined;
+                toolChoice?: "auto" | "none" | "required" | undefined;
                 responseFormat?: "text" | "json_object" | undefined;
             };
         };
         defaultProvider: "synthetic" | "minimax" | "auto";
         cacheDurationHours: number;
+        selectedModel: string;
+        selectedThinkingModel: string;
         firstRunCompleted: boolean;
         tokenUsage: {
             totalInputTokens: number;
@@ -83,15 +83,15 @@ export declare class SyntheticClaudeApp {
         };
         configVersion: number;
         recommendedModels: {
-            thinking: {
-                primary: string;
-                backup: string;
-            };
             default: {
                 primary: string;
                 backup: string;
             };
             smallFast: {
+                primary: string;
+                backup: string;
+            };
+            thinking: {
                 primary: string;
                 backup: string;
             };

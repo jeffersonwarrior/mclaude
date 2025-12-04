@@ -1,6 +1,6 @@
 {
   "name": "mclaude",
-  "version": "1.4.1",
+  "version": "1.4.3",
   "description": "Interactive model selection tool for Claude Code with Synthetic AI models",
   "main": "dist/index.js",
   "bin": {
