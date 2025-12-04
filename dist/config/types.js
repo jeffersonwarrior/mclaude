@@ -265,7 +265,7 @@ exports.AppConfigSchema = zod_1.z.object({
         default: zod_1.z
             .object({
             primary: zod_1.z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
-            backup: zod_1.z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+            backup: zod_1.z.string().default("minimax:MiniMax-M2"),
         })
             .default({}),
         smallFast: zod_1.z
@@ -276,7 +276,7 @@ exports.AppConfigSchema = zod_1.z.object({
             .default({}),
         thinking: zod_1.z
             .object({
-            primary: zod_1.z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+            primary: zod_1.z.string().default("minimax:MiniMax-M2"),
             backup: zod_1.z.string().default("hf:deepseek-ai/DeepSeek-R1"),
         })
             .default({}),

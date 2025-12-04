@@ -278,7 +278,7 @@ export const AppConfigSchema = z.object({
       default: z
         .object({
           primary: z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
-          backup: z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+          backup: z.string().default("minimax:MiniMax-M2"),
         })
         .default({}),
       smallFast: z
@@ -289,7 +289,7 @@ export const AppConfigSchema = z.object({
         .default({}),
       thinking: z
         .object({
-          primary: z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+          primary: z.string().default("minimax:MiniMax-M2"),
           backup: z.string().default("hf:deepseek-ai/DeepSeek-R1"),
         })
         .default({}),
