@@ -69,12 +69,20 @@ check_for_updates() {
         return 0
     fi
 
-    # Get current version
-    CURRENT_VERSION=$(mclaude --version 2>/dev/null | grep -oP 'v\d+\.\d+\.\d+' || echo "v0.0.0")
+    # Get current version (handle both v1.4.1 and 1.4.1 formats)
+    CURRENT_VERSION=$(mclaude --version 2>/dev/null | grep -oP 'v?\d+\.\d+\.\d+' || echo "v0.0.0")
+    # Normalize to v prefix format
+    if [[ ! $CURRENT_VERSION =~ ^v ]]; then
+      CURRENT_VERSION="v$CURRENT_VERSION"
+    fi
     log "Current version: $CURRENT_VERSION"
 
-    # Get latest version from GitHub
+    # Get latest version from GitHub (normalize to v prefix)
     LATEST_VERSION=$(curl -s "https://api.github.com/repos/jeffersonwarrior/mclaude/releases/latest" 2>/dev/null | grep -oP '"tag_name":\s*"v\K[0-9]+\.[0-9]+\.[0-9]+' || echo "v0.0.0")
+    # Ensure v prefix
+    if [[ ! $LATEST_VERSION =~ ^v ]]; then
+      LATEST_VERSION="v$LATEST_VERSION"
+    fi
     log "Latest version: $LATEST_VERSION"
 
     # Compare versions (simple string comparison works for semantic versioning)
