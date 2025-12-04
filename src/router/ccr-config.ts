@@ -70,12 +70,11 @@ export class CCRConfigGenerator {
         // Use direct property access to avoid stale envOverrides
         const minimaxApiKey = currentConfig.providers.minimax.apiKey;
         if (minimaxApiKey) {
-          // Use the OpenAI-compatible endpoint from config
-          const minimaxBaseUrl = currentConfig.providers.minimax.baseUrl;
-          const minimaxOpenAiUrl = `${minimaxBaseUrl.replace(/\/$/, '')}/v1/chat/completions`;
+          // Use the Anthropic-compatible endpoint for coding plan
+          const minimaxAnthropicUrl = currentConfig.providers.minimax.anthropicBaseUrl;
           providers.push({
             name: "minimax",
-            api_base_url: minimaxOpenAiUrl,
+            api_base_url: minimaxAnthropicUrl,
             api_key: minimaxApiKey,
             models: this.getMinimaxModels(),
           });
