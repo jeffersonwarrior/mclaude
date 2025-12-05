@@ -1,0 +1,15 @@
+# NPM Token Configuration Template
+# Copy this file to ~/.npmrc and add your token
+
+# Option 1: Simple token
+#//registry.npmjs.org/:_authToken=npm_your_token_here
+
+# Option 2: Granular token with metadata
+#//registry.npmjs.org/:_authToken=npm_your_token_here
+#//registry.npmjs.org/:token-spec=mclaude@1.6.0
+
+# Security tips:
+# - Never commit .npmrc with real tokens to git
+# - Use environment variables in CI/CD: ${NPM_TOKEN}
+# - Token expires in 7 days (per your specification)
+# - MFA required for publishing
