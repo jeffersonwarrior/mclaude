@@ -73,10 +73,16 @@ export class LiteLLMProxy {
     fs.writeFileSync(configPath, configData);
 
     try {
+      // Set DATABASE_URL environment variable for LiteLLM's Prisma schema
+      const env = {
+        ...process.env,
+        DATABASE_URL: `file:${os.tmpdir()}/litellm.db`,
+      };
+
       // Start litellm proxy with the config file
-      this.process = spawn("npx", ["litellm", "--config", configPath], {
+      this.process = spawn("litellm", ["--config", configPath], {
         stdio: ["ignore", "pipe", "pipe"],
-        env: process.env,
+        env,
       }) as unknown as ChildProcessWithoutNullStreams;
 
       this.startTime = Date.now();
@@ -150,13 +156,13 @@ export class LiteLLMProxy {
   private async ensureLiteLLMInstalled(): Promise<void> {
     try {
       const { execSync } = require("child_process");
-      execSync("python3 -m litellm --version", { stdio: "ignore" });
+      execSync("litellm --version", { stdio: "ignore" });
       console.log("[LiteLLM] Python package verified");
     } catch (error) {
       console.log("[LiteLLM] Installing Python package...");
       try {
         const { execSync } = require("child_process");
-        execSync("python3 -m pip install litellm --quiet --break-system-packages", {
+        execSync("pip install litellm --quiet --break-system-packages", {
           stdio: "inherit",
         });
         console.log("[LiteLLM] ✅ Python package installed");
@@ -206,7 +212,6 @@ ${modelConfigs.join("\n")}
 
 general_settings:
   master_key: "sk-litellm"
-  database_url: "sqlite:///litellm.db"
 `;
   }
 

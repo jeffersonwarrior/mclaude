@@ -87,15 +87,15 @@ export declare class SyntheticClaudeApp {
         };
         configVersion: number;
         recommendedModels: {
-            thinking: {
-                primary: string;
-                backup: string;
-            };
             default: {
                 primary: string;
                 backup: string;
             };
             smallFast: {
+                primary: string;
+                backup: string;
+            };
+            thinking: {
                 primary: string;
                 backup: string;
             };

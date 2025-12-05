@@ -215,6 +215,9 @@ install_package() {
             warn "  pip install 'litellm[proxy]' prisma"
         fi
     fi
+
+    # Fix LiteLLM schema for SQLite compatibility
+    fix_litellm_schema
 }
 
 # Update PATH
@@ -294,6 +297,45 @@ show_final_message() {
 
     echo ""
     echo "Run 'mclaude setup' to configure (if needed), then 'mclaude' to start."
+}
+
+# Fix LiteLLM schema for SQLite compatibility
+fix_litellm_schema() {
+    log "Configuring LiteLLM for SQLite compatibility..."
+
+    # Find LiteLLM installation path
+    LITELLM_PATH=$(python3 -c "import litellm; import os; print(os.path.dirname(litellm.__file__))" 2>/dev/null || echo "")
+
+    if [ -z "$LITELLM_PATH" ]; then
+        warn "LiteLLM not found, skipping schema fix"
+        return 0
+    fi
+
+    SCHEMA_FILE="$LITELLM_PATH/proxy/schema.prisma"
+
+    if [ ! -f "$SCHEMA_FILE" ]; then
+        warn "LiteLLM schema file not found at $SCHEMA_FILE"
+        return 0
+    fi
+
+    # Check if already fixed
+    if grep -q 'provider = "sqlite"' "$SCHEMA_FILE" 2>/dev/null; then
+        log "LiteLLM schema already configured for SQLite"
+        return 0
+    fi
+
+    # Backup original schema
+    cp "$SCHEMA_FILE" "$SCHEMA_FILE.bak" 2>/dev/null || true
+
+    # Modify schema for SQLite
+    sed -i 's/provider = "postgresql"/provider = "sqlite"/g' "$SCHEMA_FILE" 2>/dev/null || true
+    sed -i 's/Json/String/g' "$SCHEMA_FILE" 2>/dev/null || true
+
+    # Clear Python cache
+    find "$LITELLM_PATH" -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+    find "$LITELLM_PATH" -type f -name "*.pyc" -delete 2>/dev/null || true
+
+    log "LiteLLM schema configured for SQLite"
 }
 
 # Main installation flow
