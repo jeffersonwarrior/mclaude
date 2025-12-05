@@ -1,6 +1,12 @@
 # MClaude 1.6.0
 
+[![npm version](https://img.shields.io/npm/v/mclaude)](https://www.npmjs.com/package/mclaude)
+[![npm downloads](https://img.shields.io/npm/dm/mclaude)](https://www.npmjs.com/package/mclaude)
+[![GitHub stars](https://img.shields.io/github/stars/jeffersonwarrior/mclaude)](https://github.com/jeffersonwarrior/mclaude)
+
 **MClaude makes Claude Code work with MiniMax and Synthetic AI models!** This modern TypeScript/Node.js CLI tool seamlessly bridges Claude Code with MiniMax and Synthetic model APIs through LiteLLM, unlocking model choice while maintaining the familiar Claude Code experience.
+
+**🚀 Now Available on npm!** Install with: `npm install -g mclaude`
 
 ## How It Works (v1.6.0 Architecture)
 
@@ -32,16 +38,16 @@ LiteLLM provides unified OpenAI/Anthropic-compatible routing, pattern-based mode
 
 ## Quick Start
 
-### Installation (One-line)
-
-```bash
-curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/mclaude/main/scripts/install.sh | bash
-```
-
-### Manual Installation
+### Installation (Recommended - via npm)
 
 ```bash
 npm install -g mclaude
+```
+
+### Alternative Installation (One-liner)
+
+```bash
+curl -sSL https://raw.githubusercontent.com/jeffersonwarrior/mclaude/main/scripts/install.sh | bash
 ```
 
 ### Initial Setup
@@ -162,7 +168,9 @@ If you encounter "Text string must be rendered inside Text component" errors:
 
 ## Version Information
 
-**Current Version**: 1.6.0
+**Current Version**: 1.6.0 - **Published on npm!**
+
+[![npm version](https://img.shields.io/npm/v/mclaude)](https://www.npmjs.com/package/mclaude)
 
 ### Recent Changes (v1.6.0)
 
@@ -173,6 +181,7 @@ If you encounter "Text string must be rendered inside Text component" errors:
 - 🛡️ **Graceful Fallback**: Direct provider connection if proxy fails
 - 🧹 **Code Quality**: 91% reduction in lint errors (8 errors, 84 warnings)
 - ✅ **Test Coverage**: 122/133 tests passing with improved stability
+- 🚀 **Published to npm**: Install with `npm install -g mclaude`
 
 ## License
 
