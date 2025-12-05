@@ -1,4 +1,4 @@
-import { readFile, readFileSync } from "fs";
+import { readFileSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
 
@@ -149,6 +149,7 @@ export class EnvironmentManager {
     }
   }
 
+  // eslint-disable-next-line no-fallthrough
   getApiUrl(
     provider: "synthetic" | "minimax",
     type: "anthropic" | "openai" | "base",
@@ -174,6 +175,8 @@ export class EnvironmentManager {
               process.env.SYNTHETIC_BASE_URL ||
               "https://api.synthetic.new"
             );
+          default:
+            return "";
         }
       case "minimax":
         switch (type) {
@@ -195,6 +198,8 @@ export class EnvironmentManager {
               process.env.MINIMAX_API_URL ||
               "https://api.minimax.io"
             );
+          default:
+            return "";
         }
       default:
         return "";

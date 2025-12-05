@@ -11,11 +11,11 @@ export declare class ModelManager {
     private cache;
     private minimaxClient;
     constructor(options: ModelManagerOptions);
-    fetchModels(forceRefresh?: boolean): Promise<ModelInfoImpl[]>;
+    fetchModels(_: boolean): Promise<ModelInfoImpl[]>;
     /**
      * Fetch models from a specific provider
      */
-    fetchFromProvider(provider: ProviderType, forceRefresh?: boolean): Promise<ModelInfoImpl[]>;
+    fetchFromProvider(provider: ProviderType, _: boolean): Promise<ModelInfoImpl[]>;
     /**
      * Enhance error with provider information for better error recovery
      */

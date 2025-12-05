@@ -188,6 +188,32 @@ install_package() {
         error "Failed to install dependencies or build project"
         exit 1
     fi
+
+    # Install LiteLLM Python package
+    progress
+    if python3 -m litellm --version &>/dev/null; then
+        log "LiteLLM Python package already installed"
+    else
+        log "Installing LiteLLM Python package..."
+        # Try multiple installation methods
+        if command -v pip3 &>/dev/null; then
+            pip3 install litellm --break-system-packages --quiet 2>/dev/null || true
+        fi
+        if command -v pip &>/dev/null; then
+            pip install litellm --break-system-packages --quiet 2>/dev/null || true
+        fi
+        if command -v pipx &>/dev/null; then
+            pipx install litellm 2>/dev/null || true
+        fi
+
+        # Verify installation
+        if python3 -m litellm --version &>/dev/null; then
+            log "LiteLLM Python package installed successfully"
+        else
+            warn "Could not install LiteLLM automatically. Please install manually:"
+            warn "  pip install litellm"
+        fi
+    fi
 }
 
 # Update PATH
@@ -286,6 +312,17 @@ main() {
 
     # Update PATH if needed
     update_path
+
+    # Run production setup
+    progress
+    if [ "$NEEDS_UPDATE" = "true" ]; then
+        log "Running production setup..."
+        if mclaude setup &>/dev/null 2>&1; then
+            log "Production setup completed"
+        else
+            warn "Production setup had warnings (this is OK)"
+        fi
+    fi
 
     # Verification
     verify_installation

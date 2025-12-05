@@ -1,6 +1,7 @@
-import { spawn, ChildProcess } from "child_process";
-import { AppConfig, ConfigManager, ProviderType } from "../config";
+import { spawn } from "child_process";
+import { ConfigManager, ProviderType } from "../config";
 import { ModelInfoImpl } from "../models/info";
+import { getRouterManager } from "../router/manager";
 
 export interface LaunchOptions {
   model: string;
@@ -38,6 +39,19 @@ export class ClaudeLauncher {
 
   async launchClaudeCode(options: LaunchOptions): Promise<LaunchResult> {
     try {
+      // Initialize LiteLLM proxy if enabled in config
+      if (this.configManager?.config.liteLLM?.enabled) {
+        try {
+          const routerManager = getRouterManager(this.configManager);
+          const routerStatus = await routerManager.initializeRouter();
+          if (routerStatus.running) {
+            console.info(`LiteLLM proxy started successfully at ${routerStatus.url}`);
+          }
+        } catch (error) {
+          console.warn(`Failed to start LiteLLM proxy, will use direct connections: ${error}`);
+        }
+      }
+
       // Validate environment setup before launch
       const validation = await this.validateEnvironment(options);
       if (!validation.valid) {
@@ -164,16 +178,31 @@ export class ClaudeLauncher {
 
     const provider = this.resolveProvider(options);
     const providerConfig = this.getProviderConfig(provider);
-    const apiKey = this.getProviderApiKey(provider);
 
     if (!providerConfig) {
       throw new Error(`No configuration found for provider: ${provider}`);
     }
 
-    // Set Anthropic base URL to the provider's endpoint
-    env.ANTHROPIC_BASE_URL = providerConfig.anthropicBaseUrl;
+    // Use LiteLLM proxy if enabled and running, otherwise use direct connection
+    let baseUrl = providerConfig.anthropicBaseUrl;
+    if (this.configManager?.config.liteLLM?.enabled) {
+      try {
+        const routerManager = getRouterManager(this.configManager);
+        const routerStatus = routerManager.getRouterStatus();
+        if (routerStatus?.running) {
+          baseUrl = `${routerStatus.url}/v1`;
+          console.info(`Routing through LiteLLM proxy: ${baseUrl}`);
+        }
+      } catch (error) {
+        console.warn(`Failed to get router status, using direct connection: ${error}`);
+      }
+    }
+
+    // Set Anthropic base URL
+    env.ANTHROPIC_BASE_URL = baseUrl;
 
     // Set the provider's API key
+    const apiKey = this.getProviderApiKey(provider);
     env.ANTHROPIC_AUTH_TOKEN = apiKey;
 
     // The model will be routed directly to the provider
@@ -189,8 +218,7 @@ export class ClaudeLauncher {
 
     // Get subagent model from config (use same provider)
     const subagentModel =
-      this.configManager?.config.recommendedModels?.subagent?.primary ||
-      model;
+      this.configManager?.config.recommendedModels?.subagent?.primary || model;
     env.CLAUDE_CODE_SUBAGENT_MODEL = subagentModel;
 
     // Set thinking model if provided
@@ -285,18 +313,25 @@ export class ClaudeLauncher {
 
     if (provider === "auto") {
       // For 'auto' provider, get the first enabled provider's config
+      if (!this.configManager) {
+        throw new Error("ConfigManager required for auto provider");
+      }
+      const configManager = this.configManager;
       const enabledProviders = ["synthetic", "minimax"].filter((p) =>
-        this.configManager!.isProviderEnabled(p as ProviderType),
+        configManager.isProviderEnabled(p as ProviderType),
       );
       if (enabledProviders.length > 0) {
-        return this.configManager.getProviderConfig(
-          enabledProviders[0] as ProviderType,
+        return configManager.getProviderConfig(
+          enabledProviders[0]! as ProviderType,
         );
       }
       // Fallback to synthetic if no providers enabled
-      return this.configManager.getProviderConfig("synthetic");
+      return configManager.getProviderConfig("synthetic");
     }
 
+    if (!this.configManager) {
+      throw new Error("ConfigManager required");
+    }
     return this.configManager.getProviderConfig(provider);
   }
 
@@ -312,21 +347,28 @@ export class ClaudeLauncher {
 
     if (provider === "auto") {
       // For 'auto' provider, get the first available API key
+      if (!this.configManager) {
+        throw new Error("ConfigManager required for auto provider");
+      }
+      const configManager = this.configManager;
       const enabledProviders = ["synthetic", "minimax"].filter((p) =>
-        this.configManager!.isProviderEnabled(p as ProviderType),
+        configManager.isProviderEnabled(p as ProviderType),
       );
 
       for (const p of enabledProviders) {
-        const apiKey = this.configManager.getEffectiveApiKey(p as ProviderType);
+        const apiKey = configManager.getEffectiveApiKey(p as ProviderType);
         if (apiKey) {
           return apiKey;
         }
       }
 
       // Fallback to synthetic if no API keys available
-      return this.configManager.getEffectiveApiKey("synthetic");
+      return configManager.getEffectiveApiKey("synthetic");
     }
 
+    if (!this.configManager) {
+      throw new Error("ConfigManager required");
+    }
     return this.configManager.getEffectiveApiKey(provider);
   }
 
@@ -339,7 +381,7 @@ export class ClaudeLauncher {
     options: LaunchOptions,
   ): void {
     switch (provider) {
-      case "minimax":
+      case "minimax": {
         // MiniMax-specific optimizations
         // Extended timeout for MiniMax M2
         if (
@@ -356,7 +398,8 @@ export class ClaudeLauncher {
         const minimaxConfig = this.configManager?.getProviderConfig("minimax");
 
         // Temperature
-        const temperature = options.temperature ?? (minimaxConfig as any)?.temperature;
+        const temperature =
+          options.temperature ?? (minimaxConfig as any)?.temperature;
         if (temperature !== undefined) {
           env.CLAUDE_CODE_TEMPERATURE = String(temperature);
         }
@@ -368,35 +411,42 @@ export class ClaudeLauncher {
         }
 
         // Context size (MiniMax M2 supports up to 1M tokens)
-        const contextSize = options.contextSize ?? (minimaxConfig as any)?.contextSize;
+        const contextSize =
+          options.contextSize ?? (minimaxConfig as any)?.contextSize;
         if (contextSize !== undefined) {
           env.CLAUDE_CODE_CONTEXT_SIZE = String(contextSize);
         }
 
         // Tool choice
-        const toolChoice = options.toolChoice ?? (minimaxConfig as any)?.toolChoice;
+        const toolChoice =
+          options.toolChoice ?? (minimaxConfig as any)?.toolChoice;
         if (toolChoice !== undefined) {
           env.CLAUDE_CODE_TOOL_CHOICE = toolChoice;
         }
 
         // Parallel tool calls (default true for MiniMax M2)
-        const parallelToolCalls = (minimaxConfig as any)?.parallelToolCalls ?? true;
+        const parallelToolCalls =
+          (minimaxConfig as any)?.parallelToolCalls ?? true;
         if (parallelToolCalls) {
           env.CLAUDE_CODE_PARALLEL_TOOL_CALLS = "1";
         }
 
         // Response format (JSON mode)
-        const responseFormat = options.jsonMode ? "json_object" : (minimaxConfig as any)?.responseFormat;
+        const responseFormat = options.jsonMode
+          ? "json_object"
+          : (minimaxConfig as any)?.responseFormat;
         if (responseFormat === "json_object") {
           env.CLAUDE_CODE_RESPONSE_FORMAT = "json_object";
         }
 
         // Memory compact mode
-        const memoryCompact = options.memoryCompact ?? (minimaxConfig as any)?.memoryCompact;
+        const memoryCompact =
+          options.memoryCompact ?? (minimaxConfig as any)?.memoryCompact;
         if (memoryCompact) {
           env.CLAUDE_CODE_MEMORY_COMPACT = "1";
         }
         break;
+      }
 
       case "synthetic":
         // Synthetic-specific optimizations
@@ -567,5 +617,19 @@ export class ClaudeLauncher {
 
   getClaudePath(): string {
     return this.claudePath;
+  }
+
+  /**
+   * Cleanup resources including LiteLLM proxy
+   */
+  async cleanup(): Promise<void> {
+    if (this.configManager?.config.liteLLM?.enabled) {
+      try {
+        const routerManager = getRouterManager(this.configManager);
+        await routerManager.cleanup();
+      } catch (error) {
+        console.warn(`Failed to cleanup router: ${error}`);
+      }
+    }
   }
 }

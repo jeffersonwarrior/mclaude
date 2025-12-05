@@ -69,41 +69,41 @@ export class ApiClient {
     this.axios.defaults.baseURL = baseURL;
   }
 
-  async get<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
+  async get<T = unknown>(url: string, config?: unknown): Promise<AxiosResponse<T>> {
     try {
-      return await this.axios.get<T>(url, config);
+      return await this.axios.get<T>(url, config as any);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async post<T = any>(
+  async post<T = unknown>(
     url: string,
-    data?: any,
-    config?: any,
+    data?: unknown,
+    config?: unknown,
   ): Promise<AxiosResponse<T>> {
     try {
-      return await this.axios.post<T>(url, data, config);
+      return await this.axios.post<T>(url, data as any, config as any);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async put<T = any>(
+  async put<T = unknown>(
     url: string,
-    data?: any,
-    config?: any,
+    data?: unknown,
+    config?: unknown,
   ): Promise<AxiosResponse<T>> {
     try {
-      return await this.axios.put<T>(url, data, config);
+      return await this.axios.put<T>(url, data as any, config as any);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async delete<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
+  async delete<T = unknown>(url: string, config?: unknown): Promise<AxiosResponse<T>> {
     try {
-      return await this.axios.delete<T>(url, config);
+      return await this.axios.delete<T>(url, config as any);
     } catch (error) {
       throw this.handleError(error);
     }
@@ -126,6 +126,7 @@ export class ApiClient {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleError(error: any): ApiError {
     if (axios.isAxiosError(error)) {
       if (error.response) {

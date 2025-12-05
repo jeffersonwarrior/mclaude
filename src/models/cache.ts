@@ -1,8 +1,6 @@
 import { readFile, writeFile, mkdir, stat, unlink } from "fs/promises";
-import { join } from "path";
 import { ModelInfo, CacheInfo } from "./types";
 import { ModelInfoImpl } from "./info";
-import { ProviderType } from "../config/types";
 
 export interface ModelCacheOptions {
   cacheFile: string;

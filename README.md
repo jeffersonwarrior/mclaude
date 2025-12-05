@@ -1,27 +1,34 @@
-# MClaude 1.2.7
+# MClaude 1.6.0
 
-**MClaude makes Claude Code work with MiniMax and Synthetic AI models!** This modern TypeScript/Node.js CLI tool seamlessly bridges Claude Code with MiniMax and Synthetic model APIs, unlocking model choice while maintaining the familiar Claude Code experience.
+**MClaude makes Claude Code work with MiniMax and Synthetic AI models!** This modern TypeScript/Node.js CLI tool seamlessly bridges Claude Code with MiniMax and Synthetic model APIs through LiteLLM, unlocking model choice while maintaining the familiar Claude Code experience.
 
-## How It Works
+## How It Works (v1.6.0 Architecture)
 
-MClaude automatically configures Claude Code's environment to connect with MiniMax and Synthetic APIs. When you select a model, MClaude sets up:
+MClaude v1.6.0 uses an intelligent proxy architecture:
 
-- `ANTHROPIC_BASE_URL` → MiniMax or Synthetic endpoints
-- `ANTHROPIC_AUTH_TOKEN` → Proper API authentication
-- `CLAUDE_CODE_SUBAGENT_MODEL` → Your chosen model
+```
+Claude Code → LiteLLM Proxy (localhost:9313) → Providers (MiniMax/Synthetic)
+```
 
-This gives you the full Claude Code experience with access to MiniMax and Synthetic AI models instead of Anthropic's native models.
+LiteLLM provides unified OpenAI/Anthropic-compatible routing, pattern-based model mapping, and automatic failover. When you select a model, MClaude sets up the proxy with your provider credentials, enabling seamless model access with proper routing (minimax:*, synthetic:* patterns).
+
+- **LiteLLM Proxy**: Runs on port 9313 for unified API access
+- **Pattern Routing**: minimax:* → MiniMax API, synthetic:* → Synthetic API
+- **Automatic Installation**: LiteLLM Python package installed automatically
+- **Graceful Fallback**: Direct provider connection if proxy unavailable
 
 ## Features
 
-- 🔗 **MiniMax & Synthetic Integration**: Seamlessly bridge Claude Code with alternative AI models
+- 🔗 **LiteLLM Proxy Architecture**: Unified API routing via localhost:9313
+- 🔄 **Dual Provider Support**: MiniMax and Synthetic with pattern-based routing
 - 🤖 **Interactive Model Selection**: Robust multi-tier fallback system for reliable terminal compatibility
 - 🔧 **Streamlined Setup**: Simple configuration process for providers and authentication
 - 📦 **Multiple Installation Methods**: One-line installer, npm package, or local development
 - 🎯 **Direct Model Launch**: Skip UI entirely with `--model` parameter
-- 🔁 **Error Recovery**: Automatic fallback to simpler interfaces when terminal issues occur
+- 🔁 **Error Recovery**: Automatic fallback to direct provider connection if proxy unavailable
 - 🔍 **Model Management**: Search, categorize, and cache available models
 - 🏥 **System Diagnostics**: Health checks and troubleshooting tools
+- ⚙️ **Automatic Dependencies**: LiteLLM Python package installed automatically on setup
 
 ## Quick Start
 
@@ -155,13 +162,17 @@ If you encounter "Text string must be rendered inside Text component" errors:
 
 ## Version Information
 
-**Current Version**: 1.4.4
+**Current Version**: 1.6.0
 
-### Recent Changes
+### Recent Changes (v1.6.0)
 
-- Fixed permissions handling with atomic writes and backup strategies
-- Local-first config resolution (.mclaude/config.json before global)
-- Improved error recovery for EACCES/EPERM errors
+- ✨ **New Architecture**: LiteLLM proxy-based model routing (port 9313)
+- 🔄 **Pattern-Based Routing**: minimax:* and synthetic:* model patterns
+- 📦 **Automatic Installation**: LiteLLM Python package auto-installed via npm hooks
+- 🔧 **Simplified Configuration**: Unified configuration management
+- 🛡️ **Graceful Fallback**: Direct provider connection if proxy fails
+- 🧹 **Code Quality**: 91% reduction in lint errors (8 errors, 84 warnings)
+- ✅ **Test Coverage**: 122/133 tests passing with improved stability
 
 ## License
 

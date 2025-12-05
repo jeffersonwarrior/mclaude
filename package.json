@@ -1,6 +1,6 @@
 {
   "name": "mclaude",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "Interactive model selection tool for Claude Code with Synthetic AI models",
   "main": "dist/index.js",
   "bin": {
@@ -20,7 +20,10 @@
     "prepublishOnly": "echo 'Skipping tests for publishing - 88% coverage achieved'",
     "preversion": "npm run lint",
     "version": "npm run format && git add -A src",
-    "postversion": "git push && git push --tags"
+    "postversion": "git push && git push --tags",
+    "postinstall": "npm run install-litellm",
+    "install-litellm": "python3 -m pip install litellm --quiet --break-system-packages 2>/dev/null || echo 'Note: Install litellm manually with: pip install litellm'",
+    "setup": "npm run install-litellm && node dist/config/setup-production.js"
   },
   "keywords": [
     "claude",
@@ -55,9 +58,9 @@
     "@types/jest": "^29.5.8",
     "@types/node": "^20.9.0",
     "@types/react": "^18.2.37",
-    "@typescript-eslint/eslint-plugin": "^6.11.0",
-    "@typescript-eslint/parser": "^6.11.0",
-    "eslint": "^8.54.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.1",
     "jest": "^29.7.0",

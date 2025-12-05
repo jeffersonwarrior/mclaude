@@ -3,7 +3,7 @@
  */
 
 export function sanitizeApiError(error: any): string {
-  if (typeof error === 'string') {
+  if (typeof error === "string") {
     return error;
   }
 
@@ -12,7 +12,7 @@ export function sanitizeApiError(error: any): string {
     const message = error.message;
 
     // Pattern for JSON API responses
-    if (message.includes('{') && message.includes('"')) {
+    if (message.includes("{") && message.includes('"')) {
       try {
         const parsed = JSON.parse(message);
         if (parsed.error || parsed.message) {
@@ -24,37 +24,39 @@ export function sanitizeApiError(error: any): string {
     }
 
     // Pattern for network errors
-    if (message.includes('timeout') || message.includes('ETIMEDOUT')) {
-      return 'Request timed out';
+    if (message.includes("timeout") || message.includes("ETIMEDOUT")) {
+      return "Request timed out";
     }
 
-    if (message.includes('ENOTFOUND') || message.includes('ECONNREFUSED')) {
-      return 'Network connection failed';
+    if (message.includes("ENOTFOUND") || message.includes("ECONNREFUSED")) {
+      return "Network connection failed";
     }
 
     // Pattern for HTTP status errors
-    if (message.includes('401')) {
-      return 'Authentication failed - check your API key';
+    if (message.includes("401")) {
+      return "Authentication failed - check your API key";
     }
 
-    if (message.includes('403')) {
-      return 'Access forbidden - check your permissions';
+    if (message.includes("403")) {
+      return "Access forbidden - check your permissions";
     }
 
-    if (message.includes('429')) {
-      return 'Rate limit exceeded - please try again later';
+    if (message.includes("429")) {
+      return "Rate limit exceeded - please try again later";
     }
 
-    if (message.includes('500')) {
-      return 'API server error - please try again later';
+    if (message.includes("500")) {
+      return "API server error - please try again later";
     }
 
     // Return first sentence of error message
-    const firstSentence = message.split('.')[0];
-    return firstSentence.length > 80 ? message.substring(0, 80) + '...' : firstSentence;
+    const firstSentence = message.split(".")[0];
+    return firstSentence.length > 80
+      ? message.substring(0, 80) + "..."
+      : firstSentence;
   }
 
-  return 'An unexpected error occurred';
+  return "An unexpected error occurred";
 }
 
 export function isAuthError(error: any): boolean {
@@ -65,64 +67,70 @@ export function isAuthError(error: any): boolean {
 
   // Check message content
   const message = error?.message || String(error);
-  return message.includes('401') ||
-         message.includes('403') ||
-         message.includes('Unauthorized') ||
-         message.includes('Invalid API key') ||
-         message.includes('Authentication failed') ||
-         message.includes('Access forbidden') ||
-         message.includes('MiniMax authentication failed') ||
-         message.includes('synthetic authentication failed');
+  return (
+    message.includes("401") ||
+    message.includes("403") ||
+    message.includes("Unauthorized") ||
+    message.includes("Invalid API key") ||
+    message.includes("Authentication failed") ||
+    message.includes("Access forbidden") ||
+    message.includes("MiniMax authentication failed") ||
+    message.includes("synthetic authentication failed")
+  );
 }
 
 export function isNetworkError(error: any): boolean {
   const message = error?.message || String(error);
-  return message.includes('ENOTFOUND') || message.includes('ECONNREFUSED') || message.includes('timeout');
+  return (
+    message.includes("ENOTFOUND") ||
+    message.includes("ECONNREFUSED") ||
+    message.includes("timeout")
+  );
 }
 
 export function getAuthErrorMessage(error: any): string {
   // Check for specific status codes
   if (error?.status === 401) {
-    return 'Your API key appears to be invalid or expired';
+    return "Your API key appears to be invalid or expired";
   }
 
   if (error?.status === 403) {
-    return 'Access forbidden - you may have insufficient permissions or quota exceeded';
+    return "Access forbidden - you may have insufficient permissions or quota exceeded";
   }
 
   // Check message content for provider-specific errors
   const message = error?.message || String(error);
 
-  if (message.includes('MiniMax')) {
-    return 'Your MiniMax API key appears to be invalid or expired';
+  if (message.includes("MiniMax")) {
+    return "Your MiniMax API key appears to be invalid or expired";
   }
 
-  if (message.includes('synthetic') || message.includes('Synthetic')) {
-    return 'Your Synthetic API key appears to be invalid or expired';
+  if (message.includes("synthetic") || message.includes("Synthetic")) {
+    return "Your Synthetic API key appears to be invalid or expired";
   }
 
-  return 'Authentication failed - your API key appears to be invalid or expired';
+  return "Authentication failed - your API key appears to be invalid or expired";
 }
 
-export function getAuthProvider(error: any): 'synthetic' | 'minimax' | null {
+export function getAuthProvider(error: any): "synthetic" | "minimax" | null {
   const message = error?.message || String(error);
 
-  if (message.includes('MiniMax')) {
-    return 'minimax';
+  if (message.includes("MiniMax")) {
+    return "minimax";
   }
 
-  if (message.includes('synthetic') || message.includes('Synthetic')) {
-    return 'synthetic';
+  if (message.includes("synthetic") || message.includes("Synthetic")) {
+    return "synthetic";
   }
 
   // Check error data for provider information
   if (error?.data) {
     const errorData = String(error.data);
-    if (errorData.includes('MiniMax')) {
-      return 'minimax';
+    if (errorData.includes("MiniMax")) {
+      return "minimax";
     }
-    if (errorData.includes('synthetic') || errorData.includes('Synthetic')) {
-      return 'synthetic';
+    if (errorData.includes("synthetic") || errorData.includes("Synthetic")) {
+      return "synthetic";
     }
   }
 

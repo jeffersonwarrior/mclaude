@@ -126,7 +126,7 @@ export class ModelInfoImpl implements ModelInfo {
    */
   getProviderTag(): string {
     const provider = this.getProvider();
-    const providerName = provider.trim() || 'unknown';
+    const providerName = provider.trim() || "unknown";
     switch (providerName) {
       case "synthetic":
         return "🤖 Synthetic";

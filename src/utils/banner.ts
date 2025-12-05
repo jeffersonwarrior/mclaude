@@ -59,14 +59,18 @@ export function createBanner(options: BannerOptions = {}): string {
 
   // Check for system prompt
   const syspromptInfo = configManager.getActiveSyspromptPath();
-  let syspromptDisplay = "None";
   if (syspromptInfo.type) {
-    syspromptDisplay = syspromptInfo.type;
     activeOptions.push(`sysprompt: ${syspromptInfo.type}`);
   }
 
-  const defaultModel = config.selectedModel || config.recommendedModels?.default?.primary || "None";
-  const thinkingModel = config.selectedThinkingModel || config.recommendedModels?.thinking?.primary || "None";
+  const defaultModel =
+    config.selectedModel ||
+    config.recommendedModels?.default?.primary ||
+    "None";
+  const thinkingModel =
+    config.selectedThinkingModel ||
+    config.recommendedModels?.thinking?.primary ||
+    "None";
   const subagentModel = config.recommendedModels?.subagent?.primary || "None";
   const fastModel = config.recommendedModels?.smallFast?.primary || "None";
   const optionsStr =

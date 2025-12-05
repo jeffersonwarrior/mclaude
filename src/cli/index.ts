@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { createProgram } from "./commands";
-import { setupLogging } from "../utils/logger";
 
 async function main() {
   try {

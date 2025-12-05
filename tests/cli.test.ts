@@ -467,7 +467,7 @@ describe('CLI Commands', () => {
 
         expect(process.exit).toHaveBeenCalledWith(0);
         expect(consoleSpy).toHaveBeenCalledWith(
-          expect.stringContaining('1.5.1')
+          expect.stringContaining('1.6.0')
         );
       } finally {
         consoleSpy.mockRestore();

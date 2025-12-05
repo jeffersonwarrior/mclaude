@@ -19,7 +19,9 @@ class ConfigManager {
         this.globalConfigDir = configDir || (0, path_1.join)((0, os_1.homedir)(), ".config", "mclaude");
         this.globalConfigPath = (0, path_1.join)(this.globalConfigDir, "config.json");
         this.localProjectDir = this.findLocalProjectConfig();
-        this.localConfigPath = this.localProjectDir ? (0, path_1.join)(this.localProjectDir, "config.json") : "";
+        this.localConfigPath = this.localProjectDir
+            ? (0, path_1.join)(this.localProjectDir, "config.json")
+            : "";
     }
     /**
      * Find the local project config directory by walking up from current directory
@@ -28,13 +30,13 @@ class ConfigManager {
     findLocalProjectConfig() {
         const cwd = process.cwd();
         let currentDir = cwd;
-        while (currentDir !== '/') {
-            const mclaudeDir = (0, path_1.join)(currentDir, '.mclaude');
+        while (currentDir !== "/") {
+            const mclaudeDir = (0, path_1.join)(currentDir, ".mclaude");
             if ((0, fs_1.existsSync)(mclaudeDir)) {
                 this.workspaceRoot = currentDir;
                 return mclaudeDir;
             }
-            currentDir = (0, path_1.join)(currentDir, '..');
+            currentDir = (0, path_1.join)(currentDir, "..");
         }
         return null;
     }
@@ -42,7 +44,7 @@ class ConfigManager {
      * Get the type of config currently being used
      */
     getConfigType() {
-        return !!this._configHierarchy?.localProjectConfig ? 'local' : 'global';
+        return this._configHierarchy?.localProjectConfig ? "local" : "global";
     }
     /**
      * Get the workspace root if local config is available
@@ -58,7 +60,7 @@ class ConfigManager {
             throw new types_1.ConfigLoadError("Local project config already exists at " + this.localProjectDir);
         }
         const cwd = process.cwd();
-        const projectDir = (0, path_1.join)(cwd, '.mclaude');
+        const projectDir = (0, path_1.join)(cwd, ".mclaude");
         try {
             await (0, promises_1.mkdir)(projectDir, { recursive: true });
             // Start with defaults
@@ -66,21 +68,33 @@ class ConfigManager {
                 configVersion: 2,
                 providers: {
                     synthetic: { enabled: true },
-                    minimax: { enabled: true }
+                    minimax: { enabled: true },
                 },
                 recommendedModels: {
-                    default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
-                    smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
-                    thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-                    subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
-                }
+                    default: {
+                        primary: "hf:deepseek-ai/DeepSeek-V3.2",
+                        backup: "hf:MiniMaxAI/MiniMax-M2",
+                    },
+                    smallFast: {
+                        primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct",
+                        backup: "hf:meta-llama/Llama-3.1-8B-Instruct",
+                    },
+                    thinking: {
+                        primary: "hf:MiniMaxAI/MiniMax-M2",
+                        backup: "hf:deepseek-ai/DeepSeek-R1",
+                    },
+                    subagent: {
+                        primary: "synthetic:deepseek-ai/DeepSeek-V3.2",
+                        backup: "minimax:MiniMax-M2",
+                    },
+                },
             });
-            const configPath = (0, path_1.join)(projectDir, 'config.json');
+            const configPath = (0, path_1.join)(projectDir, "config.json");
             const configJson = JSON.stringify(defaultConfig, null, 2);
             // Atomic write: write to .tmp file first, then rename
-            const tempPath = (0, path_1.join)(projectDir, 'config.json.tmp');
+            const tempPath = (0, path_1.join)(projectDir, "config.json.tmp");
             try {
-                await (0, promises_1.writeFile)(tempPath, configJson, 'utf-8');
+                await (0, promises_1.writeFile)(tempPath, configJson, "utf-8");
                 await (0, promises_1.chmod)(tempPath, 0o644); // More permissive for repo sharing
                 // Rename to final location (atomic operation)
                 const fs = require("fs/promises");
@@ -99,25 +113,25 @@ class ConfigManager {
                     // Ignore cleanup errors
                 }
                 // Handle permission errors gracefully
-                if (writeError.code === 'EACCES' || writeError.code === 'EPERM') {
+                if (writeError.code === "EACCES" || writeError.code === "EPERM") {
                     throw new types_1.ConfigSaveError(`Permission denied when creating local config at ${configPath}. ` +
                         `Check directory permissions.`, writeError);
                 }
                 throw writeError;
             }
             // Create .env.local template (git-ignored)
-            const envLocalPath = (0, path_1.join)(projectDir, '.env.local');
+            const envLocalPath = (0, path_1.join)(projectDir, ".env.local");
             const envTemplate = `# Local environment overrides (do not commit to git)
 # SYNTHETIC_API_KEY=
 # MINIMAX_API_KEY=
 # MINIMAX_GROUP_ID=
 `;
             try {
-                await (0, promises_1.writeFile)(envLocalPath, envTemplate, 'utf-8');
+                await (0, promises_1.writeFile)(envLocalPath, envTemplate, "utf-8");
                 await (0, promises_1.chmod)(envLocalPath, 0o600); // Restrictive for security
             }
             catch (envError) {
-                if (envError.code === 'EACCES' || envError.code === 'EPERM') {
+                if (envError.code === "EACCES" || envError.code === "EPERM") {
                     console.warn(`Permission denied when creating ${envLocalPath}. ` +
                         `You may need to create this file manually.`, envError);
                     // Continue anyway - this file is optional
@@ -127,18 +141,19 @@ class ConfigManager {
                 }
             }
             // Create .gitignore template for .mclaude directory
-            const gitignorePath = (0, path_1.join)(projectDir, '.gitignore');
+            const gitignorePath = (0, path_1.join)(projectDir, ".gitignore");
             const gitignoreTemplate = `.env.local
 # Local secrets
 # Template - uncomment if you want to add secrets to git ignore
 # Add other sensitive files here
 `;
             try {
-                await (0, promises_1.writeFile)(gitignorePath, gitignoreTemplate, 'utf-8');
+                await (0, promises_1.writeFile)(gitignorePath, gitignoreTemplate, "utf-8");
                 await (0, promises_1.chmod)(gitignorePath, 0o644);
             }
             catch (gitignoreError) {
-                if (gitignoreError.code === 'EACCES' || gitignoreError.code === 'EPERM') {
+                if (gitignoreError.code === "EACCES" ||
+                    gitignoreError.code === "EPERM") {
                     console.warn(`Permission denied when creating ${gitignorePath}. ` +
                         `You may need to create this file manually.`, gitignoreError);
                     // Continue anyway - this file is optional
@@ -203,7 +218,7 @@ class ConfigManager {
             const configJson = JSON.stringify(config, null, 2);
             try {
                 // Write to temporary file first
-                await (0, promises_1.writeFile)(tempPath, configJson, 'utf-8');
+                await (0, promises_1.writeFile)(tempPath, configJson, "utf-8");
                 // Set permissions on temp file before renaming
                 try {
                     if (permissions) {
@@ -218,11 +233,11 @@ class ConfigManager {
                 }
                 // Create backup with timestamp before overwriting
                 if (fsSync.existsSync(this.localConfigPath)) {
-                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
                     const backupPath = `${this.localConfigPath}.backup.${timestamp}`;
                     try {
-                        const existingData = await (0, promises_1.readFile)(this.localConfigPath, 'utf-8');
-                        await (0, promises_1.writeFile)(backupPath, existingData, 'utf-8');
+                        const existingData = await (0, promises_1.readFile)(this.localConfigPath, "utf-8");
+                        await (0, promises_1.writeFile)(backupPath, existingData, "utf-8");
                     }
                     catch (backupError) {
                         // Backup failed, but continue with saving
@@ -243,7 +258,7 @@ class ConfigManager {
                     // Ignore cleanup errors
                 }
                 // Handle permission errors gracefully
-                if (writeError.code === 'EACCES' || writeError.code === 'EPERM') {
+                if (writeError.code === "EACCES" || writeError.code === "EPERM") {
                     console.warn(`Permission denied when writing to ${this.localConfigPath}. ` +
                         `Configuration will not be persisted.`, writeError);
                     // Don't throw - allow the application to continue with in-memory config
@@ -315,7 +330,8 @@ class ConfigManager {
                 config.firstRunCompleted) {
                 console.log("Migrating recommended models to selected model fields...");
                 config.selectedModel = config.recommendedModels.default?.primary || "";
-                config.selectedThinkingModel = config.recommendedModels.thinking?.primary || "";
+                config.selectedThinkingModel =
+                    config.recommendedModels.thinking?.primary || "";
                 // Save the migrated config
                 this.saveConfig(config);
             }
@@ -349,14 +365,26 @@ class ConfigManager {
             configVersion: 2,
             providers: {
                 synthetic: { enabled: true },
-                minimax: { enabled: true }
+                minimax: { enabled: true },
             },
             recommendedModels: {
-                default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
-                smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
-                thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-                subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
-            }
+                default: {
+                    primary: "hf:deepseek-ai/DeepSeek-V3.2",
+                    backup: "minimax:MiniMax-M2",
+                },
+                smallFast: {
+                    primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct",
+                    backup: "hf:meta-llama/Llama-3.1-8B-Instruct",
+                },
+                thinking: {
+                    primary: "minimax:MiniMax-M2",
+                    backup: "hf:deepseek-ai/DeepSeek-R1",
+                },
+                subagent: {
+                    primary: "synthetic:deepseek-ai/DeepSeek-V3.2",
+                    backup: "minimax:MiniMax-M2",
+                },
+            },
         });
         // Deep merge with priority order
         let merged = { ...defaultConfig };
@@ -461,7 +489,8 @@ class ConfigManager {
                 config.firstRunCompleted) {
                 console.log("Migrating recommended models to selected model fields...");
                 config.selectedModel = config.recommendedModels.default?.primary || "";
-                config.selectedThinkingModel = config.recommendedModels.thinking?.primary || "";
+                config.selectedThinkingModel =
+                    config.recommendedModels.thinking?.primary || "";
                 // Save the migrated config
                 this.saveConfig(config);
             }
@@ -533,12 +562,30 @@ class ConfigManager {
                     ttlMinutes: 60,
                     maxEntries: 100,
                 },
+                liteLLM: {
+                    enabled: false,
+                    port: 9313,
+                    host: "127.0.0.1",
+                    timeout: 300000,
+                },
                 configVersion: 2,
                 recommendedModels: {
-                    default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "hf:MiniMaxAI/MiniMax-M2" },
-                    smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
-                    thinking: { primary: "hf:MiniMaxAI/MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-                    subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
+                    default: {
+                        primary: "hf:deepseek-ai/DeepSeek-V3.2",
+                        backup: "hf:MiniMaxAI/MiniMax-M2",
+                    },
+                    smallFast: {
+                        primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct",
+                        backup: "hf:meta-llama/Llama-3.1-8B-Instruct",
+                    },
+                    thinking: {
+                        primary: "hf:MiniMaxAI/MiniMax-M2",
+                        backup: "hf:deepseek-ai/DeepSeek-R1",
+                    },
+                    subagent: {
+                        primary: "synthetic:deepseek-ai/DeepSeek-V3.2",
+                        backup: "minimax:MiniMax-M2",
+                    },
                 },
             };
             return migratedConfig;
@@ -550,10 +597,22 @@ class ConfigManager {
             firstRunCompleted: legacyConfig.firstRunCompleted || false,
             configVersion: 2,
             recommendedModels: {
-                default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
-                smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
-                thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-                subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
+                default: {
+                    primary: "hf:deepseek-ai/DeepSeek-V3.2",
+                    backup: "minimax:MiniMax-M2",
+                },
+                smallFast: {
+                    primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct",
+                    backup: "hf:meta-llama/Llama-3.1-8B-Instruct",
+                },
+                thinking: {
+                    primary: "minimax:MiniMax-M2",
+                    backup: "hf:deepseek-ai/DeepSeek-R1",
+                },
+                subagent: {
+                    primary: "synthetic:deepseek-ai/DeepSeek-V3.2",
+                    backup: "minimax:MiniMax-M2",
+                },
             },
         });
     }
@@ -591,7 +650,7 @@ class ConfigManager {
                     permissions = 0o600;
                 }
                 // Create backup with timestamp
-                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
                 const backupPath = `${this.globalConfigPath}.backup.${timestamp}`;
                 try {
                     const existingData = await (0, promises_1.readFile)(this.globalConfigPath, "utf-8");
@@ -634,7 +693,7 @@ class ConfigManager {
                     // Ignore cleanup errors
                 }
                 // Handle permission errors gracefully
-                if (writeError.code === 'EACCES' || writeError.code === 'EPERM') {
+                if (writeError.code === "EACCES" || writeError.code === "EPERM") {
                     console.warn(`Permission denied when writing to ${this.globalConfigPath}. ` +
                         `Configuration will not be persisted.`, writeError);
                     // Don't throw - allow the application to continue with in-memory config
@@ -814,14 +873,20 @@ class ConfigManager {
         return {
             synthetic: {
                 enabled: config.providers.synthetic.enabled,
-                hasApiKey: Boolean(config.envOverrides.synthetic?.apiKey || config.providers.synthetic.apiKey),
-                available: config.providers.synthetic.enabled && Boolean(config.envOverrides.synthetic?.apiKey || config.providers.synthetic.apiKey)
+                hasApiKey: Boolean(config.envOverrides.synthetic?.apiKey ||
+                    config.providers.synthetic.apiKey),
+                available: config.providers.synthetic.enabled &&
+                    Boolean(config.envOverrides.synthetic?.apiKey ||
+                        config.providers.synthetic.apiKey),
             },
             minimax: {
                 enabled: config.providers.minimax.enabled,
-                hasApiKey: Boolean(config.envOverrides.minimax?.apiKey || config.providers.minimax.apiKey),
-                available: config.providers.minimax.enabled && Boolean(config.envOverrides.minimax?.apiKey || config.providers.minimax.apiKey)
-            }
+                hasApiKey: Boolean(config.envOverrides.minimax?.apiKey ||
+                    config.providers.minimax.apiKey),
+                available: config.providers.minimax.enabled &&
+                    Boolean(config.envOverrides.minimax?.apiKey ||
+                        config.providers.minimax.apiKey),
+            },
         };
     }
     /**
@@ -907,7 +972,8 @@ class ConfigManager {
     hasProviderApiKey(provider) {
         const config = this.config;
         const providerKey = provider;
-        return !!(config.providers[providerKey]?.apiKey && config.providers[providerKey]?.apiKey.length > 0);
+        return !!(config.providers[providerKey]?.apiKey &&
+            config.providers[providerKey]?.apiKey.length > 0);
     }
     getModelCombinations() {
         const config = this.config;
@@ -917,30 +983,30 @@ class ConfigManager {
     async resetConfig() {
         this._config = null;
         await this.updateConfig({
-            selectedModel: '',
-            selectedThinkingModel: '',
-            defaultProvider: 'synthetic',
+            selectedModel: "",
+            selectedThinkingModel: "",
+            defaultProvider: "synthetic",
             providers: {
                 synthetic: {
-                    apiKey: '',
-                    baseUrl: 'https://api.synthetic.new',
-                    anthropicBaseUrl: 'https://api.synthetic.new/anthropic',
-                    modelsApiUrl: 'https://api.synthetic.new/openai/v1/models',
-                    enabled: true
+                    apiKey: "",
+                    baseUrl: "https://api.synthetic.new",
+                    anthropicBaseUrl: "https://api.synthetic.new/anthropic",
+                    modelsApiUrl: "https://api.synthetic.new/openai/v1/models",
+                    enabled: true,
                 },
                 minimax: {
-                    apiKey: '',
-                    baseUrl: 'https://api.minimax.io',
-                    anthropicBaseUrl: 'https://api.minimax.io/anthropic',
-                    modelsApiUrl: 'https://api.minimax.io/v1/models',
+                    apiKey: "",
+                    baseUrl: "https://api.minimax.io",
+                    anthropicBaseUrl: "https://api.minimax.io/anthropic",
+                    modelsApiUrl: "https://api.minimax.io/v1/models",
                     enabled: false,
-                    defaultModel: '',
-                    groupId: '',
+                    defaultModel: "",
+                    groupId: "",
                     parallelToolCalls: true,
                     streaming: true,
                     memoryCompact: false,
-                }
-            }
+                },
+            },
         });
     }
     // ============================================
@@ -948,7 +1014,9 @@ class ConfigManager {
     // ============================================
     getSyspromptPaths() {
         const globalPath = (0, path_1.join)(this.globalConfigDir, "sysprompt.md");
-        const localPath = this.localProjectDir ? (0, path_1.join)(this.localProjectDir, "sysprompt.md") : null;
+        const localPath = this.localProjectDir
+            ? (0, path_1.join)(this.localProjectDir, "sysprompt.md")
+            : null;
         return { global: globalPath, local: localPath };
     }
     /**
@@ -958,11 +1026,11 @@ class ConfigManager {
         const paths = this.getSyspromptPaths();
         // Check local first (higher priority)
         if (paths.local && (0, fs_1.existsSync)(paths.local)) {
-            return { path: paths.local, type: 'local' };
+            return { path: paths.local, type: "local" };
         }
         // Fall back to global
         if ((0, fs_1.existsSync)(paths.global)) {
-            return { path: paths.global, type: 'global' };
+            return { path: paths.global, type: "global" };
         }
         return { path: null, type: null };
     }
@@ -977,7 +1045,7 @@ class ConfigManager {
         try {
             const fs = require("fs");
             const rawContent = fs.readFileSync(path, "utf-8");
-            const size = Buffer.byteLength(rawContent, 'utf-8');
+            const size = Buffer.byteLength(rawContent, "utf-8");
             if (!resolveVariables) {
                 return { content: rawContent, type, size };
             }
@@ -1011,8 +1079,13 @@ class ConfigManager {
         const variables = {
             "{{model}}": config.selectedModel || "not selected",
             "{{provider}}": config.defaultProvider || "auto",
-            "{{date}}": new Date().toISOString().split("T")[0] || new Date().toISOString().substring(0, 10),
-            "{{time}}": new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" }),
+            "{{date}}": new Date().toISOString().split("T")[0] ||
+                new Date().toISOString().substring(0, 10),
+            "{{time}}": new Date().toLocaleTimeString("en-US", {
+                hour12: false,
+                hour: "2-digit",
+                minute: "2-digit",
+            }),
             "{{cwd}}": process.cwd(),
             "{{project}}": projectName,
             "{{user}}": os.userInfo().username,
@@ -1031,10 +1104,18 @@ class ConfigManager {
         const WARN_SIZE = 4 * 1024; // 4KB
         const ERROR_SIZE = 8 * 1024; // 8KB
         if (size > ERROR_SIZE) {
-            return { valid: false, warning: false, message: `System prompt exceeds 8KB limit (${(size / 1024).toFixed(1)}KB)` };
+            return {
+                valid: false,
+                warning: false,
+                message: `System prompt exceeds 8KB limit (${(size / 1024).toFixed(1)}KB)`,
+            };
         }
         if (size > WARN_SIZE) {
-            return { valid: true, warning: true, message: `System prompt is large (${(size / 1024).toFixed(1)}KB). Consider reducing size.` };
+            return {
+                valid: true,
+                warning: true,
+                message: `System prompt is large (${(size / 1024).toFixed(1)}KB). Consider reducing size.`,
+            };
         }
         return { valid: true, warning: false, message: "" };
     }
@@ -1043,7 +1124,7 @@ class ConfigManager {
      */
     async saveSysprompt(content, global = false) {
         const paths = this.getSyspromptPaths();
-        const targetPath = global ? paths.global : (paths.local || paths.global);
+        const targetPath = global ? paths.global : paths.local || paths.global;
         try {
             const fs = require("fs/promises");
             const fsSync = require("fs");
@@ -1070,10 +1151,10 @@ class ConfigManager {
             return false;
         }
         try {
-            const fs = require("fs/promises");
-            const fsSync = require("fs");
-            if (fsSync.existsSync(targetPath)) {
-                await fs.unlink(targetPath);
+            const { unlink } = require("fs/promises"); // eslint-disable-line @typescript-eslint/no-unused-vars
+            const { existsSync } = require("fs"); // eslint-disable-line @typescript-eslint/no-unused-vars
+            if (existsSync(targetPath)) {
+                await unlink(targetPath);
             }
             return true;
         }
@@ -1124,7 +1205,7 @@ class ConfigManager {
         const today = new Date().toISOString().split("T")[0];
         // Update or create today's entry in history
         const history = [...currentUsage.history];
-        const todayIndex = history.findIndex(h => h.date === today);
+        const todayIndex = history.findIndex((h) => h.date === today);
         if (todayIndex >= 0) {
             history[todayIndex].inputTokens += inputTokens;
             history[todayIndex].outputTokens += outputTokens;
@@ -1135,7 +1216,7 @@ class ConfigManager {
         // Keep only last 30 days
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const filteredHistory = history.filter(h => new Date(h.date) >= thirtyDaysAgo);
+        const filteredHistory = history.filter((h) => new Date(h.date) >= thirtyDaysAgo);
         return this.updateConfig({
             tokenUsage: {
                 totalInputTokens: currentUsage.totalInputTokens + inputTokens,
@@ -1143,7 +1224,7 @@ class ConfigManager {
                 sessionTokens: currentUsage.sessionTokens + inputTokens + outputTokens,
                 lastUpdated: new Date().toISOString(),
                 history: filteredHistory,
-            }
+            },
         });
     }
     /**
@@ -1157,7 +1238,7 @@ class ConfigManager {
                 sessionTokens: 0,
                 lastUpdated: new Date().toISOString(),
                 history: [],
-            }
+            },
         });
     }
     // ============================================
@@ -1241,7 +1322,7 @@ class ConfigManager {
     async updateLastCheck() {
         try {
             return this.updateConfig({
-                lastUpdateCheck: Date.now()
+                lastUpdateCheck: Date.now(),
             });
         }
         catch (error) {
@@ -1257,19 +1338,31 @@ class ConfigManager {
         const lastCheck = config.lastUpdateCheck || 0;
         const now = Date.now();
         const oneDayMs = 24 * 60 * 60 * 1000;
-        return (now - lastCheck) > oneDayMs;
+        return now - lastCheck > oneDayMs;
     }
     /**
      * Get recommended models from config
      */
     getRecommendedModels() {
         const config = this.config;
-        return config.recommendedModels || {
-            default: { primary: "hf:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" },
-            smallFast: { primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct", backup: "hf:meta-llama/Llama-3.1-8B-Instruct" },
-            thinking: { primary: "minimax:MiniMax-M2", backup: "hf:deepseek-ai/DeepSeek-R1" },
-            subagent: { primary: "synthetic:deepseek-ai/DeepSeek-V3.2", backup: "minimax:MiniMax-M2" }
-        };
+        return (config.recommendedModels || {
+            default: {
+                primary: "hf:deepseek-ai/DeepSeek-V3.2",
+                backup: "minimax:MiniMax-M2",
+            },
+            smallFast: {
+                primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct",
+                backup: "hf:meta-llama/Llama-3.1-8B-Instruct",
+            },
+            thinking: {
+                primary: "minimax:MiniMax-M2",
+                backup: "hf:deepseek-ai/DeepSeek-R1",
+            },
+            subagent: {
+                primary: "synthetic:deepseek-ai/DeepSeek-V3.2",
+                backup: "minimax:MiniMax-M2",
+            },
+        });
     }
 }
 exports.ConfigManager = ConfigManager;

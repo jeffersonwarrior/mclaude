@@ -71,6 +71,12 @@ export declare class SyntheticClaudeApp {
             ttlMinutes: number;
             maxEntries: number;
         };
+        liteLLM: {
+            enabled: boolean;
+            timeout: number;
+            port: number;
+            host: string;
+        };
         envOverrides: {
             synthetic?: {
                 apiKey?: string | undefined;
@@ -81,15 +87,15 @@ export declare class SyntheticClaudeApp {
         };
         configVersion: number;
         recommendedModels: {
+            thinking: {
+                primary: string;
+                backup: string;
+            };
             default: {
                 primary: string;
                 backup: string;
             };
             smallFast: {
-                primary: string;
-                backup: string;
-            };
-            thinking: {
                 primary: string;
                 backup: string;
             };
@@ -190,7 +196,7 @@ export declare class SyntheticClaudeApp {
     /**
      * Validate provider credentials - maintains compatibility while being simpler
      */
-    validateProviderCredentials(forceRealApiTest?: boolean): Promise<{
+    validateProviderCredentials(_: boolean): Promise<{
         valid: boolean;
         authenticationError?: string | null;
         warnings?: string[];

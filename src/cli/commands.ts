@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import { SyntheticClaudeApp } from "../core/app";
-import { ConfigManager } from "../config";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { normalizeDangerousFlags } from "../utils/banner";
@@ -32,8 +31,14 @@ export function createProgram(): Command {
     // MiniMax M2 enhancements
     .option("--temperature <value>", "Sampling temperature (0.0-2.0)")
     .option("--top-p <value>", "Top-p sampling parameter (0.0-1.0)")
-    .option("--preset <preset>", "Temperature preset: creative, precise, balanced")
-    .option("--context-size <size>", "Context window size (up to 1M for MiniMax M2)")
+    .option(
+      "--preset <preset>",
+      "Temperature preset: creative, precise, balanced",
+    )
+    .option(
+      "--context-size <size>",
+      "Context window size (up to 1M for MiniMax M2)",
+    )
     .option("--tool-choice <mode>", "Tool choice mode: auto, none, required")
     .option("--no-stream", "Disable streaming responses")
     .option("--memory <mode>", "Memory mode: compact")
@@ -42,7 +47,7 @@ export function createProgram(): Command {
     .passThroughOptions(true);
 
   // Main command (launch Claude Code)
-  program.action(async (options, command) => {
+  program.action(async (options) => {
     // Get all raw args from process.argv and extract unknown options
     const rawArgs = process.argv.slice(2);
     const additionalArgs: string[] = [];
@@ -72,7 +77,6 @@ export function createProgram(): Command {
     // Check for invalid commands (non-flag arguments that aren't help)
     // We need to be careful not to treat option values as commands
     const validCommands = new Set(["help", "/help"]);
-    const knownOptions = new Set(["--model", "--thinking-model", "--verbose", "--quiet", "--help", "--version", "-m", "-t", "-v", "-q", "-h", "-V"]);
 
     // Find arguments that could be commands (not option values)
     let potentialCommand: string | undefined;
@@ -84,7 +88,11 @@ export function createProgram(): Command {
       if (arg.startsWith("-")) {
         // If it's an option that takes a value, skip the next argument too
         const baseOption = arg.split("=")[0];
-        if (baseOption && ["--model", "--thinking-model", "-m", "-t"].includes(baseOption) && !arg.includes("=")) {
+        if (
+          baseOption &&
+          ["--model", "--thinking-model", "-m", "-t"].includes(baseOption) &&
+          !arg.includes("=")
+        ) {
           i++; // Skip the value
         }
         continue;
@@ -105,10 +113,46 @@ export function createProgram(): Command {
       }
 
       // Check if this looks like an invalid command (not a subcommand we know about)
-      const isKnownSubcommand = ['model', 'thinking-model', 'providers', 'models', 'search', 'config', 'setup', 'doctor', 'dangerously', 'dangerous', 'danger', 'cache', 'combination', 'list', 'info', 'clear-cache', 'enable', 'disable', 'status', 'test', 'show', 'set', 'provider', 'init', 'local', 'global', 'migrate', 'whoami', 'reset', 'set-default-provider', 'save', 'delete', 'stats', 'sysprompt', 'auth'].includes(potentialCommand);
+      const isKnownSubcommand = [
+        "model",
+        "thinking-model",
+        "providers",
+        "models",
+        "search",
+        "config",
+        "setup",
+        "doctor",
+        "dangerously",
+        "dangerous",
+        "danger",
+        "cache",
+        "combination",
+        "list",
+        "info",
+        "clear-cache",
+        "enable",
+        "disable",
+        "status",
+        "test",
+        "show",
+        "set",
+        "provider",
+        "init",
+        "local",
+        "global",
+        "migrate",
+        "whoami",
+        "reset",
+        "set-default-provider",
+        "save",
+        "delete",
+        "stats",
+        "sysprompt",
+        "auth",
+      ].includes(potentialCommand);
       if (!isKnownSubcommand) {
         console.error(`Unknown command: ${potentialCommand}`);
-        console.log('\nShowing available commands:');
+        console.log("\nShowing available commands:");
         program.help();
         return;
       }
@@ -118,23 +162,22 @@ export function createProgram(): Command {
       const arg = rawArgs[i];
       if (arg && arg.startsWith("--")) {
         // Check if this is a known mclaude option
-        const flagName = arg.split("=")[0]!; // Handle --flag=value format
+        const flagName = arg.split("=")[0]!;
         if (!knownFlags.has(flagName) && !knownFlags.has(arg)) {
           additionalArgs.push(arg);
           // If this is a flag that takes a value and it's not in --flag=value format, skip the next arg
+          const nextArg = rawArgs[i + 1];
           if (
             !arg.includes("=") &&
-            i + 1 < rawArgs.length &&
-            rawArgs[i + 1] &&
-            !rawArgs[i + 1]!.startsWith("-")
+            nextArg &&
+            !nextArg.startsWith("-")
           ) {
-            additionalArgs.push(rawArgs[i + 1]!);
+            additionalArgs.push(nextArg);
             i++; // Skip the next argument as it's a value
           }
         }
       }
     }
-
 
     const app = new SyntheticClaudeApp();
     // Normalize dangerous flags
@@ -148,9 +191,18 @@ export function createProgram(): Command {
     .description("Interactive model selection and launch Claude Code")
     .option("-v, --verbose", "Enable verbose logging")
     .option("-q, --quiet", "Suppress non-error output")
-    .option("--provider <name>", "Select from specific provider only (synthetic, minimax, auto)")
-    .option("--thinking-provider <name>", "Use different provider for thinking model")
-    .option("--save-combination <name>", "Save this provider combination for future use")
+    .option(
+      "--provider <name>",
+      "Select from specific provider only (synthetic, minimax, auto)",
+    )
+    .option(
+      "--thinking-provider <name>",
+      "Use different provider for thinking model",
+    )
+    .option(
+      "--save-combination <name>",
+      "Save this provider combination for future use",
+    )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
       const success = await app.interactiveModelSelection(options);
@@ -173,7 +225,7 @@ export function createProgram(): Command {
     .command("thinking-model")
     .description("Interactive thinking model selection and save to config")
     .option("-v, --verbose", "Enable verbose logging")
-    .action(async (options) => {
+    .action(async () => {
       const app = new SyntheticClaudeApp();
       await app.interactiveThinkingModelSelection();
     });
@@ -225,7 +277,8 @@ export function createProgram(): Command {
     });
 
   // Models command group
-  const modelsCmd = program.command("models")
+  const modelsCmd = program
+    .command("models")
     .description("List available models")
     .option("--refresh", "Force refresh model cache")
     .action(async (options) => {
@@ -237,7 +290,10 @@ export function createProgram(): Command {
     .command("list")
     .description("List available models")
     .option("--refresh", "Force refresh model cache")
-    .option("--provider <name>", "Filter models by provider (synthetic, minimax, auto)")
+    .option(
+      "--provider <name>",
+      "Filter models by provider (synthetic, minimax, auto)",
+    )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
       await app.listModels(options);
@@ -279,18 +335,20 @@ export function createProgram(): Command {
     });
 
   // Default models command (alias for list)
-  modelsCmd
-    .action(async (options, command) => {
-      const app = new SyntheticClaudeApp();
-      await app.listModels(options);
-    });
+  modelsCmd.action(async (options) => {
+    const app = new SyntheticClaudeApp();
+    await app.listModels(options);
+  });
 
   // Search models command (top-level for backward compatibility)
   program
     .command("search <query>")
     .description("Search models by name or provider")
     .option("--refresh", "Force refresh model cache")
-    .option("--provider <name>", "Search within specific provider (synthetic, minimax, auto)")
+    .option(
+      "--provider <name>",
+      "Search within specific provider (synthetic, minimax, auto)",
+    )
     .action(async (query, options) => {
       const app = new SyntheticClaudeApp();
       await app.searchModels(query, options);
@@ -393,7 +451,10 @@ export function createProgram(): Command {
   configCmd
     .command("reset")
     .description("Reset configuration to defaults")
-    .option("--scope <scope>", "Reset scope: 'local' or 'global' (falls back to current mode)")
+    .option(
+      "--scope <scope>",
+      "Reset scope: 'local' or 'global' (falls back to current mode)",
+    )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
       await app.resetConfig(options);
@@ -408,7 +469,9 @@ export function createProgram(): Command {
     });
 
   // Combination management commands
-  const combinationCmd = program.command("combination").description("Manage model combinations");
+  const combinationCmd = program
+    .command("combination")
+    .description("Manage model combinations");
 
   combinationCmd
     .command("list")
@@ -435,11 +498,10 @@ export function createProgram(): Command {
     });
 
   // Default combination command (alias for list)
-  combinationCmd
-    .action(async () => {
-      const app = new SyntheticClaudeApp();
-      await app.listCombinations();
-    });
+  combinationCmd.action(async () => {
+    const app = new SyntheticClaudeApp();
+    await app.listCombinations();
+  });
 
   // Setup command
   program
@@ -530,12 +592,17 @@ export function createProgram(): Command {
     });
 
   // Authentication management commands
-  const authCmd = program.command("auth").description("Manage authentication credentials");
+  const authCmd = program
+    .command("auth")
+    .description("Manage authentication credentials");
 
   authCmd
     .command("check")
     .description("Check authentication status for all providers")
-    .option("--provider <name>", "Check specific provider only (synthetic, minimax)")
+    .option(
+      "--provider <name>",
+      "Check specific provider only (synthetic, minimax)",
+    )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
       await app.checkAuth(options);
@@ -559,7 +626,9 @@ export function createProgram(): Command {
 
   authCmd
     .command("refresh [provider]")
-    .description("Refresh authentication for all providers or specific provider")
+    .description(
+      "Refresh authentication for all providers or specific provider",
+    )
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
       await app.refreshAuth(provider);
@@ -591,8 +660,14 @@ export function createProgram(): Command {
     .description("Manage custom system prompts for Claude Code");
 
   syspromptCmd
-    .option("--global", "Edit global system prompt (~/.config/mclaude/sysprompt.md)")
-    .option("--show", "Display current active system prompt (with variables resolved)")
+    .option(
+      "--global",
+      "Edit global system prompt (~/.config/mclaude/sysprompt.md)",
+    )
+    .option(
+      "--show",
+      "Display current active system prompt (with variables resolved)",
+    )
     .option("--clear", "Remove system prompt (revert to Claude default)")
     .option("--raw", "Show raw system prompt without resolving variables")
     .action(async (options) => {

@@ -135,9 +135,12 @@ export async function testConfigurationSystem(): Promise<void> {
     const workspaceRoot = configManager.getWorkspaceRoot();
 
     console.log("Configuration type:", configType);
-    console.log("Workspace root:", workspaceRoot || "None (using global config)");
+    console.log(
+      "Workspace root:",
+      workspaceRoot || "None (using global config)",
+    );
 
-    if (configType === 'local' && workspaceRoot) {
+    if (configType === "local" && workspaceRoot) {
       console.log("✓ Using local project configuration");
       console.log("Local config would override global for local settings");
     } else {

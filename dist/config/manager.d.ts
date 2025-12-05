@@ -22,7 +22,7 @@ export declare class ConfigManager {
     /**
      * Get the type of config currently being used
      */
-    getConfigType(): 'local' | 'global';
+    getConfigType(): "local" | "global";
     /**
      * Get the workspace root if local config is available
      */
@@ -137,14 +137,14 @@ export declare class ConfigManager {
      */
     getActiveSyspromptPath(): {
         path: string | null;
-        type: 'local' | 'global' | null;
+        type: "local" | "global" | null;
     };
     /**
      * Load and resolve system prompt with template variables
      */
     loadSysprompt(resolveVariables?: boolean): Promise<{
         content: string | null;
-        type: 'local' | 'global' | null;
+        type: "local" | "global" | null;
         size: number;
     }>;
     /**

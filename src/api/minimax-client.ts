@@ -1,6 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from "axios";
 import { ApiModelsResponse, ApiError } from "../models/types";
-import { ProviderType } from "../config/types";
 
 export interface MiniMaxClientOptions {
   baseURL?: string;
@@ -74,41 +73,41 @@ export class MiniMaxClient {
     this.axios.defaults.baseURL = baseURL;
   }
 
-  async get<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
+  async get<T = unknown>(url: string, config?: unknown): Promise<AxiosResponse<T>> {
     try {
-      return await this.axios.get<T>(url, config);
+      return await this.axios.get<T>(url, config as any);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async post<T = any>(
+  async post<T = unknown>(
     url: string,
-    data?: any,
-    config?: any,
+    data?: unknown,
+    config?: unknown,
   ): Promise<AxiosResponse<T>> {
     try {
-      return await this.axios.post<T>(url, data, config);
+      return await this.axios.post<T>(url, data as any, config as any);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async put<T = any>(
+  async put<T = unknown>(
     url: string,
-    data?: any,
-    config?: any,
+    data?: unknown,
+    config?: unknown,
   ): Promise<AxiosResponse<T>> {
     try {
-      return await this.axios.put<T>(url, data, config);
+      return await this.axios.put<T>(url, data as any, config as any);
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async delete<T = any>(url: string, config?: any): Promise<AxiosResponse<T>> {
+  async delete<T = unknown>(url: string, config?: unknown): Promise<AxiosResponse<T>> {
     try {
-      return await this.axios.delete<T>(url, config);
+      return await this.axios.delete<T>(url, config as any);
     } catch (error) {
       throw this.handleError(error);
     }
@@ -141,7 +140,7 @@ export class MiniMaxClient {
     this.setApiKey(apiKey);
 
     try {
-      const response = await this.get("/v1/quota");
+      const response = await this.get<{ remaining: number; total: number }>("/v1/quota");
       return response.data;
     } catch (error) {
       // MiniMax quota endpoint might not exist or might be different
@@ -151,6 +150,7 @@ export class MiniMaxClient {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private transformResponse(data: any): ApiModelsResponse {
     // MiniMax might have different response format
     // Transform to standard format if needed
@@ -187,6 +187,7 @@ export class MiniMaxClient {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private handleError(error: any): ApiError {
     if (axios.isAxiosError(error)) {
       if (error.response) {
@@ -246,7 +247,7 @@ export class MiniMaxClient {
     maxRetries: number = 3,
     retryDelay: number = 1000,
   ): Promise<ApiModelsResponse> {
-    let lastError: Error;
+    let lastError: Error = new Error("Unknown error");
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -270,13 +271,13 @@ export class MiniMaxClient {
         const delay =
           retryDelay * Math.pow(2, attempt - 1) + Math.random() * 1000;
         console.warn(
-          `MiniMax API request failed (attempt ${attempt}/${maxRetries}), retrying...`
+          `MiniMax API request failed (attempt ${attempt}/${maxRetries}), retrying...`,
         );
 
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
 
-    throw lastError!;
+    throw lastError;
   }
 }

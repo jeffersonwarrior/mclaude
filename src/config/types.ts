@@ -63,15 +63,40 @@ export const MinimaxProviderConfig = z.object({
     .describe("Default MiniMax model"),
   timeout: z.number().optional().describe("Request timeout in milliseconds"),
   // MiniMax M2 specific options
-  temperature: z.number().min(0).max(2).optional().describe("Sampling temperature (0.0-2.0)"),
-  topP: z.number().min(0).max(1).optional().describe("Top-p sampling parameter (0.0-1.0)"),
+  temperature: z
+    .number()
+    .min(0)
+    .max(2)
+    .optional()
+    .describe("Sampling temperature (0.0-2.0)"),
+  topP: z
+    .number()
+    .min(0)
+    .max(1)
+    .optional()
+    .describe("Top-p sampling parameter (0.0-1.0)"),
   topK: z.number().min(1).optional().describe("Top-k sampling parameter"),
-  contextSize: z.number().min(1).max(1000000).optional().describe("Context window size (up to 1M for MiniMax M2)"),
-  toolChoice: ToolChoiceEnum.optional().describe("Tool choice mode: auto, none, or required"),
-  parallelToolCalls: z.boolean().default(true).describe("Enable parallel tool execution"),
-  responseFormat: ResponseFormatEnum.optional().describe("Response format: text or json_object for structured output"),
+  contextSize: z
+    .number()
+    .min(1)
+    .max(1000000)
+    .optional()
+    .describe("Context window size (up to 1M for MiniMax M2)"),
+  toolChoice: ToolChoiceEnum.optional().describe(
+    "Tool choice mode: auto, none, or required",
+  ),
+  parallelToolCalls: z
+    .boolean()
+    .default(true)
+    .describe("Enable parallel tool execution"),
+  responseFormat: ResponseFormatEnum.optional().describe(
+    "Response format: text or json_object for structured output",
+  ),
   streaming: z.boolean().default(true).describe("Enable streaming responses"),
-  memoryCompact: z.boolean().default(false).describe("Enable memory compaction for long conversations"),
+  memoryCompact: z
+    .boolean()
+    .default(false)
+    .describe("Enable memory compaction for long conversations"),
 });
 
 // Legacy configuration schema for backward compatibility
@@ -122,17 +147,29 @@ export const AppConfigSchema = z.object({
   // Token usage tracking
   tokenUsage: z
     .object({
-      totalInputTokens: z.number().default(0).describe("Total input tokens used"),
-      totalOutputTokens: z.number().default(0).describe("Total output tokens used"),
-      sessionTokens: z.number().default(0).describe("Tokens used in current session"),
-      lastUpdated: z.string().optional().describe("Last usage update timestamp"),
+      totalInputTokens: z
+        .number()
+        .default(0)
+        .describe("Total input tokens used"),
+      totalOutputTokens: z
+        .number()
+        .default(0)
+        .describe("Total output tokens used"),
+      sessionTokens: z
+        .number()
+        .default(0)
+        .describe("Tokens used in current session"),
+      lastUpdated: z
+        .string()
+        .optional()
+        .describe("Last usage update timestamp"),
       history: z
         .array(
           z.object({
             date: z.string().describe("Usage date"),
             inputTokens: z.number().describe("Input tokens for this period"),
             outputTokens: z.number().describe("Output tokens for this period"),
-          })
+          }),
         )
         .default([])
         .describe("Historical token usage"),
@@ -143,11 +180,48 @@ export const AppConfigSchema = z.object({
   responseCache: z
     .object({
       enabled: z.boolean().default(false).describe("Enable response caching"),
-      ttlMinutes: z.number().min(1).max(1440).default(60).describe("Cache TTL in minutes"),
-      maxEntries: z.number().min(1).max(1000).default(100).describe("Maximum cached entries"),
+      ttlMinutes: z
+        .number()
+        .min(1)
+        .max(1440)
+        .default(60)
+        .describe("Cache TTL in minutes"),
+      maxEntries: z
+        .number()
+        .min(1)
+        .max(1000)
+        .default(100)
+        .describe("Maximum cached entries"),
     })
     .default({})
     .describe("Response caching configuration"),
+  // LiteLLM proxy router configuration (v1.6)
+  liteLLM: z
+    .object({
+      enabled: z
+        .boolean()
+        .default(false)
+        .describe("Enable LiteLLM proxy router for provider routing"),
+      port: z
+        .number()
+        .int()
+        .min(1024)
+        .max(65535)
+        .default(9313)
+        .describe("Port for LiteLLM proxy server"),
+      host: z
+        .string()
+        .default("127.0.0.1")
+        .describe("Host for LiteLLM proxy server"),
+      timeout: z
+        .number()
+        .int()
+        .min(1000)
+        .default(300000)
+        .describe("Request timeout in milliseconds"),
+    })
+    .default({})
+    .describe("LiteLLM proxy router configuration"),
   // Environment variable overrides
   envOverrides: z
     .object({
@@ -177,7 +251,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -187,7 +264,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -197,7 +277,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -207,7 +290,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -217,7 +303,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -227,7 +316,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -237,7 +329,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -247,7 +342,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -257,7 +355,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -267,7 +368,10 @@ export const AppConfigSchema = z.object({
       regularModel: z.string().optional().describe("Regular model ID"),
       thinkingModel: z.string().optional().describe("Thinking model ID"),
       regularProvider: z.string().optional().describe("Regular model provider"),
-      thinkingProvider: z.string().optional().describe("Thinking model provider"),
+      thinkingProvider: z
+        .string()
+        .optional()
+        .describe("Thinking model provider"),
       createdAt: z.string().optional().describe("Creation timestamp"),
     })
     .optional(),
@@ -283,7 +387,9 @@ export const AppConfigSchema = z.object({
         .default({}),
       smallFast: z
         .object({
-          primary: z.string().default("hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
+          primary: z
+            .string()
+            .default("hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
           backup: z.string().default("hf:meta-llama/Llama-3.1-8B-Instruct"),
         })
         .default({}),
@@ -310,9 +416,13 @@ export const AppConfigSchema = z.object({
 
 export type AppConfig = z.infer<typeof AppConfigSchema>;
 export type Provider = ProviderType;
-export type SyntheticProviderConfig = z.infer<typeof SyntheticProviderConfig>;
-export type MinimaxProviderConfig = z.infer<typeof MinimaxProviderConfig>;
 export type LegacyAppConfig = z.infer<typeof LegacyAppConfigSchema>;
+
+// Provider config types - eslint-disable needed due to Zod schema + type alias naming
+// eslint-disable-next-line no-unused-vars, no-redeclare
+export type SyntheticProviderConfig = z.infer<typeof SyntheticProviderConfig>;
+// eslint-disable-next-line no-unused-vars, no-redeclare
+export type MinimaxProviderConfig = z.infer<typeof MinimaxProviderConfig>;
 
 // ============================================
 // Model Card System (v1.3.1)
@@ -322,9 +432,18 @@ export const ModelCardSchema = z.object({
   id: z.string().describe("Model ID"),
   name: z.string().optional().describe("Model display name"),
   aliases: z.array(z.string()).optional().describe("Alternative model IDs"),
-  roles: z.array(z.string()).optional().describe("Roles this model is recommended for"),
-  priority: z.number().default(1).describe("Priority for this model (lower = higher priority)"),
-  preferProvider: z.string().optional().describe("Preferred provider for this model"),
+  roles: z
+    .array(z.string())
+    .optional()
+    .describe("Roles this model is recommended for"),
+  priority: z
+    .number()
+    .default(1)
+    .describe("Priority for this model (lower = higher priority)"),
+  preferProvider: z
+    .string()
+    .optional()
+    .describe("Preferred provider for this model"),
   capabilities: z
     .object({
       tools: z.boolean().default(true),
@@ -343,7 +462,10 @@ export const ModelCardSchema = z.object({
     .default({})
     .describe("Model limits"),
   parameters: z.array(z.string()).optional().describe("Supported parameters"),
-  speed_tier: z.enum(["fast", "medium", "slow"]).default("medium").describe("Speed tier"),
+  speed_tier: z
+    .enum(["fast", "medium", "slow"])
+    .default("medium")
+    .describe("Speed tier"),
   provider: z.string().describe("Provider name"),
   verified: z.string().optional().describe("Verification date"),
 });

@@ -8,6 +8,7 @@ yarn-error.log*
 # dist/ - REMOVED: CLI packages need compiled files in repo
 build/
 *.tgz
+mclaude-*.tgz
 
 # Environment variables
 .env
@@ -96,6 +97,10 @@ jspm_packages/
 # Config and cache directories (user-specific)
 ~/.config/mclaude/
 ~/.local/share/mclaude/
+
+# Test files and scripts (development)
+test_*.sh
+version.txt
 
 # Code documentation (generated and working)
 .codedocs/

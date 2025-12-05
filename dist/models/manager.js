@@ -22,9 +22,9 @@ class ModelManager {
         });
         this.minimaxClient = new minimax_client_1.MiniMaxClient();
     }
-    async fetchModels(forceRefresh = false) {
+    async fetchModels(_) {
         // Check if intelligent refresh is needed
-        if (!forceRefresh && !(await this.cache.needsRefresh())) {
+        if (!(await this.cache.needsRefresh())) {
             return this.cache.load();
         }
         const models = await this.fetchAllProviders();
@@ -36,7 +36,7 @@ class ModelManager {
     /**
      * Fetch models from a specific provider
      */
-    async fetchFromProvider(provider, forceRefresh = false) {
+    async fetchFromProvider(provider, _) {
         if (!this.configManager.isProviderEnabled(provider)) {
             console.warn(`${provider} provider is not enabled`);
             return [];
@@ -67,13 +67,15 @@ class ModelManager {
     enhanceErrorWithProvider(error, provider) {
         const enhanced = error;
         const providerNames = {
-            synthetic: 'Synthetic',
-            minimax: 'MiniMax',
-            auto: 'Auto'
+            synthetic: "Synthetic",
+            minimax: "MiniMax",
+            auto: "Auto",
         };
         const providerName = providerNames[provider] || provider;
         // If it's already an ApiError with provider info, return as-is
-        if (enhanced.message && (enhanced.message.includes(providerName) || enhanced.message.includes(provider))) {
+        if (enhanced.message &&
+            (enhanced.message.includes(providerName) ||
+                enhanced.message.includes(provider))) {
             return enhanced;
         }
         // Create new error message with provider context
@@ -82,13 +84,13 @@ class ModelManager {
         // Create new error preserving original error properties
         const newError = new Error(newMessage);
         // Copy over any existing properties from the original error
-        if ('status' in enhanced) {
+        if ("status" in enhanced) {
             newError.status = enhanced.status;
         }
-        if ('data' in enhanced) {
+        if ("data" in enhanced) {
             newError.data = enhanced.data;
         }
-        if ('code' in enhanced) {
+        if ("code" in enhanced) {
             newError.code = enhanced.code;
         }
         // Add provider information
@@ -106,7 +108,7 @@ class ModelManager {
         }
         const providerPromises = enabledProviders.map(async (provider) => {
             try {
-                const models = await this.fetchFromProvider(provider);
+                const models = await this.fetchFromProvider(provider, false);
                 return {
                     provider,
                     models,
@@ -259,7 +261,7 @@ class ModelManager {
                 context_length: 200000, // Approximate context window
                 max_tokens: 8192,
                 description: "MiniMax M1 model for general tasks",
-            }
+            },
         ];
         try {
             // Return the predefined models directly without validation
@@ -293,7 +295,7 @@ class ModelManager {
             }
             else {
                 // v1.3.1: Provider priority with MiniMax preference for MiniMax models
-                const isMiniMaxModel = model.id.includes('MiniMax') || existing.id.includes('MiniMax');
+                const isMiniMaxModel = model.id.includes("MiniMax") || existing.id.includes("MiniMax");
                 const providerPriority = isMiniMaxModel
                     ? { minimax: 2, synthetic: 1 } // MiniMax models prefer minimax provider
                     : { synthetic: 2, minimax: 1 }; // Other models prefer synthetic
@@ -316,12 +318,12 @@ class ModelManager {
                 return null;
             }
             // Direct match
-            let card = modelCards.cards.find(c => c.id === modelId);
+            let card = modelCards.cards.find((c) => c.id === modelId);
             if (card) {
                 return card;
             }
             // Check aliases
-            card = modelCards.cards.find(c => c.aliases?.includes(modelId));
+            card = modelCards.cards.find((c) => c.aliases?.includes(modelId));
             if (card) {
                 return card;
             }
@@ -354,7 +356,10 @@ class ModelManager {
         }
         // Sort models: minimax first, then by provider, then by ID
         return [...models].sort((a, b) => {
-            const providerOrder = { minimax: 0, synthetic: 1 };
+            const providerOrder = {
+                minimax: 0,
+                synthetic: 1,
+            };
             const aOrder = providerOrder[a.getProvider()] ?? 2;
             const bOrder = providerOrder[b.getProvider()] ?? 2;
             if (aOrder !== bOrder)
@@ -364,7 +369,7 @@ class ModelManager {
     }
     async searchModels(query, models) {
         if (!models) {
-            models = await this.fetchModels();
+            models = await this.fetchModels(false);
         }
         if (!query) {
             return this.getModels(models);
@@ -387,7 +392,7 @@ class ModelManager {
     }
     async getModelById(modelId, models) {
         if (!models) {
-            models = await this.fetchModels();
+            models = await this.fetchModels(false);
         }
         return models.find((model) => model.id === modelId) || null;
     }
@@ -422,7 +427,7 @@ class ModelManager {
      */
     async getModelStatistics(models) {
         if (!models) {
-            models = await this.fetchModels();
+            models = await this.fetchModels(false);
         }
         const stats = {
             total: models.length,
@@ -452,7 +457,7 @@ class ModelManager {
      */
     async searchModelsWithFilters(params, models) {
         if (!models) {
-            models = await this.fetchModels();
+            models = await this.fetchModels(false);
         }
         let filteredModels = models;
         // Filter by provider
@@ -460,8 +465,9 @@ class ModelManager {
             filteredModels = filteredModels.filter((model) => model.getProvider() === params.provider);
         }
         // Filter by capability
-        if (params.capability) {
-            filteredModels = filteredModels.filter((model) => model.hasCapability(params.capability));
+        const capability = params.capability;
+        if (capability) {
+            filteredModels = filteredModels.filter((model) => model.hasCapability(capability));
         }
         // Filter by Claude compatibility
         if (params.claudeCompatible !== undefined) {
@@ -490,8 +496,10 @@ class ModelManager {
         if (!models || models.length === 0) {
             throw new Error("Models must be provided or fetched first");
         }
+        // At this point, models is guaranteed to be non-null and non-empty
+        const validatedModels = models;
         const categorized = {};
-        for (const model of models) {
+        for (const model of validatedModels) {
             const provider = model.getProvider() || "unknown";
             if (!categorized[provider]) {
                 categorized[provider] = [];

@@ -96,7 +96,7 @@ class SyntheticClaudeApp {
         }
         // Load system prompt (v1.3.0)
         let sysprompt;
-        const { content, type, size } = await this.configManager.loadSysprompt();
+        const { content, size } = await this.configManager.loadSysprompt();
         if (content) {
             const validation = this.configManager.validateSyspromptSize(size);
             if (!validation.valid) {
@@ -135,7 +135,8 @@ class SyntheticClaudeApp {
         // v1.3.1: GitHub raw URL for model cards
         const CARDS_URL = "https://raw.githubusercontent.com/jeffersonwarrior/mclaude/main/model-cards.json";
         // Fire and forget - don't await
-        this.configManager.fetchAndSaveModelCards(CARDS_URL, 3000)
+        this.configManager
+            .fetchAndSaveModelCards(CARDS_URL, 3000)
             .then(async (success) => {
             if (success) {
                 // Update timestamp on success
@@ -153,7 +154,7 @@ class SyntheticClaudeApp {
     /**
      * Validate provider credentials - maintains compatibility while being simpler
      */
-    async validateProviderCredentials(forceRealApiTest = true) {
+    async validateProviderCredentials(_) {
         const modelManager = this.getModelManager();
         const enabledProviders = modelManager.getEnabledProviders();
         const errors = [];
@@ -166,11 +167,11 @@ class SyntheticClaudeApp {
                 }
             }
             catch (error) {
-                if (provider === 'synthetic') {
-                    errors.push('synthetic authentication failed');
+                if (provider === "synthetic") {
+                    errors.push("synthetic authentication failed");
                 }
-                else if (provider === 'minimax') {
-                    errors.push('minimax authentication failed');
+                else if (provider === "minimax") {
+                    errors.push("minimax authentication failed");
                 }
                 else {
                     errors.push(`${provider} authentication failed`);
@@ -181,8 +182,8 @@ class SyntheticClaudeApp {
             // All providers failed
             return {
                 valid: false,
-                authenticationError: `All providers failed authentication. ${errors.join('; ')}`,
-                warnings: []
+                authenticationError: `All providers failed authentication. ${errors.join("; ")}`,
+                warnings: [],
             };
         }
         else if (errors.length > 0) {
@@ -190,7 +191,7 @@ class SyntheticClaudeApp {
             return {
                 valid: true,
                 authenticationError: null,
-                warnings: errors
+                warnings: errors,
             };
         }
         else {
@@ -202,11 +203,13 @@ class SyntheticClaudeApp {
      * Helper to detect which provider caused an error
      */
     detectProviderFromError(error) {
-        if (error.config?.baseURL?.includes('synthetic') || error.message?.includes('synthetic')) {
-            return 'synthetic';
+        if (error.config?.baseURL?.includes("synthetic") ||
+            error.message?.includes("synthetic")) {
+            return "synthetic";
         }
-        if (error.config?.baseURL?.includes('minimax') || error.message?.includes('minimax')) {
-            return 'minimax';
+        if (error.config?.baseURL?.includes("minimax") ||
+            error.message?.includes("minimax")) {
+            return "minimax";
         }
         return null;
     }
@@ -232,13 +235,13 @@ class SyntheticClaudeApp {
         try {
             const modelManager = this.getModelManager();
             // Test connectivity by attempting to fetch models
-            await modelManager.fetchFromProvider(provider);
+            await modelManager.fetchFromProvider(provider, false);
             return { valid: true };
         }
         catch (error) {
             return {
                 valid: false,
-                error: this.formatAuthenticationError(provider, error)
+                error: this.formatAuthenticationError(provider, error),
             };
         }
     }
@@ -247,46 +250,62 @@ class SyntheticClaudeApp {
      */
     categorizeError(error) {
         if (error.response?.status === 401 || error.response?.status === 403) {
-            return 'AUTHENTICATION';
+            return "AUTHENTICATION";
         }
-        if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.code === 'ETIMEDOUT') {
-            return 'NETWORK';
+        if (error.code === "ECONNREFUSED" ||
+            error.code === "ENOTFOUND" ||
+            error.code === "ETIMEDOUT") {
+            return "NETWORK";
         }
-        if (typeof error?.message === 'string' && error.message.includes('No providers are enabled')) {
-            return 'PROVIDER_UNAVAILABLE';
+        if (typeof error?.message === "string" &&
+            error.message.includes("No providers are enabled")) {
+            return "PROVIDER_UNAVAILABLE";
         }
-        if (typeof error?.message === 'string' && error.message.includes('UI error')) {
-            return 'UI_ERROR';
+        if (typeof error?.message === "string" &&
+            error.message.includes("UI error")) {
+            return "UI_ERROR";
         }
-        return 'UNKNOWN';
+        return "UNKNOWN";
     }
     /**
      * Improved API key format validation
      */
     validateApiKeyFormat(provider, apiKey) {
         if (!apiKey || apiKey.trim().length === 0) {
-            return { valid: false, error: 'API key cannot be empty' };
+            return { valid: false, error: "API key cannot be empty" };
         }
         // Basic format validation
         switch (provider.toLowerCase()) {
-            case 'synthetic':
+            case "synthetic":
                 if (apiKey.length < 10) {
-                    return { valid: false, error: 'Synthetic API key appears to be too short' };
+                    return {
+                        valid: false,
+                        error: "Synthetic API key appears to be too short",
+                    };
                 }
-                if (!apiKey.startsWith('syn_')) {
-                    return { valid: false, error: 'Synthetic API key should start with "syn_"' };
+                if (!apiKey.startsWith("syn_")) {
+                    return {
+                        valid: false,
+                        error: 'Synthetic API key should start with "syn_"',
+                    };
                 }
                 break;
-            case 'minimax':
+            case "minimax":
                 if (apiKey.length < 20) {
-                    return { valid: false, error: 'MiniMax API key appears to be too short' };
+                    return {
+                        valid: false,
+                        error: "MiniMax API key appears to be too short",
+                    };
                 }
                 break;
         }
         // Check for common placeholder values
-        const placeholders = ['test', 'example', 'placeholder', 'your-api-key'];
-        if (placeholders.some(placeholder => apiKey.toLowerCase().includes(placeholder))) {
-            return { valid: false, error: 'Please enter a real API key, not a placeholder value' };
+        const placeholders = ["test", "example", "placeholder", "your-api-key"];
+        if (placeholders.some((placeholder) => apiKey.toLowerCase().includes(placeholder))) {
+            return {
+                valid: false,
+                error: "Please enter a real API key, not a placeholder value",
+            };
         }
         return { valid: true };
     }
@@ -294,7 +313,7 @@ class SyntheticClaudeApp {
      * Simplified error recovery: Sleep utility
      */
     sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
     /**
      * Check authentication status for providers
@@ -305,33 +324,33 @@ class SyntheticClaudeApp {
         const providerState = this.configManager.getAtomicProviderState();
         const providers = options?.provider
             ? [options.provider.toLowerCase()]
-            : ['synthetic', 'minimax'];
+            : ["synthetic", "minimax"];
         for (const provider of providers) {
             const state = providerState[provider];
             if (!state) {
-                this.ui.showStatus('warning', `${provider}: Unknown provider`);
+                this.ui.showStatus("warning", `${provider}: Unknown provider`);
                 continue;
             }
-            const status = state.available ? 'success' : 'error';
-            const message = `${provider.charAt(0).toUpperCase() + provider.slice(1)}: ${state.available ? 'Available' : 'Not available'}`;
+            const status = state.available ? "success" : "error";
+            const message = `${provider.charAt(0).toUpperCase() + provider.slice(1)}: ${state.available ? "Available" : "Not available"}`;
             this.ui.showStatus(status, message);
             if (!state.available) {
                 const issues = [];
                 if (!state.enabled && !state.hasApiKey) {
-                    issues.push('Provider disabled and no API key');
+                    issues.push("Provider disabled and no API key");
                 }
                 else if (!state.enabled) {
-                    issues.push('Provider disabled');
+                    issues.push("Provider disabled");
                 }
                 else if (!state.hasApiKey) {
-                    issues.push('No API key configured');
+                    issues.push("No API key configured");
                 }
                 if (issues.length > 0) {
-                    this.ui.info(`  Issues: ${issues.join(', ')}`);
+                    this.ui.info(`  Issues: ${issues.join(", ")}`);
                 }
             }
         }
-        const availableCount = providers.filter(p => {
+        const availableCount = providers.filter((p) => {
             const state = providerState[p];
             return state?.available;
         }).length;
@@ -348,7 +367,7 @@ class SyntheticClaudeApp {
      */
     async testAuth(provider) {
         const providerLower = provider.toLowerCase();
-        if (!['synthetic', 'minimax'].includes(providerLower)) {
+        if (!["synthetic", "minimax"].includes(providerLower)) {
             this.ui.error(`Unknown provider: ${provider}. Valid providers: synthetic, minimax`);
             return;
         }
@@ -367,7 +386,7 @@ class SyntheticClaudeApp {
      */
     async resetAuth(provider) {
         const providerLower = provider.toLowerCase();
-        if (!['synthetic', 'minimax'].includes(providerLower)) {
+        if (!["synthetic", "minimax"].includes(providerLower)) {
             this.ui.error(`Unknown provider: ${provider}. Valid providers: synthetic, minimax`);
             return;
         }
@@ -378,8 +397,8 @@ class SyntheticClaudeApp {
         }
         try {
             await this.configManager.updateProviderConfig(providerLower, {
-                apiKey: '',
-                enabled: false
+                apiKey: "",
+                enabled: false,
             });
             this.ui.coloredSuccess(`✓ Reset ${provider} authentication credentials`);
             this.ui.info(`Run 'mclaude setup' to reconfigure ${provider} provider`);
@@ -392,10 +411,12 @@ class SyntheticClaudeApp {
      * Refresh authentication by testing current credentials
      */
     async refreshAuth(provider) {
-        const providers = provider ? [provider.toLowerCase()] : ['synthetic', 'minimax'];
+        const providers = provider
+            ? [provider.toLowerCase()]
+            : ["synthetic", "minimax"];
         this.ui.info("Refreshing authentication...");
         for (const providerName of providers) {
-            if (!['synthetic', 'minimax'].includes(providerName)) {
+            if (!["synthetic", "minimax"].includes(providerName)) {
                 this.ui.error(`Unknown provider: ${providerName}`);
                 continue;
             }
@@ -416,23 +437,27 @@ class SyntheticClaudeApp {
         this.ui.info("Authentication Status Details");
         this.ui.info("=============================");
         const providerState = this.configManager.getAtomicProviderState();
-        const format = options?.format || 'table';
+        const format = options?.format || "table";
         const statusData = {
             synthetic: {
                 enabled: providerState.synthetic.enabled,
                 hasApiKey: providerState.synthetic.hasApiKey,
                 available: providerState.synthetic.available,
-                apiKey: this.configManager.getSyntheticApiKey() ? '***configured***' : 'none'
+                apiKey: this.configManager.getSyntheticApiKey()
+                    ? "***configured***"
+                    : "none",
             },
             minimax: {
                 enabled: providerState.minimax.enabled,
                 hasApiKey: providerState.minimax.hasApiKey,
                 available: providerState.minimax.available,
-                apiKey: this.configManager.getMinimaxApiKey() ? '***configured***' : 'none',
-                groupId: this.configManager.getMinimaxGroupId() || 'none'
-            }
+                apiKey: this.configManager.getMinimaxApiKey()
+                    ? "***configured***"
+                    : "none",
+                groupId: this.configManager.getMinimaxGroupId() || "none",
+            },
         };
-        if (format === 'json') {
+        if (format === "json") {
             console.log(JSON.stringify(statusData, null, 2));
             return;
         }
@@ -440,13 +465,15 @@ class SyntheticClaudeApp {
         console.log("Provider   | Enabled | API Key | Available | Details");
         console.log("-----------|---------|---------|-----------|--------");
         Object.entries(statusData).forEach(([provider, data]) => {
-            const enabled = data.enabled ? '✓' : '✗';
-            const apiKey = data.apiKey !== 'none' ? '✓' : '✗';
-            const available = data.available ? '✓' : '✗';
-            const details = 'groupId' in data && data.groupId && data.groupId !== 'none' ? `Group: ${data.groupId}` : '';
+            const enabled = data.enabled ? "✓" : "✗";
+            const apiKey = data.apiKey !== "none" ? "✓" : "✗";
+            const available = data.available ? "✓" : "✗";
+            const details = "groupId" in data && data.groupId && data.groupId !== "none"
+                ? `Group: ${data.groupId}`
+                : "";
             console.log(`${provider.padEnd(10)} | ${enabled.padEnd(7)} | ${apiKey.padEnd(7)} | ${available.padEnd(9)} | ${details}`);
         });
-        const availableCount = Object.values(statusData).filter(d => d.available).length;
+        const availableCount = Object.values(statusData).filter((d) => d.available).length;
         const totalCount = Object.keys(statusData).length;
         console.log(`\nSummary: ${availableCount}/${totalCount} providers available`);
     }
@@ -454,7 +481,8 @@ class SyntheticClaudeApp {
         try {
             // Simplified provider availability check using atomic state
             const providerState = this.configManager.getAtomicProviderState();
-            if (!providerState.synthetic.available && !providerState.minimax.available) {
+            if (!providerState.synthetic.available &&
+                !providerState.minimax.available) {
                 this.ui.error('No providers are available. Please run "mclaude setup" first to configure at least one provider.');
                 return false;
             }
@@ -463,14 +491,14 @@ class SyntheticClaudeApp {
             this.ui.coloredInfo("Fetching available models...");
             try {
                 if (options?.provider) {
-                    if (!['synthetic', 'minimax', 'auto'].includes(options.provider)) {
+                    if (!["synthetic", "minimax", "auto"].includes(options.provider)) {
                         this.ui.error(`Invalid provider: ${options.provider}. Valid providers: synthetic, minimax, auto`);
                         return false;
                     }
                     models = await modelManager.getModelsByProvider(options.provider);
                 }
                 else {
-                    models = await modelManager.fetchModels();
+                    models = await modelManager.fetchModels(false);
                 }
             }
             catch (error) {
@@ -500,9 +528,10 @@ class SyntheticClaudeApp {
                             ...this.configManager.config.recommendedModels,
                             subagent: {
                                 primary: subagentModel.id,
-                                backup: this.configManager.config.recommendedModels?.subagent?.backup || "synthetic:deepseek-ai/DeepSeek-V3.2"
-                            }
-                        }
+                                backup: this.configManager.config.recommendedModels?.subagent
+                                    ?.backup || "synthetic:deepseek-ai/DeepSeek-V3.2",
+                            },
+                        },
                     });
                     this.ui.coloredSuccess(`Subagent model saved: ${subagentModel.getDisplayName()}`);
                 }
@@ -513,9 +542,11 @@ class SyntheticClaudeApp {
                             ...this.configManager.config.recommendedModels,
                             smallFast: {
                                 primary: fastModel.id,
-                                backup: this.configManager.config.recommendedModels?.smallFast?.backup || "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"
-                            }
-                        }
+                                backup: this.configManager.config.recommendedModels?.smallFast
+                                    ?.backup ||
+                                    "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct",
+                            },
+                        },
                     });
                     this.ui.coloredSuccess(`Fast model saved: ${fastModel.getDisplayName()}`);
                 }
@@ -552,14 +583,20 @@ class SyntheticClaudeApp {
                         regularModel: selectedRegularModel.id,
                         thinkingModel: selectedThinkingModel?.id,
                         regularProvider: options.provider || this.configManager.getDefaultProvider(),
-                        thinkingProvider: options.thinkingProvider || options.provider || this.configManager.getDefaultProvider(),
-                        createdAt: new Date().toISOString()
+                        thinkingProvider: options.thinkingProvider ||
+                            options.provider ||
+                            this.configManager.getDefaultProvider(),
+                        createdAt: new Date().toISOString(),
                     };
                     const config = this.configManager.config;
                     for (let i = 1; i <= 10; i++) {
                         const comboKey = `combination${i}`;
                         const existing = config[comboKey];
-                        if (!existing || (existing && typeof existing === 'object' && 'name' in existing && existing.name === options.saveCombination)) {
+                        if (!existing ||
+                            (existing &&
+                                typeof existing === "object" &&
+                                "name" in existing &&
+                                existing.name === options.saveCombination)) {
                             const updates = {};
                             updates[comboKey] = combination;
                             await this.configManager.updateConfig(updates);
@@ -594,7 +631,7 @@ class SyntheticClaudeApp {
         try {
             const modelManager = this.getModelManager();
             this.ui.coloredInfo("Fetching available models...");
-            const models = await modelManager.fetchModels();
+            const models = await modelManager.fetchModels(false);
             if (models.length === 0) {
                 this.ui.error("No models available. Please check your API key and connection.");
                 return false;
@@ -658,26 +695,34 @@ class SyntheticClaudeApp {
                 updates.selectedThinkingModel = value;
                 break;
             case "defaultProvider":
-                if (!['synthetic', 'minimax', 'auto'].includes(value)) {
+                if (!["synthetic", "minimax", "auto"].includes(value)) {
                     this.ui.error(`Invalid provider: ${value}. Valid providers: synthetic, minimax, auto`);
                     return;
                 }
                 updates.defaultProvider = value;
                 break;
             case "synthetic.apiKey":
-                await this.configManager.updateProviderConfig('synthetic', { apiKey: value });
+                await this.configManager.updateProviderConfig("synthetic", {
+                    apiKey: value,
+                });
                 this.ui.success(`Synthetic API key updated`);
                 return;
             case "synthetic.baseUrl":
-                await this.configManager.updateProviderConfig('synthetic', { baseUrl: value });
+                await this.configManager.updateProviderConfig("synthetic", {
+                    baseUrl: value,
+                });
                 this.ui.success(`Synthetic base URL updated`);
                 return;
             case "minimax.apiKey":
-                await this.configManager.updateProviderConfig('minimax', { apiKey: value });
+                await this.configManager.updateProviderConfig("minimax", {
+                    apiKey: value,
+                });
                 this.ui.success(`Minimax API key updated`);
                 return;
             case "minimax.groupId":
-                await this.configManager.updateProviderConfig('minimax', { groupId: value });
+                await this.configManager.updateProviderConfig("minimax", {
+                    groupId: value,
+                });
                 this.ui.success(`Minimax group ID updated`);
                 return;
             default:
@@ -695,8 +740,8 @@ class SyntheticClaudeApp {
     }
     async resetConfig(options) {
         const scope = options?.scope || this.configManager.getConfigType();
-        if (scope === 'local') {
-            if (this.configManager.getConfigType() === 'global') {
+        if (scope === "local") {
+            if (this.configManager.getConfigType() === "global") {
                 this.ui.error("No local project configuration to reset");
                 this.ui.info("Use --scope global to reset global configuration");
                 return;
@@ -709,7 +754,7 @@ class SyntheticClaudeApp {
             await this.configManager.initLocalConfig(); // Re-initialize with defaults
             this.ui.success("Local configuration reset to defaults");
         }
-        else if (scope === 'global') {
+        else if (scope === "global") {
             const confirmed = await this.ui.confirm("Are you sure you want to reset global configuration to defaults?");
             if (!confirmed) {
                 this.ui.info("Global configuration reset cancelled");
@@ -756,10 +801,16 @@ class SyntheticClaudeApp {
      */
     async unifiedSetupOrchestrator() {
         const setupSteps = [
-            { name: "Provider Configuration", action: () => this.setupProviderConfiguration() },
-            { name: "Authentication Testing", action: () => this.setupAuthenticationTesting() },
+            {
+                name: "Provider Configuration",
+                action: () => this.setupProviderConfiguration(),
+            },
+            {
+                name: "Authentication Testing",
+                action: () => this.setupAuthenticationTesting(),
+            },
             { name: "Model Selection", action: () => this.setupModelSelection() },
-            { name: "Finalization", action: () => this.setupFinalization() }
+            { name: "Finalization", action: () => this.setupFinalization() },
         ];
         this.ui.info("Starting streamlined setup process...");
         this.ui.info("==================================");
@@ -794,9 +845,9 @@ class SyntheticClaudeApp {
         switch (choice) {
             case "1":
                 this.ui.info("Retrying step...");
-                await new Promise(resolve => setTimeout(resolve, 1000)); // Brief pause
+                await new Promise((resolve) => setTimeout(resolve, 1000)); // Brief pause
                 return true; // Continue, which will retry the step
-            case "2":
+            case "2": {
                 // Determine if we can safely skip this step
                 const canSkip = await this.canSkipSetupStep(stepName);
                 if (canSkip) {
@@ -807,6 +858,7 @@ class SyntheticClaudeApp {
                     this.ui.error(`Cannot skip ${stepName}. This step is required.`);
                     return false; // Abort setup
                 }
+            }
             case "3":
             default:
                 this.ui.info("Setup aborted. You can retry by running 'mclaude setup' again.");
@@ -837,7 +889,7 @@ class SyntheticClaudeApp {
         // Check for local configuration and setup if in a project
         const configType = this.configManager.getConfigType();
         const workspaceRoot = this.configManager.getWorkspaceRoot();
-        if (configType === 'global' && workspaceRoot) {
+        if (configType === "global" && workspaceRoot) {
             this.ui.info("🌍 Global configuration detected in a project directory");
             this.ui.info("Workspace: " + workspaceRoot);
             const shouldUseLocal = await this.ui.confirm("Create local project configuration?", true);
@@ -846,7 +898,8 @@ class SyntheticClaudeApp {
                     await this.configManager.initLocalConfig();
                     // Try to migrate existing global config
                     const globalProviders = this.configManager.getAtomicProviderState();
-                    const hasGlobalProviders = globalProviders.synthetic.hasApiKey || globalProviders.minimax.hasApiKey;
+                    const hasGlobalProviders = globalProviders.synthetic.hasApiKey ||
+                        globalProviders.minimax.hasApiKey;
                     if (hasGlobalProviders) {
                         const shouldMigrate = await this.ui.confirm("Migrate existing global configuration to local project?", true);
                         if (shouldMigrate) {
@@ -863,7 +916,7 @@ class SyntheticClaudeApp {
                 }
             }
         }
-        else if (configType === 'local') {
+        else if (configType === "local") {
             this.ui.info("🏠 Using local project configuration");
             this.ui.info("Workspace: " + workspaceRoot);
             this.ui.info("This configuration will be used for this project only\n");
@@ -910,7 +963,7 @@ class SyntheticClaudeApp {
      */
     async configureSingleProvider(provider) {
         try {
-            const providerNames = { synthetic: 'Synthetic', minimax: 'MiniMax' };
+            const providerNames = { synthetic: "Synthetic", minimax: "MiniMax" };
             const providerName = providerNames[provider];
             this.ui.info(`\nConfiguring ${providerName} provider...`);
             const apiKey = await this.ui.askPassword(`Enter your ${providerName} API key (or press Enter to skip)`);
@@ -930,7 +983,7 @@ class SyntheticClaudeApp {
             }
             // Save API key
             let success = false;
-            if (provider === 'synthetic') {
+            if (provider === "synthetic") {
                 success = await this.configManager.setSyntheticApiKey(apiKey);
             }
             else {
@@ -969,9 +1022,9 @@ class SyntheticClaudeApp {
         const providerState = this.configManager.getAtomicProviderState();
         const enabledProviders = [];
         if (providerState.synthetic.available)
-            enabledProviders.push('synthetic');
+            enabledProviders.push("synthetic");
         if (providerState.minimax.available)
-            enabledProviders.push('minimax');
+            enabledProviders.push("minimax");
         if (enabledProviders.length === 0) {
             throw new Error("No enabled providers available for testing. Configure at least one provider first.");
         }
@@ -979,7 +1032,7 @@ class SyntheticClaudeApp {
         const testResults = {};
         for (const provider of enabledProviders) {
             // Skip testing if no API key is provided for this provider
-            const hasApiKey = provider === 'synthetic'
+            const hasApiKey = provider === "synthetic"
                 ? this.configManager.hasSyntheticApiKey()
                 : this.configManager.hasMinimaxApiKey();
             if (!hasApiKey) {
@@ -990,7 +1043,10 @@ class SyntheticClaudeApp {
             this.ui.info(`\nTesting ${provider} provider...`);
             try {
                 const testResult = await this.validateProviderCredential(provider);
-                testResults[provider] = { success: testResult.valid, error: testResult.error };
+                testResults[provider] = {
+                    success: testResult.valid,
+                    error: testResult.error,
+                };
                 if (testResult.valid) {
                     this.ui.coloredSuccess(`✓ ${provider} connection successful`);
                     successCount++;
@@ -1015,19 +1071,22 @@ class SyntheticClaudeApp {
             throw new Error("Authentication failed for all providers. Please check your API keys and restart setup.");
         }
         // Check if critical providers failed - if Synthetic fails, it's critical since it's the primary provider
-        const criticalProviders = ['synthetic'];
-        const failedCriticalProviders = criticalProviders.filter(p => enabledProviders.includes(p) && testResults[p]?.success === false);
+        const criticalProviders = ["synthetic"];
+        const failedCriticalProviders = criticalProviders.filter((p) => enabledProviders.includes(p) &&
+            testResults[p]?.success === false);
         if (failedCriticalProviders.length > 0 && successCount > 0) {
-            const shouldContinue = await this.ui.confirm(`Critical providers failed (${failedCriticalProviders.join(', ')}). Continue with working providers?`, false);
+            const shouldContinue = await this.ui.confirm(`Critical providers failed (${failedCriticalProviders.join(", ")}). Continue with working providers?`, false);
             if (!shouldContinue) {
                 throw new Error("Setup cancelled due to critical provider failures.");
             }
         }
         if (successCount < enabledProviders.length) {
+            /* eslint-disable @typescript-eslint/no-unused-vars */
             const failedProviders = Object.entries(testResults)
                 .filter(([_, result]) => !result.success)
                 .map(([provider, _]) => provider);
-            this.ui.warning(`⚠ Some providers failed: ${failedProviders.join(', ')}`);
+            /* eslint-enable @typescript-eslint/no-unused-vars */
+            this.ui.warning(`⚠ Some providers failed: ${failedProviders.join(", ")}`);
             this.ui.info(`Continuing with ${successCount} working provider(s)...`);
         }
         this.ui.success(`✓ Authentication testing complete (${successCount}/${enabledProviders.length} providers working)`);
@@ -1047,7 +1106,8 @@ class SyntheticClaudeApp {
         this.ui.info(`• SUBAGENT: ${recommended.subagent.primary} (backup: ${recommended.subagent.backup})`);
         this.ui.info("\nWe'll check which models are available with your current providers...");
         // Check availability of recommended models
-        const availableModels = await this.checkRecommendedModelAvailability(recommended);
+        const _availableModels = // eslint-disable-line @typescript-eslint/no-unused-vars
+         await this.checkRecommendedModelAvailability(recommended);
         const shouldUseRecommended = await this.ui.confirm("\nUse recommended models? (You can customize them after setup)", true);
         if (shouldUseRecommended) {
             // Save recommended models to config
@@ -1095,12 +1155,13 @@ class SyntheticClaudeApp {
         const availableModels = [];
         const modelManager = this.getModelManager();
         try {
-            const allModels = await modelManager.fetchModels();
+            const allModels = await modelManager.fetchModels(false);
             const checkModel = (modelId) => {
-                return allModels.some(m => m.id === modelId || m.id.includes(modelId.split('/').pop() || modelId));
+                return allModels.some((m) => m.id === modelId ||
+                    m.id.includes(modelId.split("/").pop() || modelId));
             };
             // Check each recommended model
-            for (const role of ['default', 'smallFast', 'thinking', 'subagent']) {
+            for (const role of ["default", "smallFast", "thinking", "subagent"]) {
                 const rec = recommended[role];
                 if (checkModel(rec.primary)) {
                     availableModels.push(rec.primary);
@@ -1133,7 +1194,7 @@ class SyntheticClaudeApp {
         }
         // Verify final configuration
         const providerState = this.configManager.getAtomicProviderState();
-        const availableProviders = Object.values(providerState).filter(state => state.available).length;
+        const availableProviders = Object.values(providerState).filter((state) => state.available).length;
         if (availableProviders === 0) {
             throw new Error("Setup completed but no providers are available. This shouldn't happen - please report this issue.");
         }
@@ -1270,12 +1331,12 @@ class SyntheticClaudeApp {
     async listProviders() {
         this.ui.info("Available Providers:");
         this.ui.info("====================");
-        const providers = ['synthetic', 'minimax', 'auto'];
+        const providers = ["synthetic", "minimax", "auto"];
         for (const provider of providers) {
             const enabled = this.configManager.isProviderEnabled(provider);
-            const hasApiKey = provider === 'synthetic'
+            const hasApiKey = provider === "synthetic"
                 ? this.configManager.hasSyntheticApiKey()
-                : provider === 'minimax'
+                : provider === "minimax"
                     ? this.configManager.hasMinimaxApiKey()
                     : true; // auto always has access if other providers are configured
             const config = this.configManager.getProviderConfig(provider);
@@ -1283,10 +1344,10 @@ class SyntheticClaudeApp {
             const apiStatus = hasApiKey ? "✓" : "✗";
             this.ui.info(`${provider.padEnd(10)} ${status.padEnd(12)} API: ${apiStatus}`);
             if (config) {
-                if ('baseUrl' in config && config.baseUrl) {
+                if ("baseUrl" in config && config.baseUrl) {
                     this.ui.info(`  Base URL: ${config.baseUrl}`);
                 }
-                if ('groupId' in config && config.groupId) {
+                if ("groupId" in config && config.groupId) {
                     this.ui.info(`  Group ID: ${config.groupId}`);
                 }
             }
@@ -1295,7 +1356,7 @@ class SyntheticClaudeApp {
         this.ui.info(`\nDefault Provider: ${defaultProvider}`);
     }
     async enableProvider(provider) {
-        if (!['synthetic', 'minimax', 'auto'].includes(provider)) {
+        if (!["synthetic", "minimax", "auto"].includes(provider)) {
             this.ui.error(`Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`);
             return;
         }
@@ -1303,11 +1364,13 @@ class SyntheticClaudeApp {
         if (success) {
             this.ui.success(`Provider "${provider}" has been enabled`);
             // Check if provider has API key
-            if (provider === 'synthetic' && !this.configManager.hasSyntheticApiKey()) {
+            if (provider === "synthetic" &&
+                !this.configManager.hasSyntheticApiKey()) {
                 this.ui.warning(`Note: "synthetic" provider is enabled but no API key is configured`);
                 this.ui.info(`Set API key with: mclaude config set synthetic.apiKey <your-key>`);
             }
-            else if (provider === 'minimax' && !this.configManager.hasMinimaxApiKey()) {
+            else if (provider === "minimax" &&
+                !this.configManager.hasMinimaxApiKey()) {
                 this.ui.warning(`Note: "minimax" provider is enabled but no API key is configured`);
                 this.ui.info(`Set API key with: mclaude config set minimax.apiKey <your-key>`);
             }
@@ -1317,7 +1380,7 @@ class SyntheticClaudeApp {
         }
     }
     async disableProvider(provider) {
-        if (!['synthetic', 'minimax', 'auto'].includes(provider)) {
+        if (!["synthetic", "minimax", "auto"].includes(provider)) {
             this.ui.error(`Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`);
             return;
         }
@@ -1330,7 +1393,7 @@ class SyntheticClaudeApp {
         }
     }
     async setDefaultProvider(provider) {
-        if (!['synthetic', 'minimax', 'auto'].includes(provider)) {
+        if (!["synthetic", "minimax", "auto"].includes(provider)) {
             this.ui.error(`Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`);
             return;
         }
@@ -1344,8 +1407,8 @@ class SyntheticClaudeApp {
     }
     async providerStatus(options) {
         const providers = options.provider
-            ? [options.provider].filter(p => ['synthetic', 'minimax', 'auto'].includes(p))
-            : ['synthetic', 'minimax', 'auto'];
+            ? [options.provider].filter((p) => ["synthetic", "minimax", "auto"].includes(p))
+            : ["synthetic", "minimax", "auto"];
         if (options.provider && providers.length === 0) {
             this.ui.error(`Invalid provider: ${options.provider}. Valid providers: synthetic, minimax, auto`);
             return;
@@ -1356,19 +1419,19 @@ class SyntheticClaudeApp {
             this.ui.info(`\n${provider.toUpperCase()}:`);
             this.ui.info("─".repeat(provider.length + 1));
             const enabled = this.configManager.isProviderEnabled(provider);
-            const hasApiKey = provider === 'synthetic'
+            const hasApiKey = provider === "synthetic"
                 ? this.configManager.hasSyntheticApiKey()
-                : provider === 'minimax'
+                : provider === "minimax"
                     ? this.configManager.hasMinimaxApiKey()
                     : true;
             this.ui.info(`Enabled: ${enabled ? "Yes" : "No"}`);
             this.ui.info(`Has API Key: ${hasApiKey ? "Yes" : "No"}`);
             const config = this.configManager.getProviderConfig(provider);
             if (config) {
-                if ('baseUrl' in config && config.baseUrl) {
+                if ("baseUrl" in config && config.baseUrl) {
                     this.ui.info(`Base URL: ${config.baseUrl}`);
                 }
-                if ('groupId' in config && config.groupId) {
+                if ("groupId" in config && config.groupId) {
                     this.ui.info(`Group ID: ${config.groupId}`);
                 }
                 if (config.timeout) {
@@ -1392,7 +1455,7 @@ class SyntheticClaudeApp {
         }
     }
     async testProvider(provider) {
-        if (!['synthetic', 'minimax', 'auto'].includes(provider)) {
+        if (!["synthetic", "minimax", "auto"].includes(provider)) {
             this.ui.error(`Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`);
             return;
         }
@@ -1406,9 +1469,9 @@ class SyntheticClaudeApp {
             return;
         }
         // Check API key
-        const hasApiKey = provider === 'synthetic'
+        const hasApiKey = provider === "synthetic"
             ? this.configManager.hasSyntheticApiKey()
-            : provider === 'minimax'
+            : provider === "minimax"
                 ? this.configManager.hasMinimaxApiKey()
                 : true;
         if (!hasApiKey) {
@@ -1419,19 +1482,19 @@ class SyntheticClaudeApp {
         try {
             const modelManager = this.getModelManager();
             let modelCount = 0;
-            if (provider === 'auto') {
+            if (provider === "auto") {
                 // Test all enabled providers
-                const syntheticEnabled = this.configManager.isProviderEnabled('synthetic');
-                const minimaxEnabled = this.configManager.isProviderEnabled('minimax');
+                const syntheticEnabled = this.configManager.isProviderEnabled("synthetic");
+                const minimaxEnabled = this.configManager.isProviderEnabled("minimax");
                 if (syntheticEnabled) {
                     this.ui.info("Testing synthetic endpoint...");
-                    const syntheticModels = await modelManager.getModelsByProvider('synthetic');
+                    const syntheticModels = await modelManager.getModelsByProvider("synthetic");
                     modelCount += syntheticModels.length;
                     this.ui.success(`✓ Synthetic: ${syntheticModels.length} models`);
                 }
                 if (minimaxEnabled) {
                     this.ui.info("Testing minimax endpoint...");
-                    const minimaxModels = await modelManager.getModelsByProvider('minimax');
+                    const minimaxModels = await modelManager.getModelsByProvider("minimax");
                     modelCount += minimaxModels.length;
                     this.ui.success(`✓ Minimax: ${minimaxModels.length} models`);
                 }
@@ -1459,11 +1522,11 @@ class SyntheticClaudeApp {
             this.ui.error(`✗ Failed to connect to provider "${provider}"`);
             this.ui.error(`Error: ${errorMessage}`);
             // Provide specific guidance
-            if (provider === 'synthetic') {
+            if (provider === "synthetic") {
                 this.ui.info(`Check your API key and network connection`);
                 this.ui.info(`Test with: curl -H "Authorization: Bearer $SYNTHETIC_API_KEY" https://api.synthetic.new/openai/v1/models`);
             }
-            else if (provider === 'minimax') {
+            else if (provider === "minimax") {
                 this.ui.info(`Check your API key, Group ID, and network connection`);
             }
         }
@@ -1472,7 +1535,7 @@ class SyntheticClaudeApp {
     async listProviderConfigs() {
         this.ui.info("Provider Configurations:");
         this.ui.info("=========================");
-        const providers = ['synthetic', 'minimax', 'auto'];
+        const providers = ["synthetic", "minimax", "auto"];
         for (const provider of providers) {
             const config = this.configManager.getProviderConfig(provider);
             this.ui.info(`\n${provider}:`);
@@ -1482,14 +1545,14 @@ class SyntheticClaudeApp {
                 continue;
             }
             this.ui.info(`  Enabled: ${config.enabled}`);
-            if ('apiKey' in config) {
+            if ("apiKey" in config) {
                 const hasKey = !!config.apiKey;
                 this.ui.info(`  API Key: ${hasKey ? " configured" : " not configured"}`);
             }
-            if ('baseUrl' in config && config.baseUrl) {
+            if ("baseUrl" in config && config.baseUrl) {
                 this.ui.info(`  Base URL: ${config.baseUrl}`);
             }
-            if ('groupId' in config && config.groupId) {
+            if ("groupId" in config && config.groupId) {
                 this.ui.info(`  Group ID: ${config.groupId}`);
             }
             if (config.timeout) {
@@ -1498,7 +1561,7 @@ class SyntheticClaudeApp {
         }
     }
     async getProviderConfigInfo(provider) {
-        if (!['synthetic', 'minimax', 'auto'].includes(provider)) {
+        if (!["synthetic", "minimax", "auto"].includes(provider)) {
             this.ui.error(`Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`);
             return;
         }
@@ -1510,44 +1573,43 @@ class SyntheticClaudeApp {
             return;
         }
         this.ui.info(`Enabled: ${config.enabled}`);
-        if ('apiKey' in config) {
+        if ("apiKey" in config) {
             const hasKey = !!config.apiKey;
             this.ui.info(`API Key: ${hasKey ? " configured" : " not configured"}`);
-            if (hasKey && typeof config.apiKey === 'string') {
+            if (hasKey && typeof config.apiKey === "string") {
                 this.ui.info(`API Key (preview): ${config.apiKey.substring(0, 8)}...${config.apiKey.substring(config.apiKey.length - 4)}`);
             }
         }
-        if ('baseUrl' in config && config.baseUrl) {
+        if ("baseUrl" in config && config.baseUrl) {
             this.ui.info(`Base URL: ${config.baseUrl}`);
         }
-        if ('groupId' in config && config.groupId) {
+        if ("groupId" in config && config.groupId) {
             this.ui.info(`Group ID: ${config.groupId}`);
         }
-        if ('timeout' in config && config.timeout) {
+        if ("timeout" in config && config.timeout) {
             this.ui.info(`Timeout: ${config.timeout}ms`);
         }
     }
     async setProviderConfig(provider, key, value) {
-        if (!['synthetic', 'minimax', 'auto'].includes(provider)) {
+        if (!["synthetic", "minimax", "auto"].includes(provider)) {
             this.ui.error(`Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`);
             return;
         }
         // Map to provider-specific keys
         let configKey;
-        let effectiveProvider = provider;
-        if (provider === 'synthetic') {
-            if (key === 'apiKey')
-                configKey = 'synthetic.apiKey';
-            else if (key === 'baseUrl')
-                configKey = 'synthetic.baseUrl';
+        if (provider === "synthetic") {
+            if (key === "apiKey")
+                configKey = "synthetic.apiKey";
+            else if (key === "baseUrl")
+                configKey = "synthetic.baseUrl";
             else
                 configKey = key;
         }
-        else if (provider === 'minimax') {
-            if (key === 'apiKey')
-                configKey = 'minimax.apiKey';
-            else if (key === 'groupId')
-                configKey = 'minimax.groupId';
+        else if (provider === "minimax") {
+            if (key === "apiKey")
+                configKey = "minimax.apiKey";
+            else if (key === "groupId")
+                configKey = "minimax.groupId";
             else
                 configKey = key;
         }
@@ -1563,7 +1625,7 @@ class SyntheticClaudeApp {
             const shouldRefresh = options.refresh || false;
             if (options.provider) {
                 // Provider-specific model listing
-                if (!['synthetic', 'minimax', 'auto'].includes(options.provider)) {
+                if (!["synthetic", "minimax", "auto"].includes(options.provider)) {
                     this.ui.error(`Invalid provider: ${options.provider}. Valid providers: synthetic, minimax, auto`);
                     return;
                 }
@@ -1617,7 +1679,7 @@ class SyntheticClaudeApp {
             const shouldRefresh = options.refresh || false;
             if (options.provider) {
                 // Provider-specific search
-                if (!['synthetic', 'minimax', 'auto'].includes(options.provider)) {
+                if (!["synthetic", "minimax", "auto"].includes(options.provider)) {
                     this.ui.error(`Invalid provider: ${options.provider}. Valid providers: synthetic, minimax, auto`);
                     return;
                 }
@@ -1672,8 +1734,9 @@ class SyntheticClaudeApp {
     async initLocalConfig(options) {
         try {
             const configType = this.configManager.getConfigType();
-            if (configType === 'local' && !options.force) {
-                this.ui.warning("Local project configuration already exists at: " + this.configManager.getWorkspaceRoot());
+            if (configType === "local" && !options.force) {
+                this.ui.warning("Local project configuration already exists at: " +
+                    this.configManager.getWorkspaceRoot());
                 this.ui.info("Use --force to overwrite");
                 return;
             }
@@ -1689,7 +1752,7 @@ class SyntheticClaudeApp {
     }
     async switchToLocalConfig() {
         const configType = this.configManager.getConfigType();
-        if (configType === 'local') {
+        if (configType === "local") {
             this.ui.info("Already using local project configuration");
             if (this.configManager.getWorkspaceRoot()) {
                 this.ui.info(`Workspace: ${this.configManager.getWorkspaceRoot()}`);
@@ -1697,7 +1760,8 @@ class SyntheticClaudeApp {
             return;
         }
         // Create local config if it doesn't exist
-        if (!this.configManager.getWorkspaceRoot() || !this.configManager.getWorkspaceRoot()) {
+        if (!this.configManager.getWorkspaceRoot() ||
+            !this.configManager.getWorkspaceRoot()) {
             this.ui.warning("No local project configuration found");
             this.ui.info("Run 'mclaude config init' to create one");
             return;
@@ -1707,7 +1771,7 @@ class SyntheticClaudeApp {
     }
     async switchToGlobalConfig() {
         const configType = this.configManager.getConfigType();
-        if (configType === 'global') {
+        if (configType === "global") {
             this.ui.info("Already using global configuration");
             return;
         }
@@ -1719,7 +1783,7 @@ class SyntheticClaudeApp {
     async migrateConfig(options) {
         try {
             const configType = this.configManager.getConfigType();
-            if (configType === 'local' && !options.force) {
+            if (configType === "local" && !options.force) {
                 this.ui.warning("Local project configuration already exists");
                 this.ui.info("Use --force to overwrite and migrate again");
                 return;
@@ -1738,17 +1802,16 @@ class SyntheticClaudeApp {
         const workspaceRoot = this.configManager.getWorkspaceRoot();
         this.ui.info("Configuration Context:");
         this.ui.info("====================");
-        this.ui.info(`Current mode: ${configType === 'local' ? 'Local Project' : 'Global User'}`);
-        if (configType === 'local' && workspaceRoot) {
+        this.ui.info(`Current mode: ${configType === "local" ? "Local Project" : "Global User"}`);
+        if (configType === "local" && workspaceRoot) {
             this.ui.info(`Workspace root: ${workspaceRoot}`);
             this.ui.info(`Config file: ${workspaceRoot}/.mclaude/config.json`);
         }
         else {
-            const globalPath = require('os').homedir() + '/.config/mclaude/config.json';
+            const globalPath = require("os").homedir() + "/.config/mclaude/config.json";
             this.ui.info(`Global config: ${globalPath}`);
         }
         // Show active providers and models
-        const providers = this.configManager.getAtomicProviderState();
         this.ui.info(`\nActive providers: ${this.configManager.getNetworkDisplay()}`);
         const selectedModel = this.configManager.getSelectedModel();
         const thinkingModel = this.configManager.getSavedThinkingModel();
@@ -1775,7 +1838,7 @@ class SyntheticClaudeApp {
                     this.ui.info(`Provider: ${modelCard.provider}`);
                 }
                 if (modelCard.roles && modelCard.roles.length > 0) {
-                    this.ui.info(`Roles: ${modelCard.roles.join(', ')}`);
+                    this.ui.info(`Roles: ${modelCard.roles.join(", ")}`);
                 }
                 if (modelCard.priority !== undefined) {
                     this.ui.info(`Priority: ${modelCard.priority}`);
@@ -1788,11 +1851,11 @@ class SyntheticClaudeApp {
                 }
                 if (modelCard.capabilities) {
                     this.ui.info("\nCapabilities:");
-                    this.ui.info(`  Tools: ${modelCard.capabilities.tools ? '✓' : '✗'}`);
-                    this.ui.info(`  JSON Mode: ${modelCard.capabilities.json_mode ? '✓' : '✗'}`);
-                    this.ui.info(`  Thinking: ${modelCard.capabilities.thinking ? '✓' : '✗'}`);
-                    this.ui.info(`  Streaming: ${modelCard.capabilities.streaming ? '✓' : '✗'}`);
-                    this.ui.info(`  Parallel Tools: ${modelCard.capabilities.parallel_tools ? '✓' : '✗'}`);
+                    this.ui.info(`  Tools: ${modelCard.capabilities.tools ? "✓" : "✗"}`);
+                    this.ui.info(`  JSON Mode: ${modelCard.capabilities.json_mode ? "✓" : "✗"}`);
+                    this.ui.info(`  Thinking: ${modelCard.capabilities.thinking ? "✓" : "✗"}`);
+                    this.ui.info(`  Streaming: ${modelCard.capabilities.streaming ? "✓" : "✗"}`);
+                    this.ui.info(`  Parallel Tools: ${modelCard.capabilities.parallel_tools ? "✓" : "✗"}`);
                 }
                 if (modelCard.limits) {
                     this.ui.info("\nLimits:");
@@ -1804,10 +1867,10 @@ class SyntheticClaudeApp {
                     }
                 }
                 if (modelCard.parameters && modelCard.parameters.length > 0) {
-                    this.ui.info(`\nParameters: ${modelCard.parameters.join(', ')}`);
+                    this.ui.info(`\nParameters: ${modelCard.parameters.join(", ")}`);
                 }
                 if (modelCard.aliases && modelCard.aliases.length > 0) {
-                    this.ui.info(`\nAliases: ${modelCard.aliases.join(', ')}`);
+                    this.ui.info(`\nAliases: ${modelCard.aliases.join(", ")}`);
                 }
                 if (modelCard.verified) {
                     this.ui.info(`\nVerified: ${modelCard.verified}`);
@@ -1818,8 +1881,8 @@ class SyntheticClaudeApp {
                 // Fall back to showing general model info
                 const config = this.configManager.config;
                 this.ui.info("\nCurrent Configuration:");
-                this.ui.info(`Selected Model: ${config.selectedModel || 'None'}`);
-                this.ui.info(`Thinking Model: ${config.selectedThinkingModel || 'None'}`);
+                this.ui.info(`Selected Model: ${config.selectedModel || "None"}`);
+                this.ui.info(`Thinking Model: ${config.selectedThinkingModel || "None"}`);
                 this.ui.info(`Default Provider: ${config.defaultProvider}`);
             }
             return;
@@ -1827,8 +1890,8 @@ class SyntheticClaudeApp {
         // No modelId provided, show general model info
         const config = this.configManager.config;
         this.ui.info("Model Information:");
-        this.ui.info(`Selected Model: ${config.selectedModel || 'None'}`);
-        this.ui.info(`Thinking Model: ${config.selectedThinkingModel || 'None'}`);
+        this.ui.info(`Selected Model: ${config.selectedModel || "None"}`);
+        this.ui.info(`Thinking Model: ${config.selectedThinkingModel || "None"}`);
         this.ui.info(`Default Provider: ${config.defaultProvider}`);
         // v1.3.1: Show recommended models if available
         try {
@@ -1852,12 +1915,12 @@ class SyntheticClaudeApp {
         }
         this.ui.info("Saved Model Combinations:");
         combinations.forEach((combo, index) => {
-            this.ui.info(`${index + 1}. ${combo.name}: ${combo.model}${combo.thinkingModel ? ` + ${combo.thinkingModel}` : ''}`);
+            this.ui.info(`${index + 1}. ${combo.name}: ${combo.model}${combo.thinkingModel ? ` + ${combo.thinkingModel}` : ""}`);
         });
     }
     async saveCombination(name, model, thinkingModel) {
         // For simplicity, just show success message
-        this.ui.success(`Model combination "${name}" saved with model: ${model}${thinkingModel ? ` + thinkingModel` : ''}`);
+        this.ui.success(`Model combination "${name}" saved with model: ${model}${thinkingModel ? ` + thinkingModel` : ""}`);
     }
     async deleteCombination(name) {
         // For simplicity, just show success message
@@ -1947,9 +2010,9 @@ class SyntheticClaudeApp {
     }
     async editSysprompt(global) {
         const scope = global ? "global" : "local";
-        const { content, type } = await this.configManager.loadSysprompt(false);
+        const { content } = await this.configManager.loadSysprompt(false);
         // Get or create template content
-        let editContent = content || this.configManager.getDefaultSyspromptTemplate();
+        const editContent = content || this.configManager.getDefaultSyspromptTemplate();
         // Get editor from environment
         const editor = process.env.EDITOR || process.env.VISUAL || "nano";
         // Create temp file for editing
