@@ -197,13 +197,13 @@ install_package() {
         log "Installing LiteLLM Python package..."
         # Try multiple installation methods
         if command -v pip3 &>/dev/null; then
-            pip3 install litellm --break-system-packages --quiet 2>/dev/null || true
+            pip3 install 'litellm[proxy]' --break-system-packages --quiet 2>/dev/null || true
         fi
         if command -v pip &>/dev/null; then
-            pip install litellm --break-system-packages --quiet 2>/dev/null || true
+            pip install 'litellm[proxy]' --break-system-packages --quiet 2>/dev/null || true
         fi
         if command -v pipx &>/dev/null; then
-            pipx install litellm 2>/dev/null || true
+            pipx install 'litellm[proxy]' 2>/dev/null || true
         fi
 
         # Verify installation
@@ -211,7 +211,7 @@ install_package() {
             log "LiteLLM Python package installed successfully"
         else
             warn "Could not install LiteLLM automatically. Please install manually:"
-            warn "  pip install litellm"
+            warn "  pip install 'litellm[proxy]'"
         fi
     fi
 }

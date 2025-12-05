@@ -1,6 +1,6 @@
 {
   "name": "mclaude",
-  "version": "1.6.1",
+  "version": "1.6.2",
   "description": "Interactive model selection tool for Claude Code with MiniMax and Synthetic AI models via LiteLLM proxy",
   "main": "dist/index.js",
   "bin": {
@@ -22,7 +22,7 @@
     "version": "npm run format && git add -A src",
     "postversion": "git push && git push --tags",
     "postinstall": "npm run install-litellm",
-    "install-litellm": "python3 -m pip install litellm --quiet --break-system-packages 2>/dev/null || echo 'Note: Install litellm manually with: pip install litellm'",
+    "install-litellm": "python3 -m pip install 'litellm[proxy]' --quiet --break-system-packages 2>/dev/null || echo 'Note: Install litellm manually with: pip install litellm[proxy]'",
     "setup": "npm run install-litellm && node dist/config/setup-production.js"
   },
   "keywords": [
