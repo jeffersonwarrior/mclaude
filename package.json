@@ -1,10 +1,10 @@
 {
   "name": "mclaude",
   "version": "1.6.0",
-  "description": "Interactive model selection tool for Claude Code with Synthetic AI models",
+  "description": "Interactive model selection tool for Claude Code with MiniMax and Synthetic AI models via LiteLLM proxy",
   "main": "dist/index.js",
   "bin": {
-    "mclaude": "./dist/cli/index.js"
+    "mclaude": "dist/cli/index.js"
   },
   "scripts": {
     "build": "tsc && chmod +x dist/cli/index.js",
@@ -29,6 +29,8 @@
     "claude",
     "anthropic",
     "synthetic",
+    "minimax",
+    "litellm",
     "ai",
     "cli",
     "model-selection",
