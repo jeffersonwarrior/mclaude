@@ -22,7 +22,7 @@
     "version": "npm run format && git add -A src",
     "postversion": "git push && git push --tags",
     "postinstall": "npm run install-litellm",
-    "install-litellm": "python3 -m pip install 'litellm[proxy]' --quiet --break-system-packages 2>/dev/null || echo 'Note: Install litellm manually with: pip install litellm[proxy]'",
+    "install-litellm": "python3 -m pip install 'litellm[proxy]' prisma --quiet --break-system-packages 2>/dev/null || echo 'Note: Install manually with: pip install \"litellm[proxy]\" prisma' && python3 -c \"import litellm.proxy; import os, subprocess; schema = os.path.join(os.path.dirname(litellm.proxy.__file__), 'schema.prisma'); subprocess.run(['prisma', 'generate', '--schema', schema], capture_output=True) if os.path.exists(schema) else None\" 2>/dev/null || true",
     "setup": "npm run install-litellm && node dist/config/setup-production.js"
   },
   "keywords": [

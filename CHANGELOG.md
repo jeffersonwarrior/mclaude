@@ -5,6 +5,20 @@ All notable changes to mclaude will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.2] - 2025-12-05
+
+### Fixed
+- ✅ **CRITICAL**: Fixed LiteLLM proxy dependency installation
+  - `backoff` module now properly installed via `litellm[proxy]`
+  - Added `prisma` Python client for database support
+- Updated npm postinstall script to install full proxy dependencies
+- Updated shell installer scripts to include all required Python packages
+
+### Technical
+- Changed from: `pip install litellm`
+- Changed to: `pip install 'litellm[proxy]' prisma`
+- Ensures all LiteLLM proxy dependencies are installed automatically
+
 ## [1.6.1] - 2025-12-05
 
 ### Fixed
