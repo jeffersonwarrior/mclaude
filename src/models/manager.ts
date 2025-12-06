@@ -74,7 +74,7 @@ export class ModelManager {
   /**
    * Enhance error with provider information for better error recovery
    */
-  private enhanceErrorWithProvider(error: any, provider: ProviderType): Error {
+  private enhanceErrorWithProvider(error: unknown, provider: ProviderType): Error {
     const enhanced = error as Error;
     const providerNames = {
       synthetic: "Synthetic",

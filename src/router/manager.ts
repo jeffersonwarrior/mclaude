@@ -100,7 +100,7 @@ export function getRouterManager(configManager?: ConfigManager): RouterManager {
   if (!routerManagerInstance && configManager) {
     routerManagerInstance = new RouterManager(configManager);
   }
-  return routerManagerInstance!;
+  return routerManagerInstance;
 }
 
 export function resetRouterManager(): void {

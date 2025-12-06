@@ -367,7 +367,7 @@ export class ClaudeLauncher {
       );
       if (enabledProviders.length > 0) {
         return configManager.getProviderConfig(
-          enabledProviders[0]! as ProviderType,
+          enabledProviders[0] as ProviderType,
         );
       }
       // Fallback to synthetic if no providers enabled

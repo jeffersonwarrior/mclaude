@@ -162,7 +162,7 @@ export function createProgram(): Command {
       const arg = rawArgs[i];
       if (arg && arg.startsWith("--")) {
         // Check if this is a known mclaude option
-        const flagName = arg.split("=")[0]!;
+        const flagName = arg.split("=")[0];
         if (!knownFlags.has(flagName) && !knownFlags.has(arg)) {
           additionalArgs.push(arg);
           // If this is a flag that takes a value and it's not in --flag=value format, skip the next arg

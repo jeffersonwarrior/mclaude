@@ -1,4 +1,4 @@
-import { spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import { writeFileSync, mkdtempSync } from "fs";
 import { join } from "path";
 import { ConfigManager } from "../config";
@@ -21,7 +21,7 @@ export interface TensorZeroModel {
 }
 
 export class TensorZeroProxy {
-  private process: any;
+  private process: ChildProcess | null = null;
   private configManager: ConfigManager;
   private modelManager: ModelManager;
   private startTime: number = 0;
@@ -339,15 +339,15 @@ if __name__ == '__main__':
       this.process = spawn("python3", [scriptPath], {
         stdio: "ignore",
         detached: true,
-      }) as unknown as any;
-
-      // Silent - ignore stdout/stderr
-
-      this.process.on("exit", () => {
-        this.process = null;
       });
 
-      this.process.unref();
+      if (this.process) {
+        this.process.on("exit", () => {
+          this.process = null;
+        });
+
+        this.process.unref();
+      }
 
       // Wait for server to be ready
       await this.waitForServer("127.0.0.1", port, 30000);
