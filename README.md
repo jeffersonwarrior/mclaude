@@ -170,7 +170,7 @@ If you encounter "Text string must be rendered inside Text component" errors:
 
 ## Version Information
 
-**Current Version**: 1.6.1 - **Published on npm!**
+**Current Version**: 1.7.0 - **Published on npm!**
 
 [![npm version](https://img.shields.io/npm/v/mclaude)](https://www.npmjs.com/package/mclaude)
 
