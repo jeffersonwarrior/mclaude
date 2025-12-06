@@ -132,7 +132,6 @@ export class ModelManager {
       try {
         const models = await this.fetchFromProvider(
           provider as ProviderType,
-          false,
         );
         return {
           provider,
@@ -464,7 +463,7 @@ export class ModelManager {
     models?: ModelInfoImpl[],
   ): Promise<ModelInfoImpl[]> {
     if (!models) {
-      models = await this.fetchModels(false);
+      models = await this.fetchModels();
     }
 
     if (!query) {
@@ -496,7 +495,7 @@ export class ModelManager {
     models?: ModelInfoImpl[],
   ): Promise<ModelInfoImpl | null> {
     if (!models) {
-      models = await this.fetchModels(false);
+      models = await this.fetchModels();
     }
 
     return models.find((model) => model.id === modelId) || null;
@@ -543,7 +542,7 @@ export class ModelManager {
     byCapability: Record<string, number>;
   }> {
     if (!models) {
-      models = await this.fetchModels(false);
+      models = await this.fetchModels();
     }
 
     const stats = {
@@ -587,7 +586,7 @@ export class ModelManager {
     models?: ModelInfoImpl[],
   ): Promise<ModelInfoImpl[]> {
     if (!models) {
-      models = await this.fetchModels(false);
+      models = await this.fetchModels();
     }
 
     let filteredModels = models;
@@ -686,6 +685,6 @@ export class ModelManager {
    * Force refresh models from specific provider
    */
   async refreshProvider(provider: ProviderType): Promise<ModelInfoImpl[]> {
-    return this.fetchFromProvider(provider, true);
+    return this.fetchFromProvider(provider);
   }
 }

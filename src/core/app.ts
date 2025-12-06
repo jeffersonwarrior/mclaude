@@ -302,7 +302,7 @@ export class SyntheticClaudeApp {
       const modelManager = this.getModelManager();
 
       // Test connectivity by attempting to fetch models
-      await modelManager.fetchFromProvider(provider);
+      await modelManager.fetchFromProvider(provider as "synthetic" | "minimax" | "auto");
 
       return { valid: true };
     } catch (error: any) {
@@ -645,7 +645,7 @@ export class SyntheticClaudeApp {
             return false;
           }
           models = await modelManager.getModelsByProvider(
-            options.provider as any,
+            options.provider as "synthetic" | "minimax" | "auto",
           );
         } else {
           models = await modelManager.fetchModels();
@@ -1820,7 +1820,7 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setProviderEnabled(provider, true);
+    const success = await this.configManager.setProviderEnabled(provider as "synthetic" | "minimax" | "auto", true);
     if (success) {
       this.ui.success(`Provider "${provider}" has been enabled`);
 
@@ -1859,7 +1859,7 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setProviderEnabled(provider, false);
+    const success = await this.configManager.setProviderEnabled(provider as "synthetic" | "minimax" | "auto", false);
     if (success) {
       this.ui.success(`Provider "${provider}" has been disabled`);
     } else {
@@ -1875,7 +1875,7 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setDefaultProvider(provider);
+    const success = await this.configManager.setDefaultProvider(provider as "synthetic" | "minimax" | "auto");
     if (success) {
       this.ui.success(`Default provider set to "${provider}"`);
     } else {
@@ -1932,7 +1932,7 @@ export class SyntheticClaudeApp {
       // Try to get provider-specific model count
       try {
         const modelManager = this.getModelManager();
-        const providerModels = await modelManager.getModelsByProvider(provider);
+        const providerModels = await modelManager.getModelsByProvider(provider as "synthetic" | "minimax" | "auto");
         this.ui.info(`Available Models: ${providerModels.length}`);
       } catch (error) {
         const errorMessage = sanitizeApiError(error);
@@ -2082,14 +2082,7 @@ export class SyntheticClaudeApp {
     }
   }
 
-  async getProviderConfigInfo(provider: string): Promise<void> {
-    if (!["synthetic", "minimax", "auto"].includes(provider)) {
-      this.ui.error(
-        `Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`,
-      );
-      return;
-    }
-
+  async getProviderConfigInfo(provider: "synthetic" | "minimax" | "auto"): Promise<void> {
     const config = this.configManager.getProviderConfig(provider);
     this.ui.info(`Configuration for ${provider}:`);
     this.ui.info("=".repeat(20 + provider.length));
@@ -2178,7 +2171,7 @@ export class SyntheticClaudeApp {
         this.ui.info(`Loading models from ${options.provider} provider...`);
         const allModels = await modelManager.fetchModels();
         const models = modelManager.getModelsByProvider(
-          options.provider as any,
+          options.provider as "synthetic" | "minimax" | "auto",
           allModels,
         );
 
@@ -2262,7 +2255,7 @@ export class SyntheticClaudeApp {
         );
         const allModels = await modelManager.fetchModels();
         const models = modelManager.getModelsByProvider(
-          options.provider as any,
+          options.provider as "synthetic" | "minimax" | "auto",
           allModels,
         );
         const filteredModels = models.filter(

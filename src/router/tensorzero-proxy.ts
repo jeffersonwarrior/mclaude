@@ -37,7 +37,7 @@ export class TensorZeroProxy {
 
   private async createTensorZeroConfig(): Promise<TensorZeroConfig> {
     // Fetch actual models from providers
-    const allModels = await this.modelManager.fetchModels(false);
+    const allModels = await this.modelManager.fetchModels();
     const syntheticModels = allModels.filter(
       (model: ModelInfoImpl) => model.getProvider() === "synthetic",
     );

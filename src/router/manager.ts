@@ -35,12 +35,7 @@ export class RouterManager {
     }
 
     console.log("[Router] Starting TensorZero proxy...");
-    const status = await this.proxy.start({
-      port: options.port || proxyConfig.port || 8000,
-      host: options.host || proxyConfig.host || "0.0.0.0",
-      timeout: options.timeout || proxyConfig.timeout || 300000,
-      enabled: true,
-    });
+    const status = await this.proxy.start();
 
     if (status.running) {
       console.log(`[Router] ✅ TensorZero proxy running at ${status.url}`);
@@ -97,8 +92,8 @@ export class RouterManager {
 let routerManagerInstance: RouterManager | null = null;
 
 export function getRouterManager(configManager?: ConfigManager): RouterManager {
-  if (!routerManagerInstance && configManager) {
-    routerManagerInstance = new RouterManager(configManager);
+  if (!routerManagerInstance) {
+    routerManagerInstance = new RouterManager(configManager || new ConfigManager());
   }
   return routerManagerInstance;
 }
