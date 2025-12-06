@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import { writeFileSync, mkdtempSync } from "fs";
 import { join } from "path";
 import { ConfigManager } from "../config";
-import { ProxyStartOptions, ProxyStatus } from "./types";
+import { ProxyStatus } from "./types";
 import { ModelManager } from "../models/manager";
 import { ModelInfoImpl } from "../models/info";
 
