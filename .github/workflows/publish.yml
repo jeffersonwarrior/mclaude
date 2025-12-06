@@ -36,4 +36,4 @@ jobs:
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
-          # provenance: true  # Enable package provenance (requires OIDC setup)
+          provenance: true  # Enable package provenance with OIDC
