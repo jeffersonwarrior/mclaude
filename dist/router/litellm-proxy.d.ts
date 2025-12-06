@@ -24,13 +24,13 @@ export declare class LiteLLMProxy {
      */
     isEnabled(): boolean;
     /**
+     * Check if LiteLLM proxy is already running on the expected port
+     */
+    private checkIfProxyRunning;
+    /**
      * Ensure LiteLLM Python package is installed
      */
     private ensureLiteLLMInstalled;
-    /**
-     * Build LiteLLM configuration YAML
-     */
-    private buildLiteLLMConfig;
     /**
      * Wait for server to be ready
      */

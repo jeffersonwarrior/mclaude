@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
+import { getRouterManager } from "../router/manager";
 import { createProgram } from "./commands";
+
 
 async function main() {
   try {
-    const program = createProgram();
+    const program = await createProgram();
 
     // Parse command line arguments
     program.parse(process.argv);
@@ -13,6 +15,23 @@ async function main() {
     process.exit(1);
   }
 }
+
+async function cleanupAndExit(signal: NodeJS.Signals) {
+  console.log(`\nReceived ${signal}. Cleaning up...`);
+  const routerManager = getRouterManager();
+  try {
+    await routerManager.cleanup();
+    console.log("Cleanup complete. Exiting.");
+    process.exit(0);
+  } catch (error) {
+    console.error("Error during cleanup:", error);
+    process.exit(1);
+  }
+}
+
+// Handle graceful shutdown
+process.on("SIGINT", () => cleanupAndExit("SIGINT"));
+process.on("SIGTERM", () => cleanupAndExit("SIGTERM"));
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (reason, promise) => {

@@ -122,6 +122,7 @@ class SyntheticClaudeApp {
             jsonMode: options.jsonMode,
             sysprompt,
         }, thinkingModel);
+        process.exit(0);
     }
     /**
      * v1.3.1: Silent update check on launch (Option C from spec)

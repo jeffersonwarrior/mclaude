@@ -72,7 +72,7 @@ export async function testLiteLLMConfig(): Promise<void> {
   const routerManager = getRouterManager(configManager);
   console.log("  ✅ RouterManager created");
 
-  const routerStatus = routerManager.getRouterStatus();
+  const routerStatus = await routerManager.getRouterStatus();
   console.log("  Initial Status:", routerStatus || "Not initialized");
 
   console.log("\n6. Architecture Validation:");

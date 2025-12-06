@@ -1,9 +1,9 @@
-import { LiteLLMProxy } from "./litellm-proxy";
+import { TensorZeroProxy } from "./tensorzero-proxy";
 import { ConfigManager } from "../config";
 import { ProxyStartOptions, ProxyStatus } from "./types";
 
 export class RouterManager {
-  private proxy: LiteLLMProxy | null = null;
+  private proxy: TensorZeroProxy | null = null;
   private configManager: ConfigManager;
 
   constructor(configManager: ConfigManager) {
@@ -16,9 +16,10 @@ export class RouterManager {
   async initializeRouter(options: ProxyStartOptions = {}): Promise<ProxyStatus> {
     const config = this.configManager.config;
 
-    // Check if router is enabled in config
-    if (!config.liteLLM?.enabled) {
-      console.log("[Router] LiteLLM proxy disabled in config");
+    // Check if router is enabled in config (support both liteLLM and tensorzero for migration)
+    const proxyConfig = config.tensorzero || config.liteLLM;
+    if (!proxyConfig?.enabled) {
+      console.log("[Router] TensorZero proxy disabled in config");
       return {
         running: false,
         url: "",
@@ -28,19 +29,19 @@ export class RouterManager {
     }
 
     if (!this.proxy) {
-      this.proxy = new LiteLLMProxy(this.configManager);
+      this.proxy = new TensorZeroProxy(this.configManager);
     }
 
-    console.log("[Router] Starting LiteLLM proxy...");
+    console.log("[Router] Starting TensorZero proxy...");
     const status = await this.proxy.start({
-      port: options.port || config.liteLLM.port || 8000,
-      host: options.host || config.liteLLM.host || "127.0.0.1",
-      timeout: options.timeout || config.liteLLM.timeout || 300000,
+      port: options.port || proxyConfig.port || 8000,
+      host: options.host || proxyConfig.host || "0.0.0.0",
+      timeout: options.timeout || proxyConfig.timeout || 300000,
       enabled: true,
     });
 
     if (status.running) {
-      console.log(`[Router] ✅ LiteLLM proxy running at ${status.url}`);
+      console.log(`[Router] ✅ TensorZero proxy running at ${status.url}`);
       console.log(`[Router] Routes configured: ${status.routes}`);
     }
 
@@ -52,32 +53,33 @@ export class RouterManager {
    */
   async stopRouter(): Promise<void> {
     if (this.proxy) {
-      console.log("[Router] Stopping LiteLLM proxy...");
+      console.log("[Router] Stopping TensorZero proxy...");
       await this.proxy.stop();
       this.proxy = null;
-      console.log("[Router] ✅ LiteLLM proxy stopped");
+      console.log("[Router] ✅ TensorZero proxy stopped");
     }
   }
 
   /**
    * Get router status
    */
-  getRouterStatus(): ProxyStatus | null {
-    return this.proxy?.getStatus() || null;
+  async getRouterStatus(): Promise<ProxyStatus | null> {
+    return this.proxy ? await this.proxy.getStatus() : null;
   }
 
   /**
    * Check if router is running
    */
-  isRouterRunning(): boolean {
-    return !!(this.proxy?.isEnabled() && this.proxy.getStatus().running);
+  async isRouterRunning(): Promise<boolean> {
+    const status = this.proxy ? await this.proxy.getStatus() : null;
+    return !!(status?.running);
   }
 
   /**
    * Get proxy URL
    */
-  getProxyUrl(): string | null {
-    const status = this.getRouterStatus();
+  async getProxyUrl(): Promise<string | null> {
+    const status = await this.getRouterStatus();
     return status?.running ? status.url : null;
   }
 

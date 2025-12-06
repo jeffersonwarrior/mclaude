@@ -71,6 +71,12 @@ export declare class SyntheticClaudeApp {
             ttlMinutes: number;
             maxEntries: number;
         };
+        tensorzero: {
+            enabled: boolean;
+            timeout: number;
+            port: number;
+            host: string;
+        };
         liteLLM: {
             enabled: boolean;
             timeout: number;

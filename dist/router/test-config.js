@@ -62,7 +62,7 @@ async function testLiteLLMConfig() {
     console.log("\n5. Router Manager Initialization:");
     const routerManager = (0, manager_2.getRouterManager)(configManager);
     console.log("  ✅ RouterManager created");
-    const routerStatus = routerManager.getRouterStatus();
+    const routerStatus = await routerManager.getRouterStatus();
     console.log("  Initial Status:", routerStatus || "Not initialized");
     console.log("\n6. Architecture Validation:");
     console.log("  ✅ Configuration file: VALID");

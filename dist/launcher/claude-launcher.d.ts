@@ -65,7 +65,7 @@ export declare class ClaudeLauncher {
     setClaudePath(path: string): void;
     getClaudePath(): string;
     /**
-     * Cleanup resources including LiteLLM proxy
+     * Cleanup resources including TensorZero proxy
      */
     cleanup(): Promise<void>;
 }

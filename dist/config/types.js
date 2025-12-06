@@ -178,13 +178,40 @@ exports.AppConfigSchema = zod_1.z.object({
     })
         .default({})
         .describe("Response caching configuration"),
-    // LiteLLM proxy router configuration (v1.6)
+    // TensorZero proxy router configuration (v1.7)
+    tensorzero: zod_1.z
+        .object({
+        enabled: zod_1.z
+            .boolean()
+            .default(false)
+            .describe("Enable TensorZero proxy router for provider routing"),
+        port: zod_1.z
+            .number()
+            .int()
+            .min(1024)
+            .max(65535)
+            .default(9313)
+            .describe("Port for TensorZero proxy server"),
+        host: zod_1.z
+            .string()
+            .default("0.0.0.0")
+            .describe("Host for TensorZero proxy server"),
+        timeout: zod_1.z
+            .number()
+            .int()
+            .min(1000)
+            .default(300000)
+            .describe("Request timeout in milliseconds"),
+    })
+        .default({})
+        .describe("TensorZero proxy router configuration"),
+    // LiteLLM proxy router configuration (v1.6) - deprecated, migrate to tensorzero
     liteLLM: zod_1.z
         .object({
         enabled: zod_1.z
             .boolean()
             .default(false)
-            .describe("Enable LiteLLM proxy router for provider routing"),
+            .describe("Enable LiteLLM proxy router for provider routing (deprecated, use tensorzero)"),
         port: zod_1.z
             .number()
             .int()
@@ -194,7 +221,7 @@ exports.AppConfigSchema = zod_1.z.object({
             .describe("Port for LiteLLM proxy server"),
         host: zod_1.z
             .string()
-            .default("127.0.0.1")
+            .default("0.0.0.0")
             .describe("Host for LiteLLM proxy server"),
         timeout: zod_1.z
             .number()
@@ -204,7 +231,7 @@ exports.AppConfigSchema = zod_1.z.object({
             .describe("Request timeout in milliseconds"),
     })
         .default({})
-        .describe("LiteLLM proxy router configuration"),
+        .describe("LiteLLM proxy router configuration (deprecated, use tensorzero)"),
     // Environment variable overrides
     envOverrides: zod_1.z
         .object({
@@ -364,28 +391,28 @@ exports.AppConfigSchema = zod_1.z.object({
         .object({
         default: zod_1.z
             .object({
-            primary: zod_1.z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
-            backup: zod_1.z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+            primary: zod_1.z.string().default("synthetic:hf:deepseek-ai/DeepSeek-V3.2"),
+            backup: zod_1.z.string().default("synthetic:hf:MiniMaxAI/MiniMax-M2"),
         })
             .default({}),
         smallFast: zod_1.z
             .object({
             primary: zod_1.z
                 .string()
-                .default("hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
-            backup: zod_1.z.string().default("hf:meta-llama/Llama-3.1-8B-Instruct"),
+                .default("synthetic:hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
+            backup: zod_1.z.string().default("synthetic:hf:meta-llama/Llama-3.1-8B-Instruct"),
         })
             .default({}),
         thinking: zod_1.z
             .object({
-            primary: zod_1.z.string().default("hf:MiniMaxAI/MiniMax-M2"),
-            backup: zod_1.z.string().default("hf:deepseek-ai/DeepSeek-R1"),
+            primary: zod_1.z.string().default("minimax:MiniMax-M2"),
+            backup: zod_1.z.string().default("synthetic:hf:deepseek-ai/DeepSeek-R1"),
         })
             .default({}),
         subagent: zod_1.z
             .object({
-            primary: zod_1.z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
-            backup: zod_1.z.string().default("hf:meta-llama/Llama-3.3-70B-Instruct"),
+            primary: zod_1.z.string().default("synthetic:hf:deepseek-ai/DeepSeek-V3.2"),
+            backup: zod_1.z.string().default("synthetic:hf:meta-llama/Llama-3.3-70B-Instruct"),
         })
             .default({}),
     })

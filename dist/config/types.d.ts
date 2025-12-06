@@ -293,6 +293,22 @@ export declare const AppConfigSchema: z.ZodObject<{
         ttlMinutes?: number | undefined;
         maxEntries?: number | undefined;
     }>>;
+    tensorzero: z.ZodDefault<z.ZodObject<{
+        enabled: z.ZodDefault<z.ZodBoolean>;
+        port: z.ZodDefault<z.ZodNumber>;
+        host: z.ZodDefault<z.ZodString>;
+        timeout: z.ZodDefault<z.ZodNumber>;
+    }, "strip", z.ZodTypeAny, {
+        enabled: boolean;
+        timeout: number;
+        port: number;
+        host: string;
+    }, {
+        enabled?: boolean | undefined;
+        timeout?: number | undefined;
+        port?: number | undefined;
+        host?: string | undefined;
+    }>>;
     liteLLM: z.ZodDefault<z.ZodObject<{
         enabled: z.ZodDefault<z.ZodBoolean>;
         port: z.ZodDefault<z.ZodNumber>;
@@ -688,6 +704,12 @@ export declare const AppConfigSchema: z.ZodObject<{
         ttlMinutes: number;
         maxEntries: number;
     };
+    tensorzero: {
+        enabled: boolean;
+        timeout: number;
+        port: number;
+        host: string;
+    };
     liteLLM: {
         enabled: boolean;
         timeout: number;
@@ -852,6 +874,12 @@ export declare const AppConfigSchema: z.ZodObject<{
         enabled?: boolean | undefined;
         ttlMinutes?: number | undefined;
         maxEntries?: number | undefined;
+    } | undefined;
+    tensorzero?: {
+        enabled?: boolean | undefined;
+        timeout?: number | undefined;
+        port?: number | undefined;
+        host?: string | undefined;
     } | undefined;
     liteLLM?: {
         enabled?: boolean | undefined;

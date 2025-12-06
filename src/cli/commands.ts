@@ -546,12 +546,12 @@ export function createProgram(): Command {
         (config.selectedModel || config.selectedThinkingModel)
       ) {
         // Use existing saved models
-        await app.run({
-          verbose: options.verbose,
-          quiet: options.quiet,
-          model: "", // Will use saved models from config
-          additionalArgs: ["--dangerously-skip-permissions"],
-        });
+          await app.run({
+            verbose: options.verbose,
+            quiet: options.quiet,
+            model: "", // Will use saved models from config
+            additionalArgs: ["--dangerously-skip-permissions"],
+          });
       } else {
         // Need to select models first
         await app.interactiveModelSelection();

@@ -195,13 +195,40 @@ export const AppConfigSchema = z.object({
     })
     .default({})
     .describe("Response caching configuration"),
-  // LiteLLM proxy router configuration (v1.6)
+  // TensorZero proxy router configuration (v1.7)
+  tensorzero: z
+    .object({
+      enabled: z
+        .boolean()
+        .default(false)
+        .describe("Enable TensorZero proxy router for provider routing"),
+      port: z
+        .number()
+        .int()
+        .min(1024)
+        .max(65535)
+        .default(9313)
+        .describe("Port for TensorZero proxy server"),
+      host: z
+        .string()
+        .default("0.0.0.0")
+        .describe("Host for TensorZero proxy server"),
+      timeout: z
+        .number()
+        .int()
+        .min(1000)
+        .default(300000)
+        .describe("Request timeout in milliseconds"),
+    })
+    .default({})
+    .describe("TensorZero proxy router configuration"),
+  // LiteLLM proxy router configuration (v1.6) - deprecated, migrate to tensorzero
   liteLLM: z
     .object({
       enabled: z
         .boolean()
         .default(false)
-        .describe("Enable LiteLLM proxy router for provider routing"),
+        .describe("Enable LiteLLM proxy router for provider routing (deprecated, use tensorzero)"),
       port: z
         .number()
         .int()
@@ -211,7 +238,7 @@ export const AppConfigSchema = z.object({
         .describe("Port for LiteLLM proxy server"),
       host: z
         .string()
-        .default("127.0.0.1")
+        .default("0.0.0.0")
         .describe("Host for LiteLLM proxy server"),
       timeout: z
         .number()
@@ -221,7 +248,7 @@ export const AppConfigSchema = z.object({
         .describe("Request timeout in milliseconds"),
     })
     .default({})
-    .describe("LiteLLM proxy router configuration"),
+    .describe("LiteLLM proxy router configuration (deprecated, use tensorzero)"),
   // Environment variable overrides
   envOverrides: z
     .object({
@@ -381,28 +408,28 @@ export const AppConfigSchema = z.object({
     .object({
       default: z
         .object({
-          primary: z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
-          backup: z.string().default("hf:MiniMaxAI/MiniMax-M2"),
+          primary: z.string().default("synthetic:hf:deepseek-ai/DeepSeek-V3.2"),
+          backup: z.string().default("synthetic:hf:MiniMaxAI/MiniMax-M2"),
         })
         .default({}),
       smallFast: z
         .object({
           primary: z
             .string()
-            .default("hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
-          backup: z.string().default("hf:meta-llama/Llama-3.1-8B-Instruct"),
+            .default("synthetic:hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
+          backup: z.string().default("synthetic:hf:meta-llama/Llama-3.1-8B-Instruct"),
         })
         .default({}),
       thinking: z
         .object({
-          primary: z.string().default("hf:MiniMaxAI/MiniMax-M2"),
-          backup: z.string().default("hf:deepseek-ai/DeepSeek-R1"),
+          primary: z.string().default("minimax:MiniMax-M2"),
+          backup: z.string().default("synthetic:hf:deepseek-ai/DeepSeek-R1"),
         })
         .default({}),
       subagent: z
         .object({
-          primary: z.string().default("hf:deepseek-ai/DeepSeek-V3.2"),
-          backup: z.string().default("hf:meta-llama/Llama-3.3-70B-Instruct"),
+          primary: z.string().default("synthetic:hf:deepseek-ai/DeepSeek-V3.2"),
+          backup: z.string().default("synthetic:hf:meta-llama/Llama-3.3-70B-Instruct"),
         })
         .default({}),
     })

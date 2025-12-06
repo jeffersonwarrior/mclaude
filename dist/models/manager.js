@@ -197,9 +197,21 @@ class ModelManager {
                 const models = [];
                 for (const modelData of modelsData) {
                     try {
+                        // Determine actual provider based on model content, not which API returned it
+                        let actualProvider = "synthetic"; // default
+                        const modelId = modelData.id || "";
+                        if (modelId.startsWith("minimax:")) {
+                            actualProvider = "minimax";
+                        }
+                        else if (modelId.startsWith("hf:")) {
+                            actualProvider = "synthetic"; // HuggingFace models via Synthetic
+                        }
+                        else if (modelId.startsWith("anthropic:")) {
+                            actualProvider = "anthropic";
+                        }
                         const model = new info_1.ModelInfoImpl({
                             ...modelData,
-                            provider: "synthetic",
+                            provider: actualProvider,
                         });
                         models.push(model);
                     }

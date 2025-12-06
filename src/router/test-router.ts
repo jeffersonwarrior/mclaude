@@ -24,7 +24,7 @@ export async function testLiteLLMRouter(): Promise<void> {
   const routerManager = getRouterManager(configManager);
 
   console.log("\n=== Router Status ===");
-  const initialStatus = routerManager.getRouterStatus();
+  const initialStatus = await routerManager.getRouterStatus();
   console.log("Initial Status:", initialStatus);
 
   console.log("\n=== Starting Router ===");
@@ -47,7 +47,7 @@ export async function testLiteLLMRouter(): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     console.log("\n=== Checking Router Health ===");
-    const healthStatus = routerManager.getRouterStatus();
+    const healthStatus = await routerManager.getRouterStatus();
     console.log("Health Status:", healthStatus);
 
     if (healthStatus?.running) {

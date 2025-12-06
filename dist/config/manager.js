@@ -562,6 +562,12 @@ class ConfigManager {
                     ttlMinutes: 60,
                     maxEntries: 100,
                 },
+                tensorzero: {
+                    enabled: false,
+                    port: 9313,
+                    host: "0.0.0.0",
+                    timeout: 300000,
+                },
                 liteLLM: {
                     enabled: false,
                     port: 9313,

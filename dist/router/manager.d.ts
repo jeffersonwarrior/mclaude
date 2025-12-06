@@ -15,15 +15,15 @@ export declare class RouterManager {
     /**
      * Get router status
      */
-    getRouterStatus(): ProxyStatus | null;
+    getRouterStatus(): Promise<ProxyStatus | null>;
     /**
      * Check if router is running
      */
-    isRouterRunning(): boolean;
+    isRouterRunning(): Promise<boolean>;
     /**
      * Get proxy URL
      */
-    getProxyUrl(): string | null;
+    getProxyUrl(): Promise<string | null>;
     /**
      * Cleanup on process exit
      */

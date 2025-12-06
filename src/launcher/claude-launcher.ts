@@ -39,16 +39,16 @@ export class ClaudeLauncher {
 
   async launchClaudeCode(options: LaunchOptions): Promise<LaunchResult> {
     try {
-      // Initialize LiteLLM proxy if enabled in config
+      // Initialize TensorZero proxy if enabled in config
       if (this.configManager?.config.liteLLM?.enabled) {
         try {
           const routerManager = getRouterManager(this.configManager);
           const routerStatus = await routerManager.initializeRouter();
           if (routerStatus.running) {
-            console.info(`LiteLLM proxy started successfully at ${routerStatus.url}`);
+            console.info(`TensorZero proxy started successfully at ${routerStatus.url}`);
           }
         } catch (error) {
-          console.warn(`Failed to start LiteLLM proxy, will use direct connections: ${error}`);
+          console.warn(`Failed to start TensorZero proxy, will use direct connections: ${error}`);
         }
       }
 
@@ -103,11 +103,18 @@ export class ClaudeLauncher {
     options: LaunchOptions,
   ): Promise<LaunchResult> {
     try {
-      // Set up environment variables for Claude Code
+      // Set up environment variables for Claude Code with API key only
       const env = {
-        ...process.env,
-        ...this.createClaudeEnvironment(options),
+        ...await this.createClaudeEnvironment(options),
         ...options.env,
+        // Inherit process.env but exclude any conflicting auth tokens
+        ...Object.fromEntries(
+          Object.entries(process.env).filter(([key]) => 
+            !key.includes('AUTH_TOKEN') && 
+            !key.includes('CLAUDE_CLI_SESSION') && 
+            !key.includes('ALAI_TOKEN')
+          )
+        ),
       };
 
       const provider = this.resolveProvider(options);
@@ -144,17 +151,32 @@ export class ClaudeLauncher {
         });
 
         child.on("spawn", () => {
-          resolve({
-            success: true,
-            pid: child.pid || undefined,
+          // empty
+        });
+
+        child.on("close", (code) => {
+          this.cleanup().finally(() => {
+            if (code === 0) {
+              resolve({
+                success: true,
+                pid: child.pid || undefined,
+              });
+            } else {
+              resolve({
+                success: false,
+                error: `Claude Code exited with code ${code}`,
+              });
+            }
           });
         });
 
         child.on("error", (error) => {
           console.error(`Failed to launch Claude Code: ${error.message}`);
-          resolve({
-            success: false,
-            error: error.message,
+          this.cleanup().finally(() => {
+            resolve({
+              success: false,
+              error: error.message,
+            });
           });
         });
 
@@ -171,9 +193,9 @@ export class ClaudeLauncher {
     }
   }
 
-  private createClaudeEnvironment(
+  private async createClaudeEnvironment(
     options: LaunchOptions,
-  ): Record<string, string> {
+  ): Promise<Record<string, string>> {
     const env: Record<string, string> = {};
 
     const provider = this.resolveProvider(options);
@@ -183,30 +205,46 @@ export class ClaudeLauncher {
       throw new Error(`No configuration found for provider: ${provider}`);
     }
 
-    // Use LiteLLM proxy if enabled and running, otherwise use direct connection
+    // Use TensorZero proxy if enabled and running for standardized routing
     let baseUrl = providerConfig.anthropicBaseUrl;
-    if (this.configManager?.config.liteLLM?.enabled) {
+    if (this.configManager?.config.tensorzero?.enabled) {
       try {
         const routerManager = getRouterManager(this.configManager);
-        const routerStatus = routerManager.getRouterStatus();
+        const routerStatus = await routerManager.getRouterStatus();
         if (routerStatus?.running) {
-          baseUrl = `${routerStatus.url}/v1`;
-          console.info(`Routing through LiteLLM proxy: ${baseUrl}`);
+          baseUrl = "http://127.0.0.1:9313"; // Fixed proxy endpoint
+          console.info(`Routing through TensorZero proxy: ${baseUrl}`);
         }
       } catch (error) {
         console.warn(`Failed to get router status, using direct connection: ${error}`);
       }
     }
 
-    // Set Anthropic base URL
-    env.ANTHROPIC_BASE_URL = baseUrl;
-
-    // Set the provider's API key
-    const apiKey = this.getProviderApiKey(provider);
-    env.ANTHROPIC_AUTH_TOKEN = apiKey;
-
-    // The model will be routed directly to the provider
+    // The model will be routed through the proxy with provider prefix
     const model = options.model;
+
+    // Use standardized proxy authentication - provider routing handled by TensorZero
+    env.ANTHROPIC_API_URL = baseUrl; // Set custom API URL  
+    env.ANTHROPIC_API_KEY = "sk-master"; // Fixed proxy-internal key
+    env.ANTHROPIC_MODEL = model; // Set explicitly
+    
+    // Force Claude Code to use our proxy by overriding all URL variables
+    env.ANTHROPIC_BASE_URL = baseUrl; // Alternative variable
+    env.ANTHROPIC_CLOUD_API_BASE_URL = baseUrl; // Another alternative
+
+    // Clear ALL existing authentication from parent environment
+    delete env.ANTHROPIC_AUTH_TOKEN;
+    delete env.CLAUDE_CLI_SESSION;
+    delete env.CLAUDE_CLI_SESSION_ID;
+    delete env.ALAI_TOKEN;
+    delete env.CLAUDE_API_KEY;
+    
+    // Also clear from the environment we're inheriting from
+    delete process.env.ANTHROPIC_AUTH_TOKEN;
+    delete process.env.CLAUDE_CLI_SESSION;
+    delete process.env.CLAUDE_CLI_SESSION_ID;
+    delete process.env.ALAI_TOKEN;
+    delete process.env.CLAUDE_API_KEY;
 
     // Set all the model environment variables to the full model identifier
     // This ensures Claude Code uses the correct model regardless of which tier it requests
@@ -620,7 +658,7 @@ export class ClaudeLauncher {
   }
 
   /**
-   * Cleanup resources including LiteLLM proxy
+   * Cleanup resources including TensorZero proxy
    */
   async cleanup(): Promise<void> {
     if (this.configManager?.config.liteLLM?.enabled) {

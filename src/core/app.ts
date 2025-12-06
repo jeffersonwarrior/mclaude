@@ -169,6 +169,7 @@ export class SyntheticClaudeApp {
       },
       thinkingModel,
     );
+    process.exit(0);
   }
 
   /**

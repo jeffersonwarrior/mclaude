@@ -5,7 +5,9 @@ import { ProviderType } from '../src/config/types';
 
 // Mock spawn for testing
 jest.mock('child_process', () => ({
+  ...jest.requireActual('child_process'),
   spawn: jest.fn(),
+  exec: jest.fn(),
 }));
 
 import { spawn } from 'child_process';

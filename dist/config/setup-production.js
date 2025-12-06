@@ -4,50 +4,50 @@ exports.setupProductionConfig = setupProductionConfig;
 const manager_1 = require("./manager");
 /**
  * Production configuration setup with recommended defaults
- * Enables LiteLLM proxy and both providers
+ * Enables TensorZero proxy and both providers
  */
 async function setupProductionConfig() {
     console.log("=== Setting up Production Configuration ===\n");
-    // Install LiteLLM if not present
-    console.log("📦 Checking LiteLLM installation...");
+    // Install TensorZero if not present
+    console.log("📦 Checking TensorZero installation...");
     try {
         const { execSync } = require("child_process");
-        execSync("python3 -m litellm --version", { stdio: "ignore" });
-        console.log("✅ LiteLLM is already installed\n");
+        execSync("python3 -m tensorzero --version", { stdio: "ignore" });
+        console.log("✅ TensorZero is already installed\n");
     }
     catch (error) {
-        console.log("⚠️  LiteLLM not found. Installing...\n");
+        console.log("⚠️  TensorZero not found. Installing...\n");
         try {
             const { execSync } = require("child_process");
-            execSync("python3 -m pip install litellm --quiet --break-system-packages", { stdio: "inherit" });
-            console.log("\n✅ LiteLLM installed successfully\n");
+            execSync("python3 -m pip install tensorzero --quiet --break-system-packages", { stdio: "inherit" });
+            console.log("\n✅ TensorZero installed successfully\n");
         }
         catch (installError) {
             console.log("\n⚠️  Automatic installation failed. Please install manually:");
-            console.log("   pip install litellm");
+            console.log("   pip install tensorzero");
             console.log("   OR");
-            console.log("   pipx install litellm\n");
+            console.log("   pipx install tensorzero\n");
         }
     }
     const configManager = new manager_1.ConfigManager();
     const config = configManager.config;
     console.log("Current Configuration:");
-    console.log("  LiteLLM Enabled:", config.liteLLM?.enabled || false);
-    console.log("  LiteLLM Port:", config.liteLLM?.port || 9313);
+    console.log("  TensorZero Enabled:", config.tensorzero?.enabled || false);
+    console.log("  TensorZero Port:", config.tensorzero?.port || 9313);
     console.log("  MiniMax Enabled:", config.providers?.minimax?.enabled || false);
     console.log("  Synthetic Enabled:", config.providers?.synthetic?.enabled || false);
     console.log("  Default Provider:", config.defaultProvider);
-    // Enable LiteLLM proxy
-    console.log("\n✓ Configuring LiteLLM Proxy:");
-    config.liteLLM = {
+    // Enable TensorZero proxy
+    console.log("\n✓ Configuring TensorZero Proxy:");
+    config.tensorzero = {
         enabled: true,
         port: 9313,
-        host: "127.0.0.1",
+        host: "0.0.0.0",
         timeout: 300000,
     };
     console.log("  - Enabled: true");
     console.log("  - Port: 9313");
-    console.log("  - Host: 127.0.0.1");
+    console.log("  - Host: 0.0.0.0");
     console.log("  - Timeout: 300000ms");
     // Enable MiniMax provider
     console.log("\n✓ Configuring MiniMax Provider:");
@@ -135,19 +135,19 @@ async function setupProductionConfig() {
     console.log("  ✓ Synthetic enabled:", isSyntheticEnabled);
     console.log("  ✓ MiniMax API key configured:", hasMinimaxKey);
     console.log("  ✓ Synthetic API key configured:", hasSyntheticKey);
-    console.log("\nLiteLLM Proxy Status:");
-    console.log("  ✓ Enabled:", config.liteLLM.enabled);
-    console.log("  ✓ Port:", config.liteLLM.port);
-    console.log("  ✓ Host:", config.liteLLM.host);
+    console.log("\nTensorZero Proxy Status:");
+    console.log("  ✓ Enabled:", config.tensorzero.enabled);
+    console.log("  ✓ Port:", config.tensorzero.port);
+    console.log("  ✓ Host:", config.tensorzero.host);
     const issues = [];
     if (!isMiniMaxEnabled)
         issues.push("MiniMax provider is not enabled");
     if (!isSyntheticEnabled)
         issues.push("Synthetic provider is not enabled");
-    if (!config.liteLLM.enabled)
-        issues.push("LiteLLM proxy is not enabled");
-    if (config.liteLLM.port !== 9313)
-        issues.push(`LiteLLM port is ${config.liteLLM.port}, should be 9313`);
+    if (!config.tensorzero.enabled)
+        issues.push("TensorZero proxy is not enabled");
+    if (config.tensorzero.port !== 9313)
+        issues.push(`TensorZero port is ${config.tensorzero.port}, should be 9313`);
     if (issues.length === 0) {
         console.log("\n✅ All configuration checks passed!");
         console.log("✅ System is ready for production use\n");

@@ -2,7 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LiteLLMProxy = void 0;
 const child_process_1 = require("child_process");
-const path_1 = require("path");
 class LiteLLMProxy {
     process = null;
     config;
@@ -15,7 +14,7 @@ class LiteLLMProxy {
     loadConfig() {
         return {
             port: parseInt(process.env.LITELLM_PORT || "9313", 10),
-            host: process.env.LITELLM_HOST || "127.0.0.1",
+            host: process.env.LITELLM_HOST || "0.0.0.0",
             timeout: parseInt(process.env.LITELLM_TIMEOUT || "300000", 10),
             enabled: process.env.LITELLM_ENABLED === "true",
             modelRoutes: [
@@ -44,54 +43,86 @@ class LiteLLMProxy {
                 routes: 0,
             };
         }
-        // Ensure LiteLLM is installed
-        await this.ensureLiteLLMInstalled();
+        // First check if LiteLLM is already running on the expected port
+        const isAlreadyRunning = await this.checkIfProxyRunning();
+        if (isAlreadyRunning) {
+            return {
+                running: true,
+                url: `http://127.0.0.1:${this.config.port}`,
+                uptime: 0,
+                routes: this.config.modelRoutes.length,
+            };
+        }
+        // Only start if not already running
         if (this.process) {
             return {
                 running: true,
-                url: `http://${this.config.host}:${this.config.port}`,
+                url: `http://127.0.0.1:${this.config.port}`,
                 uptime: Date.now() - (this.startTime || Date.now()),
                 routes: this.config.modelRoutes.length,
             };
         }
-        const port = options.port || this.config.port;
-        const host = options.host || this.config.host;
-        const timeout = options.timeout || this.config.timeout;
-        const configData = this.buildLiteLLMConfig();
-        // Write config to temp file
-        const os = require("os");
-        const fs = require("fs");
-        const configPath = (0, path_1.join)(os.tmpdir(), `litellm-config-${Date.now()}.yaml`);
-        fs.writeFileSync(configPath, configData);
+        // Silent startup - no console output unless there's an error
+        await this.ensureLiteLLMInstalled();
         try {
-            // Set DATABASE_URL environment variable for LiteLLM's Prisma schema
+            // Use working configuration approach
+            const syntheticApiKey = this.configManager.getEffectiveApiKey("synthetic") || "";
+            const syntheticBaseUrl = this.configManager.getProviderConfig("synthetic")?.anthropicBaseUrl || "https://api.synthetic.new/anthropic";
+            const minimaxApiKey = this.configManager.getEffectiveApiKey("minimax") || "";
+            const minimaxBaseUrl = this.configManager.getProviderConfig("minimax")?.anthropicBaseUrl || "https://api.minimax.io/anthropic";
+            // Use file-based SQLite database for better PostgreSQL compatibility
+            const tempDir = require('os').tmpdir();
+            const dbPath = `${tempDir}/litellm-mclaude.db`;
             const env = {
                 ...process.env,
-                DATABASE_URL: `file:${os.tmpdir()}/litellm.db`,
+                // Use file-based SQLite database instead of in-memory (fixes PostgreSQL compatibility issues)
+                DATABASE_URL: `file:${dbPath}`,
+                LITELLM_DATABASE_URL: `file:${dbPath}`,
+                // Alternative: try with local file database
+                // DATABASE_URL: `file:${require('os').tmpdir()}/litellm-memory.db`,
+                // LITELLM_DATABASE_URL: `file:${require('os').tmpdir()}/litellm-memory.db`,
+                // Set configuration for direct API calls
+                ANTHROPIC_API_KEY: syntheticApiKey,
+                ANTHROPIC_API_BASE: syntheticBaseUrl,
+                // Master key must start with "sk-" for LiteLLM proxy validation
+                LITELLM_MASTER_KEY: `sk-${syntheticApiKey}`,
             };
-            // Start litellm proxy with the config file
-            this.process = (0, child_process_1.spawn)("litellm", ["--config", configPath], {
-                stdio: ["ignore", "pipe", "pipe"],
+            // Use simple direct model configuration without database
+            const args = [
+                "--port", "9313",
+                "--host", "0.0.0.0",
+                "--model", "openai/hf:deepseek-ai/DeepSeek-V3.2",
+                "--api_base", syntheticBaseUrl,
+                "--api_key", syntheticApiKey,
+                "--drop_params",
+                "--no_database", // Skip database entirely
+            ];
+            // Always silent - capture stderr for error detection only
+            this.process = (0, child_process_1.spawn)("litellm", args, {
+                stdio: "pipe", // Capture all output
+                detached: true,
                 env,
             });
+            // Show startup output for debugging
+            this.process.stderr.on('data', (data) => {
+                const output = data.toString().trim();
+                console.error(`[LiteLLM STDERR]: ${output}`);
+            });
+            // Show startup output for debugging  
+            this.process.stdout.on('data', (data) => {
+                const output = data.toString().trim();
+                console.log(`[LiteLLM STDOUT]: ${output}`);
+            });
+            this.process.unref(); // Run in background - don't block
             this.startTime = Date.now();
-            this.process.stdout.on("data", (data) => {
-                console.log(`[LiteLLM] ${data.toString().trim()}`);
-            });
-            this.process.stderr.on("data", (data) => {
-                console.error(`[LiteLLM Error] ${data.toString().trim()}`);
-            });
-            this.process.on("exit", (code) => {
-                console.log(`[LiteLLM] Process exited with code ${code}`);
-                this.cleanup();
-            });
-            // Wait for server to be ready
-            await this.waitForServer(host, port, timeout);
-            // Clean up temp config file
-            fs.unlinkSync(configPath);
+            // Silently wait for startup
+            await this.waitForServer("127.0.0.1", 9313, this.config.timeout);
+            // Additional delay to ensure LiteLLM auth system is fully initialized
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Silent completion - no success message
             return {
                 running: true,
-                url: `http://${host}:${port}`,
+                url: `http://127.0.0.1:9313`,
                 uptime: Date.now() - this.startTime,
                 routes: this.config.modelRoutes.length,
             };
@@ -99,9 +130,6 @@ class LiteLLMProxy {
         catch (error) {
             console.error("Failed to start LiteLLM proxy:", error);
             this.cleanup();
-            if (fs.existsSync(configPath)) {
-                fs.unlinkSync(configPath);
-            }
             throw error;
         }
     }
@@ -118,7 +146,7 @@ class LiteLLMProxy {
         return {
             running: this.process !== null,
             url: this.process
-                ? `http://${this.config.host}:${this.config.port}`
+                ? `http://127.0.0.1:${this.config.port}`
                 : "",
             uptime: this.startTime ? Date.now() - this.startTime : 0,
             routes: this.config.modelRoutes.length,
@@ -131,67 +159,63 @@ class LiteLLMProxy {
         return this.config.enabled;
     }
     /**
+     * Check if LiteLLM proxy is already running on the expected port
+     */
+    async checkIfProxyRunning() {
+        try {
+            const http = require("http");
+            // Check if proxy is running using correct master key
+            const syntheticApiKey = this.configManager.getEffectiveApiKey("synthetic") || "";
+            await new Promise((resolve, reject) => {
+                const options = {
+                    host: "127.0.0.1",
+                    port: this.config.port,
+                    path: "/health",
+                    headers: {
+                        Authorization: `Bearer sk-${syntheticApiKey}`,
+                    },
+                    timeout: 2000,
+                };
+                const req = http.get(options, (res) => {
+                    // If we get any response, the server is running
+                    resolve();
+                });
+                req.on("error", () => {
+                    reject(new Error("Proxy not running"));
+                });
+                req.on("timeout", () => {
+                    req.destroy();
+                    reject(new Error("Connection timeout"));
+                });
+            });
+            return true;
+        }
+        catch (error) {
+            // If we can't connect, proxy is not running
+            return false;
+        }
+    }
+    /**
      * Ensure LiteLLM Python package is installed
      */
     async ensureLiteLLMInstalled() {
         try {
             const { execSync } = require("child_process");
             execSync("litellm --version", { stdio: "ignore" });
-            console.log("[LiteLLM] Python package verified");
+            // Silent - no console output for successful verification
         }
         catch (error) {
-            console.log("[LiteLLM] Installing Python package...");
             try {
                 const { execSync } = require("child_process");
-                execSync("pip install litellm --quiet --break-system-packages", {
+                execSync("pip install --upgrade litellm --quiet --break-system-packages", {
                     stdio: "inherit",
                 });
-                console.log("[LiteLLM] ✅ Python package installed");
+                // Silent - no console output for successful installation
             }
             catch (installError) {
                 throw new Error("LiteLLM Python package not found. Install with: pip install litellm");
             }
         }
-    }
-    /**
-     * Build LiteLLM configuration YAML
-     */
-    buildLiteLLMConfig() {
-        const modelConfigs = this.config.modelRoutes.map((route) => {
-            let apiKey = "";
-            let apiBase = "";
-            if (route.provider === "minimax") {
-                const minimaxConfig = this.configManager.getProviderConfig("minimax");
-                try {
-                    apiKey = this.configManager.getEffectiveApiKey("minimax") || "";
-                    apiBase = minimaxConfig?.anthropicBaseUrl || "https://api.minimax.io/anthropic";
-                }
-                catch (error) {
-                    console.warn(`Failed to get MiniMax config: ${error}`);
-                }
-            }
-            else {
-                const syntheticConfig = this.configManager.getProviderConfig("synthetic");
-                try {
-                    apiKey = this.configManager.getEffectiveApiKey("synthetic") || "";
-                    apiBase = syntheticConfig?.anthropicBaseUrl || "https://api.synthetic.new/anthropic";
-                }
-                catch (error) {
-                    console.warn(`Failed to get Synthetic config: ${error}`);
-                }
-            }
-            return `  - model_name: "${route.pattern}"
-    litellm_params:
-      model: "openai/${route.provider}"
-      api_base: "${apiBase}"
-      api_key: "${apiKey}"`;
-        });
-        return `model_list:
-${modelConfigs.join("\n")}
-
-general_settings:
-  master_key: "sk-litellm"
-`;
     }
     /**
      * Wait for server to be ready
@@ -201,21 +225,46 @@ general_settings:
         const http = require("http");
         while (Date.now() - startTime < timeoutMs) {
             try {
-                await new Promise((resolve) => {
-                    const req = http.get(`http://${host}:${port}/health`, () => {
-                        resolve();
+                // Use same sk- prefixed key for health checks during startup
+                const syntheticApiKey = this.configManager.getEffectiveApiKey("synthetic") || "";
+                await new Promise((resolve, reject) => {
+                    const options = {
+                        host,
+                        port,
+                        path: "/health",
+                        headers: {
+                            Authorization: `Bearer sk-${syntheticApiKey}`,
+                        },
+                        timeout: 2000,
+                    };
+                    const req = http.get(options, (res) => {
+                        if (res.statusCode === 200) {
+                            resolve();
+                        }
+                        else {
+                            // Health endpoint might not exist, try root instead
+                            if (res.statusCode === 404) {
+                                resolve(); // Server is up, just no health endpoint
+                            }
+                            else {
+                                reject(new Error(`Health check failed with status: ${res.statusCode}`));
+                            }
+                        }
                     });
-                    req.on("error", () => {
-                        // Ignore connection errors
+                    req.on("error", (err) => {
+                        reject(err);
                     });
-                    req.setTimeout(1000);
+                    req.on("timeout", () => {
+                        req.destroy();
+                        reject(new Error("Request timed out"));
+                    });
                 });
-                console.log(`[LiteLLM] Proxy server is ready at http://${host}:${port}`);
+                // Silent - no console output when server is ready
                 return;
             }
             catch (error) {
                 // Server not ready yet, wait and retry
-                await new Promise((resolve) => setTimeout(resolve, 1000));
+                await new Promise((resolve) => setTimeout(resolve, 2000));
             }
         }
         throw new Error(`LiteLLM proxy server failed to start within ${timeoutMs}ms`);
@@ -228,6 +277,15 @@ general_settings:
             this.process.kill();
             this.process = null;
             this.startTime = null;
+        }
+        // Clean up database file to prevent accumulation
+        try {
+            const { unlinkSync } = require('fs');
+            const dbPath = `${require('os').tmpdir()}/litellm-mclaude.db`;
+            unlinkSync(dbPath);
+        }
+        catch {
+            // Ignore cleanup errors (file might not exist)
         }
     }
 }
