@@ -302,7 +302,7 @@ export class SyntheticClaudeApp {
       const modelManager = this.getModelManager();
 
       // Test connectivity by attempting to fetch models
-      await modelManager.fetchFromProvider(provider as any, false);
+      await modelManager.fetchFromProvider(provider);
 
       return { valid: true };
     } catch (error: any) {
@@ -648,7 +648,7 @@ export class SyntheticClaudeApp {
             options.provider as any,
           );
         } else {
-          models = await modelManager.fetchModels(false);
+          models = await modelManager.fetchModels();
         }
       } catch (error: any) {
         const errorMessage = sanitizeApiError(error);
@@ -829,7 +829,7 @@ export class SyntheticClaudeApp {
     try {
       const modelManager = this.getModelManager();
       this.ui.coloredInfo("Fetching available models...");
-      const models = await modelManager.fetchModels(false);
+      const models = await modelManager.fetchModels();
 
       if (models.length === 0) {
         this.ui.error(
@@ -1542,7 +1542,7 @@ export class SyntheticClaudeApp {
     const modelManager = this.getModelManager();
 
     try {
-      const allModels = await modelManager.fetchModels(false);
+      const allModels = await modelManager.fetchModels();
 
       const checkModel = (modelId: string): boolean => {
         return allModels.some(
@@ -1654,7 +1654,7 @@ export class SyntheticClaudeApp {
     if (this.configManager.hasApiKey()) {
       try {
         const modelManager = this.getModelManager();
-        const models = await modelManager.fetchModels(true);
+        const models = await modelManager.fetchModels();
         this.ui.showStatus(
           "success",
           `API connection: OK (${models.length} models)`,
@@ -1820,10 +1820,7 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setProviderEnabled(
-      provider as any,
-      true,
-    );
+    const success = await this.configManager.setProviderEnabled(provider, true);
     if (success) {
       this.ui.success(`Provider "${provider}" has been enabled`);
 
@@ -1862,10 +1859,7 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setProviderEnabled(
-      provider as any,
-      false,
-    );
+    const success = await this.configManager.setProviderEnabled(provider, false);
     if (success) {
       this.ui.success(`Provider "${provider}" has been disabled`);
     } else {
@@ -1881,9 +1875,7 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setDefaultProvider(
-      provider as any,
-    );
+    const success = await this.configManager.setDefaultProvider(provider);
     if (success) {
       this.ui.success(`Default provider set to "${provider}"`);
     } else {
@@ -1892,6 +1884,7 @@ export class SyntheticClaudeApp {
   }
 
   async providerStatus(options: { provider?: string }): Promise<void> {
+  const { provider } = options ?? {};
     const providers = options.provider
       ? [options.provider as any].filter((p) =>
           ["synthetic", "minimax", "auto"].includes(p),
@@ -2018,7 +2011,7 @@ export class SyntheticClaudeApp {
         }
       } else {
         // Test specific provider
-        const models = await modelManager.getModelsByProvider(provider as any);
+        const models = await modelManager.getModelsByProvider(provider);
         modelCount = models.length;
         this.ui.success(`✓ Connected successfully`);
         this.ui.info(`Found ${modelCount} models`);
@@ -2097,7 +2090,7 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const config = this.configManager.getProviderConfig(provider as any);
+    const config = this.configManager.getProviderConfig(provider);
     this.ui.info(`Configuration for ${provider}:`);
     this.ui.info("=".repeat(20 + provider.length));
 
@@ -2170,7 +2163,8 @@ export class SyntheticClaudeApp {
   }): Promise<void> {
     try {
       const modelManager = this.getModelManager();
-      const shouldRefresh = options.refresh || false;
+      // shouldRefresh unused
+  const _shouldRefresh = options.refresh;
 
       if (options.provider) {
         // Provider-specific model listing
@@ -2182,7 +2176,7 @@ export class SyntheticClaudeApp {
         }
 
         this.ui.info(`Loading models from ${options.provider} provider...`);
-        const allModels = await modelManager.fetchModels(shouldRefresh);
+        const allModels = await modelManager.fetchModels();
         const models = modelManager.getModelsByProvider(
           options.provider as any,
           allModels,
@@ -2211,7 +2205,7 @@ export class SyntheticClaudeApp {
         });
       } else {
         // Original model listing with provider information
-        const allModels = await modelManager.fetchModels(shouldRefresh);
+        const allModels = await modelManager.fetchModels();
         const categorizedModels = modelManager.getCategorizedModels(allModels);
         const totalCount = Object.values(categorizedModels).reduce(
           (sum, models) => sum + models.length,
@@ -2251,7 +2245,8 @@ export class SyntheticClaudeApp {
   ): Promise<void> {
     try {
       const modelManager = this.getModelManager();
-      const shouldRefresh = options.refresh || false;
+      // shouldRefresh unused
+  const _shouldRefresh = options.refresh;
 
       if (options.provider) {
         // Provider-specific search
@@ -2265,7 +2260,7 @@ export class SyntheticClaudeApp {
         this.ui.info(
           `Searching for "${query}" in ${options.provider} provider...`,
         );
-        const allModels = await modelManager.fetchModels(shouldRefresh);
+        const allModels = await modelManager.fetchModels();
         const models = modelManager.getModelsByProvider(
           options.provider as any,
           allModels,
@@ -2301,7 +2296,7 @@ export class SyntheticClaudeApp {
         });
       } else {
         // Original cross-provider search
-        const allFetchedModels = await modelManager.fetchModels(shouldRefresh);
+        const allFetchedModels = await modelManager.fetchModels();
         const categorizedModels =
           modelManager.getCategorizedModels(allFetchedModels);
         const allModels = Object.values(categorizedModels).flat();
