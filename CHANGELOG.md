@@ -5,6 +5,37 @@ All notable changes to mclaude will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2025-12-06
+
+### Added
+- 🚀 **New Architecture**: Custom TensorZero-like proxy (self-contained Python HTTP server)
+- 🌐 **Dynamic Model Loading**: Real-time model fetching from provider APIs
+- 🔍 **Fuzzy Model Matching**: Auto-prefix mapping (e.g., "hf:model" → "synthetic:hf:model")
+- 📦 **Anthropic API Compatibility**: Full `/v1/messages?beta=true` endpoint support
+- ⚙️ **Zero External Dependencies**: No pip/Docker requirements for proxy
+
+### Changed  
+- 🔀 **Migration**: Complete refactor from LiteLLM to custom proxy architecture
+- 🧹 **Dependency Cleanup**: Removed all LiteLLM Python dependencies and scripts
+- 🔄 **Async Propagation**: Fixed launcher/router initialization and health checks
+- 📖 **Documentation**: Updated README to reflect new architecture and capabilities
+
+### Technical
+- 🏗️ **Built-in Proxy**: Embedded Python HTTP server (port 9313) with OpenAI/Anthropic compatibility
+- 🎯 **Smart Routing**: Fuzzy matching + prefix mapping with provider fallbacks
+- 🧪 **Test Suite**: Fixed Jest mocks and improved test stability (122+ tests passing)
+- 🔇 **Clean Logs**: Removed debug output; silent stdio for Python subprocess
+
+### Architecture
+```
+Claude Code → Custom TensorZero-like Proxy (localhost:9313) → Providers (MiniMax/Synthetic)
+```
+
+### Migration Notes
+- ✅ Fully backward compatible - all existing CLI commands work unchanged
+- ✅ Model selection now supports unprefixed inputs with automatic prefix detection
+- ✅ Zero external dependencies - completely self-contained installation
+
 ## [1.6.2] - 2025-12-05
 
 ### Fixed
