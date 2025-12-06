@@ -3,12 +3,20 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+bun.lock
 
 # Build outputs (keep dist/* for production package)
 # dist/ - REMOVED: CLI packages need compiled files in repo
 build/
 *.tgz
 mclaude-*.tgz
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# Package manager files
+package-lock.json
+yarn.lock
 
 # Environment variables
 .env
@@ -97,10 +105,22 @@ jspm_packages/
 # Config and cache directories (user-specific)
 ~/.config/mclaude/
 ~/.local/share/mclaude/
+.mclaude/
 
 # Test files and scripts (development)
 test_*.sh
 version.txt
+
+# Documentation files (working/dev status)
+AUTHENTICATION_FIX_SUCCESS.md
+LITELLM_VERSION_LOCK.md
+NPM_OIDC_SETUP.md
+refactor.md
+CRUSH.md
+.mclaude-config-example.md
+
+# Temporary files
+{}
 
 # Code documentation (generated and working)
 .codedocs/
