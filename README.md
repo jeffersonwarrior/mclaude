@@ -1,32 +1,34 @@
-# MClaude 1.6.1
+# MClaude 1.7.0
 
 [![npm version](https://img.shields.io/npm/v/mclaude)](https://www.npmjs.com/package/mclaude)
 [![npm downloads](https://img.shields.io/npm/dm/mclaude)](https://www.npmjs.com/package/mclaude)
 [![GitHub stars](https://img.shields.io/github/stars/jeffersonwarrior/mclaude)](https://github.com/jeffersonwarrior/mclaude)
 
-**MClaude makes Claude Code work with MiniMax and Synthetic AI models!** This modern TypeScript/Node.js CLI tool seamlessly bridges Claude Code with MiniMax and Synthetic model APIs through LiteLLM, unlocking model choice while maintaining the familiar Claude Code experience.
+**MClaude makes Claude Code work with MiniMax and Synthetic AI models!** This modern TypeScript/Node.js CLI tool seamlessly bridges Claude Code with MiniMax and Synthetic model APIs through a custom TensorZero-like proxy, unlocking model choice while maintaining the familiar Claude Code experience.
 
 **🚀 Now Available on npm!** Install with: `npm install -g mclaude`
 
-## How It Works (v1.6.0 Architecture)
+## How It Works (v1.7.0 Architecture)
 
-MClaude v1.6.0 uses an intelligent proxy architecture:
+MClaude v1.7.0 uses an intelligent proxy architecture:
 
 ```
-Claude Code → LiteLLM Proxy (localhost:9313) → Providers (MiniMax/Synthetic)
+Claude Code → Custom TensorZero-like Proxy (localhost:9313) → Providers (MiniMax/Synthetic)
 ```
 
-LiteLLM provides unified OpenAI/Anthropic-compatible routing, pattern-based model mapping, and automatic failover. When you select a model, MClaude sets up the proxy with your provider credentials, enabling seamless model access with proper routing (minimax:*, synthetic:* patterns).
+A custom TensorZero-like proxy provides unified OpenAI/Anthropic-compatible routing, pattern-based model mapping, and automatic failover. When you select a model, MClaude sets up the proxy with your provider credentials, enabling seamless model access with proper routing (minimax:*, synthetic:* patterns).
 
-- **LiteLLM Proxy**: Runs on port 9313 for unified API access
+- **Custom Proxy**: Built-in Python HTTP server runs on port 9313 for unified API access
+- **Dynamic Model Loading**: Fetches real-time model lists from provider APIs
 - **Pattern Routing**: minimax:* → MiniMax API, synthetic:* → Synthetic API
-- **Automatic Installation**: LiteLLM Python package installed automatically
-- **Graceful Fallback**: Direct provider connection if proxy unavailable
+- **Fuzzy Matching**: Auto-prefix mapping (e.g., "hf:model" → "synthetic:hf:model")
+- **Zero Dependencies**: Self-contained proxy without external pip packages
 
 ## Features
 
-- 🔗 **LiteLLM Proxy Architecture**: Unified API routing via localhost:9313
+- 🔗 **Custom TensorZero-like Proxy**: Built-in Python HTTP server for unified API routing via localhost:9313
 - 🔄 **Dual Provider Support**: MiniMax and Synthetic with pattern-based routing
+- 🌐 **Real-time Model Discovery**: Dynamic model loading from provider APIs with fuzzy matching
 - 🤖 **Interactive Model Selection**: Robust multi-tier fallback system for reliable terminal compatibility
 - 🔧 **Streamlined Setup**: Simple configuration process for providers and authentication
 - 📦 **Multiple Installation Methods**: One-line installer, npm package, or local development
@@ -34,7 +36,7 @@ LiteLLM provides unified OpenAI/Anthropic-compatible routing, pattern-based mode
 - 🔁 **Error Recovery**: Automatic fallback to direct provider connection if proxy unavailable
 - 🔍 **Model Management**: Search, categorize, and cache available models
 - 🏥 **System Diagnostics**: Health checks and troubleshooting tools
-- ⚙️ **Automatic Dependencies**: LiteLLM Python package installed automatically on setup
+- ⚙️ **Zero External Dependencies**: Self-contained proxy without requiring pip packages
 
 ## Quick Start
 
