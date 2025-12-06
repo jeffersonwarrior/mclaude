@@ -1429,8 +1429,8 @@ export class SyntheticClaudeApp {
     if (successCount < enabledProviders.length) {
       /* eslint-disable @typescript-eslint/no-unused-vars */
       const failedProviders = Object.entries(testResults)
-        .filter(([_, result]) => !result.success)
-        .map(([provider, _]) => provider);
+        .filter(([, result]) => !result.success)
+        .map(([provider]) => provider);
       /* eslint-enable @typescript-eslint/no-unused-vars */
 
       this.ui.warning(
@@ -1474,8 +1474,7 @@ export class SyntheticClaudeApp {
     );
 
     // Check availability of recommended models
-    const _availableModels = // eslint-disable-line @typescript-eslint/no-unused-vars
-      await this.checkRecommendedModelAvailability(recommended);
+    await this.checkRecommendedModelAvailability(recommended);
 
     const shouldUseRecommended = await this.ui.confirm(
       "\nUse recommended models? (You can customize them after setup)",

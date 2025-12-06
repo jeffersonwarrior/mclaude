@@ -28,7 +28,7 @@ export class ModelManager {
   }
 
   async fetchModels(
-    _: boolean, // eslint-disable-line @typescript-eslint/no-unused-vars
+    _forceRefresh: boolean, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<ModelInfoImpl[]> {
     // Check if intelligent refresh is needed
     if (!(await this.cache.needsRefresh())) {
@@ -49,7 +49,7 @@ export class ModelManager {
    */
   async fetchFromProvider(
     provider: ProviderType,
-    _: boolean, // eslint-disable-line @typescript-eslint/no-unused-vars
+    _forceRefresh: boolean, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<ModelInfoImpl[]> {
     if (!this.configManager.isProviderEnabled(provider)) {
       console.warn(`${provider} provider is not enabled`);

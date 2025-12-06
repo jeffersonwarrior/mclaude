@@ -16,7 +16,7 @@ async function main() {
   }
 }
 
-async function cleanupAndExit(signal: NodeJS.Signals) {
+async function cleanupAndExit(signal: string) {
   console.log(`\nReceived ${signal}. Cleaning up...`);
   const routerManager = getRouterManager();
   try {

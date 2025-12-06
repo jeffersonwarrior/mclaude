@@ -1,5 +1,4 @@
-import { spawn, exec } from "child_process";
-import { promisify } from "util";
+import { spawn } from "child_process";
 import { writeFileSync, mkdtempSync } from "fs";
 import { join } from "path";
 import { ConfigManager } from "../config";
@@ -7,7 +6,7 @@ import { ProxyStartOptions, ProxyStatus } from "./types";
 import { ModelManager } from "../models/manager";
 import { ModelInfoImpl } from "../models/info";
 
-const execAsync = promisify(exec);
+
 
 export interface TensorZeroConfig {
   port: number;
@@ -112,7 +111,7 @@ export class TensorZeroProxy {
     return toml;
   }
 
-  async start(options: ProxyStartOptions = {}): Promise<ProxyStatus> {
+  async start(_options: ProxyStartOptions = {}): Promise<ProxyStatus> {
     // Only start if not already running
     if (this.process) {
       return {
@@ -334,7 +333,7 @@ if __name__ == '__main__':
 
       // Silent - ignore stdout/stderr
 
-      this.process.on('exit', (code: any) => {
+      this.process.on('exit', (_code: any) => {
         this.process = null;
       });
 
