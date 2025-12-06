@@ -13,7 +13,9 @@ export class RouterManager {
   /**
    * Initialize and start the router if enabled
    */
-  async initializeRouter(options: ProxyStartOptions = {}): Promise<ProxyStatus> {
+  async initializeRouter(
+    options: ProxyStartOptions = {},
+  ): Promise<ProxyStatus> {
     const config = this.configManager.config;
 
     // Check if router is enabled in config (support both liteLLM and tensorzero for migration)
@@ -72,7 +74,7 @@ export class RouterManager {
    */
   async isRouterRunning(): Promise<boolean> {
     const status = this.proxy ? await this.proxy.getStatus() : null;
-    return !!(status?.running);
+    return !!status?.running;
   }
 
   /**

@@ -68,8 +68,12 @@ export async function testLiteLLMRouter(): Promise<void> {
       // Generate example routes
       console.log("\nExample Routes:");
       console.log("  1. minimax:MiniMax-M2 → MiniMax provider");
-      console.log("  2. synthetic:deepseek-ai/DeepSeek-V3.2 → Synthetic provider");
-      console.log("  3. synthetic:meta-llama/Llama-4-Scout-17B → Synthetic provider");
+      console.log(
+        "  2. synthetic:deepseek-ai/DeepSeek-V3.2 → Synthetic provider",
+      );
+      console.log(
+        "  3. synthetic:meta-llama/Llama-4-Scout-17B → Synthetic provider",
+      );
       console.log("  4. minimax:custom-model → MiniMax provider");
 
       console.log("\n=== Integration Test Summary ===");
@@ -84,13 +88,13 @@ export async function testLiteLLMRouter(): Promise<void> {
       console.log("\nNext steps:");
       console.log("  1. Run 'mclaude model' to select a model");
       console.log("  2. Claude Code will route through LiteLLM proxy");
-      console.log("  3. Models will be automatically routed to correct providers");
-
+      console.log(
+        "  3. Models will be automatically routed to correct providers",
+      );
     } else {
       console.log("\n❌ Router is not running after start!");
       process.exit(1);
     }
-
   } catch (error) {
     console.error("\n❌ Router test failed:", error);
     if (error instanceof Error) {

@@ -1286,9 +1286,7 @@ export class ConfigManager {
   /**
    * Load and resolve system prompt with template variables
    */
-  async loadSysprompt(
-    resolveVariables: boolean = true,
-  ): Promise<{
+  async loadSysprompt(resolveVariables: boolean = true): Promise<{
     content: string | null;
     type: "local" | "global" | null;
     size: number;

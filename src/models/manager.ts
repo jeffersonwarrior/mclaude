@@ -45,9 +45,7 @@ export class ModelManager {
   /**
    * Fetch models from a specific provider
    */
-  async fetchFromProvider(
-    provider: ProviderType,
-  ): Promise<ModelInfoImpl[]> {
+  async fetchFromProvider(provider: ProviderType): Promise<ModelInfoImpl[]> {
     if (!this.configManager.isProviderEnabled(provider)) {
       console.warn(`${provider} provider is not enabled`);
       return [];
@@ -132,7 +130,10 @@ export class ModelManager {
 
     const providerPromises = enabledProviders.map(async (provider) => {
       try {
-        const models = await this.fetchFromProvider(provider as ProviderType, false);
+        const models = await this.fetchFromProvider(
+          provider as ProviderType,
+          false,
+        );
         return {
           provider,
           models,
@@ -244,7 +245,7 @@ export class ModelManager {
             // Determine actual provider based on model content, not which API returned it
             let actualProvider = "synthetic"; // default
             const modelId = modelData.id || "";
-            
+
             if (modelId.startsWith("minimax:")) {
               actualProvider = "minimax";
             } else if (modelId.startsWith("hf:")) {
@@ -252,7 +253,7 @@ export class ModelManager {
             } else if (modelId.startsWith("anthropic:")) {
               actualProvider = "anthropic";
             }
-            
+
             const model = new ModelInfoImpl({
               ...modelData,
               provider: actualProvider,

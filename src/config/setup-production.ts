@@ -17,10 +17,15 @@ export async function setupProductionConfig(): Promise<void> {
     console.log("⚠️  TensorZero not found. Installing...\n");
     try {
       const { execSync } = require("child_process");
-      execSync("python3 -m pip install tensorzero --quiet --break-system-packages", { stdio: "inherit" });
+      execSync(
+        "python3 -m pip install tensorzero --quiet --break-system-packages",
+        { stdio: "inherit" },
+      );
       console.log("\n✅ TensorZero installed successfully\n");
     } catch (installError) {
-      console.log("\n⚠️  Automatic installation failed. Please install manually:");
+      console.log(
+        "\n⚠️  Automatic installation failed. Please install manually:",
+      );
       console.log("   pip install tensorzero");
       console.log("   OR");
       console.log("   pipx install tensorzero\n");
@@ -33,8 +38,14 @@ export async function setupProductionConfig(): Promise<void> {
   console.log("Current Configuration:");
   console.log("  TensorZero Enabled:", config.tensorzero?.enabled || false);
   console.log("  TensorZero Port:", config.tensorzero?.port || 9313);
-  console.log("  MiniMax Enabled:", config.providers?.minimax?.enabled || false);
-  console.log("  Synthetic Enabled:", config.providers?.synthetic?.enabled || false);
+  console.log(
+    "  MiniMax Enabled:",
+    config.providers?.minimax?.enabled || false,
+  );
+  console.log(
+    "  Synthetic Enabled:",
+    config.providers?.synthetic?.enabled || false,
+  );
   console.log("  Default Provider:", config.defaultProvider);
 
   // Enable TensorZero proxy
@@ -110,7 +121,9 @@ export async function setupProductionConfig(): Promise<void> {
     },
   };
   console.log("  - Default: synthetic:deepseek-ai/DeepSeek-V3.2");
-  console.log("  - Small/Fast: synthetic:meta-llama/Llama-4-Scout-17B-16E-Instruct");
+  console.log(
+    "  - Small/Fast: synthetic:meta-llama/Llama-4-Scout-17B-16E-Instruct",
+  );
   console.log("  - Thinking: minimax:MiniMax-M2");
   console.log("  - Subagent: synthetic:deepseek-ai/DeepSeek-V3.2");
 
@@ -150,8 +163,10 @@ export async function setupProductionConfig(): Promise<void> {
   const issues = [];
   if (!isMiniMaxEnabled) issues.push("MiniMax provider is not enabled");
   if (!isSyntheticEnabled) issues.push("Synthetic provider is not enabled");
-  if (!config.tensorzero.enabled) issues.push("TensorZero proxy is not enabled");
-  if (config.tensorzero.port !== 9313) issues.push(`TensorZero port is ${config.tensorzero.port}, should be 9313`);
+  if (!config.tensorzero.enabled)
+    issues.push("TensorZero proxy is not enabled");
+  if (config.tensorzero.port !== 9313)
+    issues.push(`TensorZero port is ${config.tensorzero.port}, should be 9313`);
 
   if (issues.length === 0) {
     console.log("\n✅ All configuration checks passed!");

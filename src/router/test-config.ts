@@ -11,7 +11,10 @@ export async function testLiteLLMConfig(): Promise<void> {
   const config = configManager.config;
 
   console.log("1. Configuration Validation:");
-  console.log("  LiteLLM Enabled:", config.liteLLM?.enabled ? "✅ YES" : "❌ NO");
+  console.log(
+    "  LiteLLM Enabled:",
+    config.liteLLM?.enabled ? "✅ YES" : "❌ NO",
+  );
   console.log("  LiteLLM Port:", config.liteLLM?.port || "NOT SET");
   console.log("  LiteLLM Host:", config.liteLLM?.host || "NOT SET");
   console.log("  LiteLLM Timeout:", config.liteLLM?.timeout || "NOT SET");
@@ -27,10 +30,22 @@ export async function testLiteLLMConfig(): Promise<void> {
   const hasMiniMaxKey = configManager.hasMinimaxApiKey();
   const hasSyntheticKey = configManager.hasSyntheticApiKey();
 
-  console.log("  MiniMax Provider:", miniMaxEnabled ? "✅ ENABLED" : "❌ DISABLED");
-  console.log("  Synthetic Provider:", syntheticEnabled ? "✅ ENABLED" : "❌ DISABLED");
-  console.log("  MiniMax API Key:", hasMiniMaxKey ? "✅ CONFIGURED" : "❌ MISSING");
-  console.log("  Synthetic API Key:", hasSyntheticKey ? "✅ CONFIGURED" : "❌ MISSING");
+  console.log(
+    "  MiniMax Provider:",
+    miniMaxEnabled ? "✅ ENABLED" : "❌ DISABLED",
+  );
+  console.log(
+    "  Synthetic Provider:",
+    syntheticEnabled ? "✅ ENABLED" : "❌ DISABLED",
+  );
+  console.log(
+    "  MiniMax API Key:",
+    hasMiniMaxKey ? "✅ CONFIGURED" : "❌ MISSING",
+  );
+  console.log(
+    "  Synthetic API Key:",
+    hasSyntheticKey ? "✅ CONFIGURED" : "❌ MISSING",
+  );
 
   if (!miniMaxEnabled || !syntheticEnabled) {
     console.log("\n❌ Not all providers are enabled!");
@@ -135,7 +150,9 @@ export async function testLiteLLMConfig(): Promise<void> {
     console.log("✅ Both MiniMax and Synthetic providers are configured");
     console.log("✅ LiteLLM will route models to correct providers");
     console.log("✅ Architecture is production-ready");
-    console.log("\n📝 Note: To use the proxy, ensure LiteLLM Python package is installed:");
+    console.log(
+      "\n📝 Note: To use the proxy, ensure LiteLLM Python package is installed:",
+    );
     console.log("   pip install litellm");
     console.log("   OR");
     console.log("   pipx install litellm");

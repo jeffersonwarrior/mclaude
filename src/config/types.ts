@@ -228,7 +228,9 @@ export const AppConfigSchema = z.object({
       enabled: z
         .boolean()
         .default(false)
-        .describe("Enable LiteLLM proxy router for provider routing (deprecated, use tensorzero)"),
+        .describe(
+          "Enable LiteLLM proxy router for provider routing (deprecated, use tensorzero)",
+        ),
       port: z
         .number()
         .int()
@@ -248,7 +250,9 @@ export const AppConfigSchema = z.object({
         .describe("Request timeout in milliseconds"),
     })
     .default({})
-    .describe("LiteLLM proxy router configuration (deprecated, use tensorzero)"),
+    .describe(
+      "LiteLLM proxy router configuration (deprecated, use tensorzero)",
+    ),
   // Environment variable overrides
   envOverrides: z
     .object({
@@ -417,7 +421,9 @@ export const AppConfigSchema = z.object({
           primary: z
             .string()
             .default("synthetic:hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
-          backup: z.string().default("synthetic:hf:meta-llama/Llama-3.1-8B-Instruct"),
+          backup: z
+            .string()
+            .default("synthetic:hf:meta-llama/Llama-3.1-8B-Instruct"),
         })
         .default({}),
       thinking: z
@@ -429,7 +435,9 @@ export const AppConfigSchema = z.object({
       subagent: z
         .object({
           primary: z.string().default("synthetic:hf:deepseek-ai/DeepSeek-V3.2"),
-          backup: z.string().default("synthetic:hf:meta-llama/Llama-3.3-70B-Instruct"),
+          backup: z
+            .string()
+            .default("synthetic:hf:meta-llama/Llama-3.3-70B-Instruct"),
         })
         .default({}),
     })

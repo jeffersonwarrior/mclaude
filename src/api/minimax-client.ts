@@ -73,7 +73,10 @@ export class MiniMaxClient {
     this.axios.defaults.baseURL = baseURL;
   }
 
-  async get<T = unknown>(url: string, config?: unknown): Promise<AxiosResponse<T>> {
+  async get<T = unknown>(
+    url: string,
+    config?: unknown,
+  ): Promise<AxiosResponse<T>> {
     try {
       return await this.axios.get<T>(url, config as any);
     } catch (error) {
@@ -105,7 +108,10 @@ export class MiniMaxClient {
     }
   }
 
-  async delete<T = unknown>(url: string, config?: unknown): Promise<AxiosResponse<T>> {
+  async delete<T = unknown>(
+    url: string,
+    config?: unknown,
+  ): Promise<AxiosResponse<T>> {
     try {
       return await this.axios.delete<T>(url, config as any);
     } catch (error) {
@@ -140,7 +146,9 @@ export class MiniMaxClient {
     this.setApiKey(apiKey);
 
     try {
-      const response = await this.get<{ remaining: number; total: number }>("/v1/quota");
+      const response = await this.get<{ remaining: number; total: number }>(
+        "/v1/quota",
+      );
       return response.data;
     } catch (error) {
       // MiniMax quota endpoint might not exist or might be different

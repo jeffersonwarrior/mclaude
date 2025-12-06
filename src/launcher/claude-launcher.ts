@@ -45,10 +45,14 @@ export class ClaudeLauncher {
           const routerManager = getRouterManager(this.configManager);
           const routerStatus = await routerManager.initializeRouter();
           if (routerStatus.running) {
-            console.info(`TensorZero proxy started successfully at ${routerStatus.url}`);
+            console.info(
+              `TensorZero proxy started successfully at ${routerStatus.url}`,
+            );
           }
         } catch (error) {
-          console.warn(`Failed to start TensorZero proxy, will use direct connections: ${error}`);
+          console.warn(
+            `Failed to start TensorZero proxy, will use direct connections: ${error}`,
+          );
         }
       }
 
@@ -105,15 +109,16 @@ export class ClaudeLauncher {
     try {
       // Set up environment variables for Claude Code with API key only
       const env = {
-        ...await this.createClaudeEnvironment(options),
+        ...(await this.createClaudeEnvironment(options)),
         ...options.env,
         // Inherit process.env but exclude any conflicting auth tokens
         ...Object.fromEntries(
-          Object.entries(process.env).filter(([key]) => 
-            !key.includes('AUTH_TOKEN') && 
-            !key.includes('CLAUDE_CLI_SESSION') && 
-            !key.includes('ALAI_TOKEN')
-          )
+          Object.entries(process.env).filter(
+            ([key]) =>
+              !key.includes("AUTH_TOKEN") &&
+              !key.includes("CLAUDE_CLI_SESSION") &&
+              !key.includes("ALAI_TOKEN"),
+          ),
         ),
       };
 
@@ -216,7 +221,9 @@ export class ClaudeLauncher {
           console.info(`Routing through TensorZero proxy: ${baseUrl}`);
         }
       } catch (error) {
-        console.warn(`Failed to get router status, using direct connection: ${error}`);
+        console.warn(
+          `Failed to get router status, using direct connection: ${error}`,
+        );
       }
     }
 
@@ -224,10 +231,10 @@ export class ClaudeLauncher {
     const model = options.model;
 
     // Use standardized proxy authentication - provider routing handled by TensorZero
-    env.ANTHROPIC_API_URL = baseUrl; // Set custom API URL  
+    env.ANTHROPIC_API_URL = baseUrl; // Set custom API URL
     env.ANTHROPIC_API_KEY = "sk-master"; // Fixed proxy-internal key
     env.ANTHROPIC_MODEL = model; // Set explicitly
-    
+
     // Force Claude Code to use our proxy by overriding all URL variables
     env.ANTHROPIC_BASE_URL = baseUrl; // Alternative variable
     env.ANTHROPIC_CLOUD_API_BASE_URL = baseUrl; // Another alternative
@@ -238,7 +245,7 @@ export class ClaudeLauncher {
     delete env.CLAUDE_CLI_SESSION_ID;
     delete env.ALAI_TOKEN;
     delete env.CLAUDE_API_KEY;
-    
+
     // Also clear from the environment we're inheriting from
     delete process.env.ANTHROPIC_AUTH_TOKEN;
     delete process.env.CLAUDE_CLI_SESSION;

@@ -3,7 +3,6 @@
 import { getRouterManager } from "../router/manager";
 import { createProgram } from "./commands";
 
-
 async function main() {
   try {
     const program = await createProgram();

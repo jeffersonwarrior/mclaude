@@ -6,8 +6,6 @@ import { ProxyStatus } from "./types";
 import { ModelManager } from "../models/manager";
 import { ModelInfoImpl } from "../models/info";
 
-
-
 export interface TensorZeroConfig {
   port: number;
   host: string;
@@ -37,18 +35,26 @@ export class TensorZeroProxy {
     });
   }
 
-
-
   private async createTensorZeroConfig(): Promise<TensorZeroConfig> {
     // Fetch actual models from providers
     const allModels = await this.modelManager.fetchModels(false);
-    const syntheticModels = allModels.filter((model: ModelInfoImpl) => model.getProvider() === "synthetic");
-    const minimaxModels = allModels.filter((model: ModelInfoImpl) => model.getProvider() === "minimax");
+    const syntheticModels = allModels.filter(
+      (model: ModelInfoImpl) => model.getProvider() === "synthetic",
+    );
+    const minimaxModels = allModels.filter(
+      (model: ModelInfoImpl) => model.getProvider() === "minimax",
+    );
 
-    const syntheticApiKey = this.configManager.getEffectiveApiKey("synthetic") || "";
-    const syntheticBaseUrl = this.configManager.getProviderConfig("synthetic")?.anthropicBaseUrl || "https://api.synthetic.new/anthropic";
-    const minimaxApiKey = this.configManager.getEffectiveApiKey("minimax") || "";
-    const minimaxBaseUrl = this.configManager.getProviderConfig("minimax")?.anthropicBaseUrl || "https://api.minimax.io/anthropic";
+    const syntheticApiKey =
+      this.configManager.getEffectiveApiKey("synthetic") || "";
+    const syntheticBaseUrl =
+      this.configManager.getProviderConfig("synthetic")?.anthropicBaseUrl ||
+      "https://api.synthetic.new/anthropic";
+    const minimaxApiKey =
+      this.configManager.getEffectiveApiKey("minimax") || "";
+    const minimaxBaseUrl =
+      this.configManager.getProviderConfig("minimax")?.anthropicBaseUrl ||
+      "https://api.minimax.io/anthropic";
 
     const models: TensorZeroModel[] = [];
 
@@ -59,7 +65,7 @@ export class TensorZeroProxy {
         provider: "anthropic",
         model_name: model.id, // Use actual model ID from provider
         api_base: syntheticBaseUrl,
-        api_key: syntheticApiKey
+        api_key: syntheticApiKey,
       });
     });
 
@@ -67,10 +73,10 @@ export class TensorZeroProxy {
     minimaxModels.forEach((model: ModelInfoImpl) => {
       models.push({
         name: `minimax:${model.id}`,
-        provider: "anthropic", 
+        provider: "anthropic",
         model_name: model.id, // Use actual model ID from provider
         api_base: minimaxBaseUrl,
-        api_key: minimaxApiKey
+        api_key: minimaxApiKey,
       });
     });
 
@@ -82,12 +88,12 @@ export class TensorZeroProxy {
   }
 
   private createTensorZeroTomlConfig(config: TensorZeroConfig): string {
-    let toml = '';
-    
+    let toml = "";
+
     // Add models - configure each model as custom Anthropic endpoint
-    config.models.forEach(model => {
+    config.models.forEach((model) => {
       // Use the model ID directly without prefixes for the TOML config
-      const cleanName = model.name.replace(/^(synthetic|minimax):/, '');
+      const cleanName = model.name.replace(/^(synthetic|minimax):/, "");
       toml += `\n[models.${cleanName}]\n`;
       toml += `routing = ["anthropic"]\n\n`;
       toml += `[models.${cleanName}.providers.anthropic]\n`;
@@ -96,18 +102,19 @@ export class TensorZeroProxy {
       toml += `api_base = "${model.api_base}"\n`;
       toml += `api_key = "${model.api_key}"\n\n`;
     });
-    
+
     // Add a basic chat function for inference
     toml += `[functions.chat]\n`;
     toml += `type = "chat"\n\n`;
     toml += `[functions.chat.variants.default]\n`;
     toml += `type = "chat_completion"\n`;
-    
+
     if (config.models.length > 0) {
-      const firstModel = config.models[0]?.name.replace(/^(synthetic|minimax):/, '') || '';
+      const firstModel =
+        config.models[0]?.name.replace(/^(synthetic|minimax):/, "") || "";
       toml += `model = "${firstModel}"\n`;
     }
-    
+
     return toml;
   }
 
@@ -126,11 +133,11 @@ export class TensorZeroProxy {
 
     try {
       const config = await this.createTensorZeroConfig();
-      
+
       // Create temp directory for config
-      const tempDir = mkdtempSync('/tmp/tensorzero-');
-      const configPath = join(tempDir, 'tensorzero.toml');
-      
+      const tempDir = mkdtempSync("/tmp/tensorzero-");
+      const configPath = join(tempDir, "tensorzero.toml");
+
       // Write TOML config
       const tomlConfig = this.createTensorZeroTomlConfig(config);
       writeFileSync(configPath, tomlConfig);
@@ -320,20 +327,23 @@ if __name__ == '__main__':
     main()
 `;
 
-      const scriptPath = join(tempDir, 'gateway.py');
+      const scriptPath = join(tempDir, "gateway.py");
       writeFileSync(scriptPath, gatewayScript);
 
-      const port = this.configManager.config.tensorzero?.port || this.configManager.config.liteLLM?.port || 9313;
+      const port =
+        this.configManager.config.tensorzero?.port ||
+        this.configManager.config.liteLLM?.port ||
+        9313;
 
       // Always silent - capture stderr for error detection only
       this.process = spawn("python3", [scriptPath], {
-        stdio: 'ignore',
+        stdio: "ignore",
         detached: true,
       }) as unknown as any;
 
       // Silent - ignore stdout/stderr
 
-      this.process.on('exit', () => {
+      this.process.on("exit", () => {
         this.process = null;
       });
 
@@ -354,14 +364,18 @@ if __name__ == '__main__':
     }
   }
 
-  private async waitForServer(host: string, port: number, timeout: number): Promise<void> {
+  private async waitForServer(
+    host: string,
+    port: number,
+    timeout: number,
+  ): Promise<void> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       try {
-        const axios = require('axios');
-        const response = await axios.get(`http://${host}:${port}/health`, { 
-          timeout: 2000 
+        const axios = require("axios");
+        const response = await axios.get(`http://${host}:${port}/health`, {
+          timeout: 2000,
         });
         if (response.status === 200) {
           return;
@@ -369,15 +383,15 @@ if __name__ == '__main__':
       } catch (error) {
         // Server not ready yet
       }
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-    
+
     throw new Error(`TensorZero server did not start within ${timeout}ms`);
   }
 
   async stop(): Promise<void> {
     if (this.process) {
-      this.process.kill('SIGTERM');
+      this.process.kill("SIGTERM");
       this.process = null;
     }
   }
@@ -388,12 +402,15 @@ if __name__ == '__main__':
 
   async healthCheck(): Promise<boolean> {
     if (!this.process) return false;
-    
+
     try {
-      const axios = require('axios');
-      const port = this.configManager.config.tensorzero?.port || this.configManager.config.liteLLM?.port || 9313;
-      const response = await axios.get(`http://127.0.0.1:${port}/health`, { 
-        timeout: 5000 
+      const axios = require("axios");
+      const port =
+        this.configManager.config.tensorzero?.port ||
+        this.configManager.config.liteLLM?.port ||
+        9313;
+      const response = await axios.get(`http://127.0.0.1:${port}/health`, {
+        timeout: 5000,
       });
       return response.status === 200;
     } catch (error) {
@@ -403,9 +420,12 @@ if __name__ == '__main__':
 
   async getStatus(): Promise<ProxyStatus | null> {
     if (!this.process) return null;
-    
+
     const config = await this.createTensorZeroConfig();
-    const port = this.configManager.config.tensorzero?.port || this.configManager.config.liteLLM?.port || 9313;
+    const port =
+      this.configManager.config.tensorzero?.port ||
+      this.configManager.config.liteLLM?.port ||
+      9313;
     return {
       running: true,
       url: `http://127.0.0.1:${port}`,

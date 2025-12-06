@@ -167,11 +167,7 @@ export function createProgram(): Command {
           additionalArgs.push(arg);
           // If this is a flag that takes a value and it's not in --flag=value format, skip the next arg
           const nextArg = rawArgs[i + 1];
-          if (
-            !arg.includes("=") &&
-            nextArg &&
-            !nextArg.startsWith("-")
-          ) {
+          if (!arg.includes("=") && nextArg && !nextArg.startsWith("-")) {
             additionalArgs.push(nextArg);
             i++; // Skip the next argument as it's a value
           }
@@ -546,12 +542,12 @@ export function createProgram(): Command {
         (config.selectedModel || config.selectedThinkingModel)
       ) {
         // Use existing saved models
-          await app.run({
-            verbose: options.verbose,
-            quiet: options.quiet,
-            model: "", // Will use saved models from config
-            additionalArgs: ["--dangerously-skip-permissions"],
-          });
+        await app.run({
+          verbose: options.verbose,
+          quiet: options.quiet,
+          model: "", // Will use saved models from config
+          additionalArgs: ["--dangerously-skip-permissions"],
+        });
       } else {
         // Need to select models first
         await app.interactiveModelSelection();

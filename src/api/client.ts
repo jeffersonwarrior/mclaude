@@ -69,7 +69,10 @@ export class ApiClient {
     this.axios.defaults.baseURL = baseURL;
   }
 
-  async get<T = unknown>(url: string, config?: unknown): Promise<AxiosResponse<T>> {
+  async get<T = unknown>(
+    url: string,
+    config?: unknown,
+  ): Promise<AxiosResponse<T>> {
     try {
       return await this.axios.get<T>(url, config as any);
     } catch (error) {
@@ -101,7 +104,10 @@ export class ApiClient {
     }
   }
 
-  async delete<T = unknown>(url: string, config?: unknown): Promise<AxiosResponse<T>> {
+  async delete<T = unknown>(
+    url: string,
+    config?: unknown,
+  ): Promise<AxiosResponse<T>> {
     try {
       return await this.axios.delete<T>(url, config as any);
     } catch (error) {

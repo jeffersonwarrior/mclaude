@@ -28,7 +28,6 @@ export class EnvironmentManager {
     return this.instance;
   }
 
-
   private loadEnvFile(): void {
     try {
       // Try to load .env from project root first
@@ -91,16 +90,19 @@ export class EnvironmentManager {
         const cleanValue = value.replace(/^["']|["']$/g, "");
 
         // Only store variables we're interested in
-        if (key in this.envVars || [
-          "SYNTHETIC_API_KEY",
-          "MINIMAX_API_KEY",
-          "SYNTHETIC_BASE_URL",
-          "MINIMAX_API_URL",
-          "MINIMAX_ANTHROPIC_URL",
-          "MINIMAX_OPENAI_URL",
-          "MINIMAX_MODEL",
-          "API_TIMEOUT_MS"
-        ].includes(key)) {
+        if (
+          key in this.envVars ||
+          [
+            "SYNTHETIC_API_KEY",
+            "MINIMAX_API_KEY",
+            "SYNTHETIC_BASE_URL",
+            "MINIMAX_API_URL",
+            "MINIMAX_ANTHROPIC_URL",
+            "MINIMAX_OPENAI_URL",
+            "MINIMAX_MODEL",
+            "API_TIMEOUT_MS",
+          ].includes(key)
+        ) {
           (this.envVars as any)[key] = cleanValue;
           process.env[key] = cleanValue; // Also set in process.env
         }
