@@ -111,7 +111,7 @@ export class TensorZeroProxy {
     return toml;
   }
 
-  async start(_options: ProxyStartOptions = {}): Promise<ProxyStatus> {
+  async start(): Promise<ProxyStatus> {
     // Only start if not already running
     if (this.process) {
       return {
@@ -333,7 +333,7 @@ if __name__ == '__main__':
 
       // Silent - ignore stdout/stderr
 
-      this.process.on('exit', (_code: any) => {
+      this.process.on('exit', () => {
         this.process = null;
       });
 

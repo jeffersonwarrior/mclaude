@@ -208,9 +208,7 @@ export class SyntheticClaudeApp {
   /**
    * Validate provider credentials - maintains compatibility while being simpler
    */
-  async validateProviderCredentials(
-    _: boolean, // eslint-disable-line @typescript-eslint/no-unused-vars
-  ): Promise<{
+  async validateProviderCredentials(): Promise<{
     valid: boolean;
     authenticationError?: string | null;
     warnings?: string[];

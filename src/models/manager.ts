@@ -27,9 +27,7 @@ export class ModelManager {
     this.minimaxClient = new MiniMaxClient();
   }
 
-  async fetchModels(
-    _forceRefresh: boolean, // eslint-disable-line @typescript-eslint/no-unused-vars
-  ): Promise<ModelInfoImpl[]> {
+  async fetchModels(): Promise<ModelInfoImpl[]> {
     // Check if intelligent refresh is needed
     if (!(await this.cache.needsRefresh())) {
       return this.cache.load();
@@ -49,7 +47,6 @@ export class ModelManager {
    */
   async fetchFromProvider(
     provider: ProviderType,
-    _forceRefresh: boolean, // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<ModelInfoImpl[]> {
     if (!this.configManager.isProviderEnabled(provider)) {
       console.warn(`${provider} provider is not enabled`);
