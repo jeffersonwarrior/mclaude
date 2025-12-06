@@ -111,13 +111,15 @@ jspm_packages/
 test_*.sh
 version.txt
 
-# Documentation files (working/dev status)
-AUTHENTICATION_FIX_SUCCESS.md
-LITELLM_VERSION_LOCK.md
-NPM_OIDC_SETUP.md
-refactor.md
-CRUSH.md
-.mclaude-config-example.md
+# Documentation files (working/dev status - archived)
+# AUTHENTICATION_FIX_SUCCESS.md
+# LITELLM_VERSION_LOCK.md  
+# NPM_OIDC_SETUP.md
+# refactor.md
+# .mclaude-config-example.md
+
+# Archives (historical documentation)
+archives/
 
 # Temporary files
 {}
