@@ -1887,7 +1887,7 @@ export class SyntheticClaudeApp {
     const providers = _options.provider
       ? [_options.provider].filter((p) =>
           ["synthetic", "minimax", "auto"].includes(p),
-        )
+        ) as ("synthetic" | "minimax" | "auto")[]
       : (["synthetic", "minimax", "auto"] as const);
 
     if (_options.provider && providers.length === 0) {
