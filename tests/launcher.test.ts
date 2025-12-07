@@ -248,7 +248,7 @@ describe('ClaudeLauncher', () => {
       expect(env.ANTHROPIC_THINKING_MODEL).toBe('minimax:MiniMax-M2');
     });
 
-    it('should apply provider-specific optimizations', () => {
+    it('should apply provider-specific optimizations', async () => {
       const minimaxOptions: LaunchOptions = {
         model: 'minimax:MiniMax-M2',
         provider: 'minimax',
