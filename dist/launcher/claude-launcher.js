@@ -68,12 +68,12 @@ class ClaudeLauncher {
         try {
             // Set up environment variables for Claude Code with API key only
             const env = {
-                ...await this.createClaudeEnvironment(options),
+                ...(await this.createClaudeEnvironment(options)),
                 ...options.env,
                 // Inherit process.env but exclude any conflicting auth tokens
-                ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.includes('AUTH_TOKEN') &&
-                    !key.includes('CLAUDE_CLI_SESSION') &&
-                    !key.includes('ALAI_TOKEN'))),
+                ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.includes("AUTH_TOKEN") &&
+                    !key.includes("CLAUDE_CLI_SESSION") &&
+                    !key.includes("ALAI_TOKEN"))),
             };
             const provider = this.resolveProvider(options);
             console.info(`Launching Claude Code with ${provider} provider using model: ${options.model}`);
@@ -161,7 +161,7 @@ class ClaudeLauncher {
         // The model will be routed through the proxy with provider prefix
         const model = options.model;
         // Use standardized proxy authentication - provider routing handled by TensorZero
-        env.ANTHROPIC_API_URL = baseUrl; // Set custom API URL  
+        env.ANTHROPIC_API_URL = baseUrl; // Set custom API URL
         env.ANTHROPIC_API_KEY = "sk-master"; // Fixed proxy-internal key
         env.ANTHROPIC_MODEL = model; // Set explicitly
         // Force Claude Code to use our proxy by overriding all URL variables

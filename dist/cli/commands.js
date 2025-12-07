@@ -139,14 +139,12 @@ function createProgram() {
             const arg = rawArgs[i];
             if (arg && arg.startsWith("--")) {
                 // Check if this is a known mclaude option
-                const flagName = arg.split("=")[0];
+                const flagName = arg.split("=")[0] || arg;
                 if (!knownFlags.has(flagName) && !knownFlags.has(arg)) {
                     additionalArgs.push(arg);
                     // If this is a flag that takes a value and it's not in --flag=value format, skip the next arg
                     const nextArg = rawArgs[i + 1];
-                    if (!arg.includes("=") &&
-                        nextArg &&
-                        !nextArg.startsWith("-")) {
+                    if (!arg.includes("=") && nextArg && !nextArg.startsWith("-")) {
                         additionalArgs.push(nextArg);
                         i++; // Skip the next argument as it's a value
                     }

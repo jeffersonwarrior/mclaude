@@ -4,6 +4,7 @@ exports.RouterManager = void 0;
 exports.getRouterManager = getRouterManager;
 exports.resetRouterManager = resetRouterManager;
 const tensorzero_proxy_1 = require("./tensorzero-proxy");
+const config_1 = require("../config");
 class RouterManager {
     proxy = null;
     configManager;
@@ -30,12 +31,7 @@ class RouterManager {
             this.proxy = new tensorzero_proxy_1.TensorZeroProxy(this.configManager);
         }
         console.log("[Router] Starting TensorZero proxy...");
-        const status = await this.proxy.start({
-            port: options.port || proxyConfig.port || 8000,
-            host: options.host || proxyConfig.host || "0.0.0.0",
-            timeout: options.timeout || proxyConfig.timeout || 300000,
-            enabled: true,
-        });
+        const status = await this.proxy.start();
         if (status.running) {
             console.log(`[Router] ✅ TensorZero proxy running at ${status.url}`);
             console.log(`[Router] Routes configured: ${status.routes}`);
@@ -64,7 +60,7 @@ class RouterManager {
      */
     async isRouterRunning() {
         const status = this.proxy ? await this.proxy.getStatus() : null;
-        return !!(status?.running);
+        return !!status?.running;
     }
     /**
      * Get proxy URL
@@ -84,8 +80,8 @@ exports.RouterManager = RouterManager;
 // Singleton instance
 let routerManagerInstance = null;
 function getRouterManager(configManager) {
-    if (!routerManagerInstance && configManager) {
-        routerManagerInstance = new RouterManager(configManager);
+    if (!routerManagerInstance) {
+        routerManagerInstance = new RouterManager(configManager || new config_1.ConfigManager());
     }
     return routerManagerInstance;
 }

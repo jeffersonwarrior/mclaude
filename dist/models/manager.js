@@ -22,7 +22,7 @@ class ModelManager {
         });
         this.minimaxClient = new minimax_client_1.MiniMaxClient();
     }
-    async fetchModels(_) {
+    async fetchModels() {
         // Check if intelligent refresh is needed
         if (!(await this.cache.needsRefresh())) {
             return this.cache.load();
@@ -36,7 +36,7 @@ class ModelManager {
     /**
      * Fetch models from a specific provider
      */
-    async fetchFromProvider(provider, _) {
+    async fetchFromProvider(provider) {
         if (!this.configManager.isProviderEnabled(provider)) {
             console.warn(`${provider} provider is not enabled`);
             return [];
@@ -108,7 +108,7 @@ class ModelManager {
         }
         const providerPromises = enabledProviders.map(async (provider) => {
             try {
-                const models = await this.fetchFromProvider(provider, false);
+                const models = await this.fetchFromProvider(provider);
                 return {
                     provider,
                     models,
@@ -381,7 +381,7 @@ class ModelManager {
     }
     async searchModels(query, models) {
         if (!models) {
-            models = await this.fetchModels(false);
+            models = await this.fetchModels();
         }
         if (!query) {
             return this.getModels(models);
@@ -404,7 +404,7 @@ class ModelManager {
     }
     async getModelById(modelId, models) {
         if (!models) {
-            models = await this.fetchModels(false);
+            models = await this.fetchModels();
         }
         return models.find((model) => model.id === modelId) || null;
     }
@@ -439,7 +439,7 @@ class ModelManager {
      */
     async getModelStatistics(models) {
         if (!models) {
-            models = await this.fetchModels(false);
+            models = await this.fetchModels();
         }
         const stats = {
             total: models.length,
@@ -469,7 +469,7 @@ class ModelManager {
      */
     async searchModelsWithFilters(params, models) {
         if (!models) {
-            models = await this.fetchModels(false);
+            models = await this.fetchModels();
         }
         let filteredModels = models;
         // Filter by provider
@@ -542,7 +542,7 @@ class ModelManager {
      * Force refresh models from specific provider
      */
     async refreshProvider(provider) {
-        return this.fetchFromProvider(provider, true);
+        return this.fetchFromProvider(provider);
     }
 }
 exports.ModelManager = ModelManager;

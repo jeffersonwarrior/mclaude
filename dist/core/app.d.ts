@@ -50,7 +50,7 @@ export declare class SyntheticClaudeApp {
                 responseFormat?: "text" | "json_object" | undefined;
             };
         };
-        defaultProvider: "synthetic" | "minimax" | "auto";
+        defaultProvider: "synthetic" | "auto" | "minimax";
         cacheDurationHours: number;
         selectedModel: string;
         selectedThinkingModel: string;
@@ -202,7 +202,7 @@ export declare class SyntheticClaudeApp {
     /**
      * Validate provider credentials - maintains compatibility while being simpler
      */
-    validateProviderCredentials(_: boolean): Promise<{
+    validateProviderCredentials(): Promise<{
         valid: boolean;
         authenticationError?: string | null;
         warnings?: string[];
@@ -336,7 +336,7 @@ export declare class SyntheticClaudeApp {
     }): Promise<void>;
     testProvider(provider: string): Promise<void>;
     listProviderConfigs(): Promise<void>;
-    getProviderConfigInfo(provider: string): Promise<void>;
+    getProviderConfigInfo(provider: "synthetic" | "minimax" | "auto"): Promise<void>;
     setProviderConfig(provider: string, key: string, value: string): Promise<void>;
     listModels(options: {
         refresh?: boolean;

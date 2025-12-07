@@ -155,7 +155,7 @@ class SyntheticClaudeApp {
     /**
      * Validate provider credentials - maintains compatibility while being simpler
      */
-    async validateProviderCredentials(_) {
+    async validateProviderCredentials() {
         const modelManager = this.getModelManager();
         const enabledProviders = modelManager.getEnabledProviders();
         const errors = [];
@@ -236,7 +236,7 @@ class SyntheticClaudeApp {
         try {
             const modelManager = this.getModelManager();
             // Test connectivity by attempting to fetch models
-            await modelManager.fetchFromProvider(provider, false);
+            await modelManager.fetchFromProvider(provider);
             return { valid: true };
         }
         catch (error) {
@@ -499,7 +499,7 @@ class SyntheticClaudeApp {
                     models = await modelManager.getModelsByProvider(options.provider);
                 }
                 else {
-                    models = await modelManager.fetchModels(false);
+                    models = await modelManager.fetchModels();
                 }
             }
             catch (error) {
@@ -632,7 +632,7 @@ class SyntheticClaudeApp {
         try {
             const modelManager = this.getModelManager();
             this.ui.coloredInfo("Fetching available models...");
-            const models = await modelManager.fetchModels(false);
+            const models = await modelManager.fetchModels();
             if (models.length === 0) {
                 this.ui.error("No models available. Please check your API key and connection.");
                 return false;
@@ -1084,8 +1084,8 @@ class SyntheticClaudeApp {
         if (successCount < enabledProviders.length) {
             /* eslint-disable @typescript-eslint/no-unused-vars */
             const failedProviders = Object.entries(testResults)
-                .filter(([_, result]) => !result.success)
-                .map(([provider, _]) => provider);
+                .filter(([, result]) => !result.success)
+                .map(([provider]) => provider);
             /* eslint-enable @typescript-eslint/no-unused-vars */
             this.ui.warning(`⚠ Some providers failed: ${failedProviders.join(", ")}`);
             this.ui.info(`Continuing with ${successCount} working provider(s)...`);
@@ -1107,8 +1107,7 @@ class SyntheticClaudeApp {
         this.ui.info(`• SUBAGENT: ${recommended.subagent.primary} (backup: ${recommended.subagent.backup})`);
         this.ui.info("\nWe'll check which models are available with your current providers...");
         // Check availability of recommended models
-        const _availableModels = // eslint-disable-line @typescript-eslint/no-unused-vars
-         await this.checkRecommendedModelAvailability(recommended);
+        await this.checkRecommendedModelAvailability(recommended);
         const shouldUseRecommended = await this.ui.confirm("\nUse recommended models? (You can customize them after setup)", true);
         if (shouldUseRecommended) {
             // Save recommended models to config
@@ -1156,7 +1155,7 @@ class SyntheticClaudeApp {
         const availableModels = [];
         const modelManager = this.getModelManager();
         try {
-            const allModels = await modelManager.fetchModels(false);
+            const allModels = await modelManager.fetchModels();
             const checkModel = (modelId) => {
                 return allModels.some((m) => m.id === modelId ||
                     m.id.includes(modelId.split("/").pop() || modelId));
@@ -1233,7 +1232,7 @@ class SyntheticClaudeApp {
         if (this.configManager.hasApiKey()) {
             try {
                 const modelManager = this.getModelManager();
-                const models = await modelManager.fetchModels(true);
+                const models = await modelManager.fetchModels();
                 this.ui.showStatus("success", `API connection: OK (${models.length} models)`);
             }
             catch (error) {
@@ -1407,6 +1406,7 @@ class SyntheticClaudeApp {
         }
     }
     async providerStatus(options) {
+        const { provider } = options ?? {};
         const providers = options.provider
             ? [options.provider].filter((p) => ["synthetic", "minimax", "auto"].includes(p))
             : ["synthetic", "minimax", "auto"];
@@ -1623,7 +1623,8 @@ class SyntheticClaudeApp {
     async listModels(options) {
         try {
             const modelManager = this.getModelManager();
-            const shouldRefresh = options.refresh || false;
+            // shouldRefresh unused
+            const _shouldRefresh = options.refresh;
             if (options.provider) {
                 // Provider-specific model listing
                 if (!["synthetic", "minimax", "auto"].includes(options.provider)) {
@@ -1631,7 +1632,7 @@ class SyntheticClaudeApp {
                     return;
                 }
                 this.ui.info(`Loading models from ${options.provider} provider...`);
-                const allModels = await modelManager.fetchModels(shouldRefresh);
+                const allModels = await modelManager.fetchModels();
                 const models = modelManager.getModelsByProvider(options.provider, allModels);
                 if (models.length === 0) {
                     this.ui.warning(`No models found for provider "${options.provider}"`);
@@ -1649,7 +1650,7 @@ class SyntheticClaudeApp {
             }
             else {
                 // Original model listing with provider information
-                const allModels = await modelManager.fetchModels(shouldRefresh);
+                const allModels = await modelManager.fetchModels();
                 const categorizedModels = modelManager.getCategorizedModels(allModels);
                 const totalCount = Object.values(categorizedModels).reduce((sum, models) => sum + models.length, 0);
                 this.ui.info(`Available Models (${totalCount} total):\n`);
@@ -1677,7 +1678,8 @@ class SyntheticClaudeApp {
     async searchModels(query, options) {
         try {
             const modelManager = this.getModelManager();
-            const shouldRefresh = options.refresh || false;
+            // shouldRefresh unused
+            const _shouldRefresh = options.refresh;
             if (options.provider) {
                 // Provider-specific search
                 if (!["synthetic", "minimax", "auto"].includes(options.provider)) {
@@ -1685,7 +1687,7 @@ class SyntheticClaudeApp {
                     return;
                 }
                 this.ui.info(`Searching for "${query}" in ${options.provider} provider...`);
-                const allModels = await modelManager.fetchModels(shouldRefresh);
+                const allModels = await modelManager.fetchModels();
                 const models = modelManager.getModelsByProvider(options.provider, allModels);
                 const filteredModels = models.filter((model) => model.id.toLowerCase().includes(query.toLowerCase()) ||
                     model.name?.toLowerCase().includes(query.toLowerCase()) ||
@@ -1705,7 +1707,7 @@ class SyntheticClaudeApp {
             }
             else {
                 // Original cross-provider search
-                const allFetchedModels = await modelManager.fetchModels(shouldRefresh);
+                const allFetchedModels = await modelManager.fetchModels();
                 const categorizedModels = modelManager.getCategorizedModels(allFetchedModels);
                 const allModels = Object.values(categorizedModels).flat();
                 const matchingModels = allModels.filter((model) => model.id.toLowerCase().includes(query.toLowerCase()) ||

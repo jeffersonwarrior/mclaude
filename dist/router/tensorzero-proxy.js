@@ -2,13 +2,11 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TensorZeroProxy = void 0;
 const child_process_1 = require("child_process");
-const util_1 = require("util");
 const fs_1 = require("fs");
 const path_1 = require("path");
 const manager_1 = require("../models/manager");
-const execAsync = (0, util_1.promisify)(child_process_1.exec);
 class TensorZeroProxy {
-    process;
+    process = null;
     configManager;
     modelManager;
     startTime = 0;
@@ -22,13 +20,15 @@ class TensorZeroProxy {
     }
     async createTensorZeroConfig() {
         // Fetch actual models from providers
-        const allModels = await this.modelManager.fetchModels(false);
+        const allModels = await this.modelManager.fetchModels();
         const syntheticModels = allModels.filter((model) => model.getProvider() === "synthetic");
         const minimaxModels = allModels.filter((model) => model.getProvider() === "minimax");
         const syntheticApiKey = this.configManager.getEffectiveApiKey("synthetic") || "";
-        const syntheticBaseUrl = this.configManager.getProviderConfig("synthetic")?.anthropicBaseUrl || "https://api.synthetic.new/anthropic";
+        const syntheticBaseUrl = this.configManager.getProviderConfig("synthetic")?.anthropicBaseUrl ||
+            "https://api.synthetic.new/anthropic";
         const minimaxApiKey = this.configManager.getEffectiveApiKey("minimax") || "";
-        const minimaxBaseUrl = this.configManager.getProviderConfig("minimax")?.anthropicBaseUrl || "https://api.minimax.io/anthropic";
+        const minimaxBaseUrl = this.configManager.getProviderConfig("minimax")?.anthropicBaseUrl ||
+            "https://api.minimax.io/anthropic";
         const models = [];
         // Add synthetic models with 'synthetic:' prefix for routing
         syntheticModels.forEach((model) => {
@@ -37,7 +37,7 @@ class TensorZeroProxy {
                 provider: "anthropic",
                 model_name: model.id, // Use actual model ID from provider
                 api_base: syntheticBaseUrl,
-                api_key: syntheticApiKey
+                api_key: syntheticApiKey,
             });
         });
         // Add minimax models with 'minimax:' prefix for routing
@@ -47,7 +47,7 @@ class TensorZeroProxy {
                 provider: "anthropic",
                 model_name: model.id, // Use actual model ID from provider
                 api_base: minimaxBaseUrl,
-                api_key: minimaxApiKey
+                api_key: minimaxApiKey,
             });
         });
         return {
@@ -57,11 +57,11 @@ class TensorZeroProxy {
         };
     }
     createTensorZeroTomlConfig(config) {
-        let toml = '';
+        let toml = "";
         // Add models - configure each model as custom Anthropic endpoint
-        config.models.forEach(model => {
+        config.models.forEach((model) => {
             // Use the model ID directly without prefixes for the TOML config
-            const cleanName = model.name.replace(/^(synthetic|minimax):/, '');
+            const cleanName = model.name.replace(/^(synthetic|minimax):/, "");
             toml += `\n[models.${cleanName}]\n`;
             toml += `routing = ["anthropic"]\n\n`;
             toml += `[models.${cleanName}.providers.anthropic]\n`;
@@ -76,12 +76,12 @@ class TensorZeroProxy {
         toml += `[functions.chat.variants.default]\n`;
         toml += `type = "chat_completion"\n`;
         if (config.models.length > 0) {
-            const firstModel = config.models[0]?.name.replace(/^(synthetic|minimax):/, '') || '';
+            const firstModel = config.models[0]?.name.replace(/^(synthetic|minimax):/, "") || "";
             toml += `model = "${firstModel}"\n`;
         }
         return toml;
     }
-    async start(options = {}) {
+    async start() {
         // Only start if not already running
         if (this.process) {
             return {
@@ -95,8 +95,8 @@ class TensorZeroProxy {
         try {
             const config = await this.createTensorZeroConfig();
             // Create temp directory for config
-            const tempDir = (0, fs_1.mkdtempSync)('/tmp/tensorzero-');
-            const configPath = (0, path_1.join)(tempDir, 'tensorzero.toml');
+            const tempDir = (0, fs_1.mkdtempSync)("/tmp/tensorzero-");
+            const configPath = (0, path_1.join)(tempDir, "tensorzero.toml");
             // Write TOML config
             const tomlConfig = this.createTensorZeroTomlConfig(config);
             (0, fs_1.writeFileSync)(configPath, tomlConfig);
@@ -284,19 +284,22 @@ def main():
 if __name__ == '__main__':
     main()
 `;
-            const scriptPath = (0, path_1.join)(tempDir, 'gateway.py');
+            const scriptPath = (0, path_1.join)(tempDir, "gateway.py");
             (0, fs_1.writeFileSync)(scriptPath, gatewayScript);
-            const port = this.configManager.config.tensorzero?.port || this.configManager.config.liteLLM?.port || 9313;
+            const port = this.configManager.config.tensorzero?.port ||
+                this.configManager.config.liteLLM?.port ||
+                9313;
             // Always silent - capture stderr for error detection only
             this.process = (0, child_process_1.spawn)("python3", [scriptPath], {
-                stdio: 'ignore',
+                stdio: "ignore",
                 detached: true,
             });
-            // Silent - ignore stdout/stderr
-            this.process.on('exit', (code) => {
-                this.process = null;
-            });
-            this.process.unref();
+            if (this.process) {
+                this.process.on("exit", () => {
+                    this.process = null;
+                });
+                this.process.unref();
+            }
             // Wait for server to be ready
             await this.waitForServer("127.0.0.1", port, 30000);
             this.startTime = Date.now();
@@ -315,9 +318,9 @@ if __name__ == '__main__':
         const startTime = Date.now();
         while (Date.now() - startTime < timeout) {
             try {
-                const axios = require('axios');
+                const axios = require("axios");
                 const response = await axios.get(`http://${host}:${port}/health`, {
-                    timeout: 2000
+                    timeout: 2000,
                 });
                 if (response.status === 200) {
                     return;
@@ -326,13 +329,13 @@ if __name__ == '__main__':
             catch (error) {
                 // Server not ready yet
             }
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
         }
         throw new Error(`TensorZero server did not start within ${timeout}ms`);
     }
     async stop() {
         if (this.process) {
-            this.process.kill('SIGTERM');
+            this.process.kill("SIGTERM");
             this.process = null;
         }
     }
@@ -343,10 +346,12 @@ if __name__ == '__main__':
         if (!this.process)
             return false;
         try {
-            const axios = require('axios');
-            const port = this.configManager.config.tensorzero?.port || this.configManager.config.liteLLM?.port || 9313;
+            const axios = require("axios");
+            const port = this.configManager.config.tensorzero?.port ||
+                this.configManager.config.liteLLM?.port ||
+                9313;
             const response = await axios.get(`http://127.0.0.1:${port}/health`, {
-                timeout: 5000
+                timeout: 5000,
             });
             return response.status === 200;
         }
@@ -358,7 +363,9 @@ if __name__ == '__main__':
         if (!this.process)
             return null;
         const config = await this.createTensorZeroConfig();
-        const port = this.configManager.config.tensorzero?.port || this.configManager.config.liteLLM?.port || 9313;
+        const port = this.configManager.config.tensorzero?.port ||
+            this.configManager.config.liteLLM?.port ||
+            9313;
         return {
             running: true,
             url: `http://127.0.0.1:${port}`,

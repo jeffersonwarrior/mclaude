@@ -1,5 +1,5 @@
 import { ConfigManager } from "../config";
-import { ProxyStartOptions, ProxyStatus } from "./types";
+import { ProxyStatus } from "./types";
 export interface TensorZeroConfig {
     port: number;
     host: string;
@@ -20,7 +20,7 @@ export declare class TensorZeroProxy {
     constructor(configManager: ConfigManager);
     private createTensorZeroConfig;
     private createTensorZeroTomlConfig;
-    start(options?: ProxyStartOptions): Promise<ProxyStatus>;
+    start(): Promise<ProxyStatus>;
     private waitForServer;
     stop(): Promise<void>;
     isRunning(): boolean;

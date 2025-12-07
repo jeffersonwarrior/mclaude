@@ -400,7 +400,9 @@ exports.AppConfigSchema = zod_1.z.object({
             primary: zod_1.z
                 .string()
                 .default("synthetic:hf:meta-llama/Llama-4-Scout-17B-16E-Instruct"),
-            backup: zod_1.z.string().default("synthetic:hf:meta-llama/Llama-3.1-8B-Instruct"),
+            backup: zod_1.z
+                .string()
+                .default("synthetic:hf:meta-llama/Llama-3.1-8B-Instruct"),
         })
             .default({}),
         thinking: zod_1.z
@@ -412,7 +414,9 @@ exports.AppConfigSchema = zod_1.z.object({
         subagent: zod_1.z
             .object({
             primary: zod_1.z.string().default("synthetic:hf:deepseek-ai/DeepSeek-V3.2"),
-            backup: zod_1.z.string().default("synthetic:hf:meta-llama/Llama-3.3-70B-Instruct"),
+            backup: zod_1.z
+                .string()
+                .default("synthetic:hf:meta-llama/Llama-3.3-70B-Instruct"),
         })
             .default({}),
     })
