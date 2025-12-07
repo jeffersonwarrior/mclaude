@@ -302,7 +302,9 @@ export class SyntheticClaudeApp {
       const modelManager = this.getModelManager();
 
       // Test connectivity by attempting to fetch models
-      await modelManager.fetchFromProvider(provider as "synthetic" | "minimax" | "auto");
+      await modelManager.fetchFromProvider(
+        provider as "synthetic" | "minimax" | "auto",
+      );
 
       return { valid: true };
     } catch (error: any) {
@@ -1820,7 +1822,10 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setProviderEnabled(provider as "synthetic" | "minimax" | "auto", true);
+    const success = await this.configManager.setProviderEnabled(
+      provider as "synthetic" | "minimax" | "auto",
+      true,
+    );
     if (success) {
       this.ui.success(`Provider "${provider}" has been enabled`);
 
@@ -1859,7 +1864,10 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setProviderEnabled(provider as "synthetic" | "minimax" | "auto", false);
+    const success = await this.configManager.setProviderEnabled(
+      provider as "synthetic" | "minimax" | "auto",
+      false,
+    );
     if (success) {
       this.ui.success(`Provider "${provider}" has been disabled`);
     } else {
@@ -1875,7 +1883,9 @@ export class SyntheticClaudeApp {
       return;
     }
 
-    const success = await this.configManager.setDefaultProvider(provider as "synthetic" | "minimax" | "auto");
+    const success = await this.configManager.setDefaultProvider(
+      provider as "synthetic" | "minimax" | "auto",
+    );
     if (success) {
       this.ui.success(`Default provider set to "${provider}"`);
     } else {
@@ -1885,9 +1895,9 @@ export class SyntheticClaudeApp {
 
   async providerStatus(_options: { provider?: string }): Promise<void> {
     const providers = _options.provider
-      ? [_options.provider].filter((p) =>
+      ? ([_options.provider].filter((p) =>
           ["synthetic", "minimax", "auto"].includes(p),
-        ) as ("synthetic" | "minimax" | "auto")[]
+        ) as ("synthetic" | "minimax" | "auto")[])
       : (["synthetic", "minimax", "auto"] as const);
 
     if (_options.provider && providers.length === 0) {
@@ -1931,7 +1941,9 @@ export class SyntheticClaudeApp {
       // Try to get provider-specific model count
       try {
         const modelManager = this.getModelManager();
-        const providerModels = await modelManager.getModelsByProvider(provider as "synthetic" | "minimax" | "auto");
+        const providerModels = await modelManager.getModelsByProvider(
+          provider as "synthetic" | "minimax" | "auto",
+        );
         this.ui.info(`Available Models: ${providerModels.length}`);
       } catch (error) {
         const errorMessage = sanitizeApiError(error);
@@ -2081,7 +2093,9 @@ export class SyntheticClaudeApp {
     }
   }
 
-  async getProviderConfigInfo(provider: "synthetic" | "minimax" | "auto"): Promise<void> {
+  async getProviderConfigInfo(
+    provider: "synthetic" | "minimax" | "auto",
+  ): Promise<void> {
     const config = this.configManager.getProviderConfig(provider);
     this.ui.info(`Configuration for ${provider}:`);
     this.ui.info("=".repeat(20 + provider.length));

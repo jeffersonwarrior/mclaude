@@ -74,7 +74,10 @@ export class ModelManager {
   /**
    * Enhance error with provider information for better error recovery
    */
-  private enhanceErrorWithProvider(error: unknown, provider: ProviderType): Error {
+  private enhanceErrorWithProvider(
+    error: unknown,
+    provider: ProviderType,
+  ): Error {
     const enhanced = error as Error;
     const providerNames = {
       synthetic: "Synthetic",
@@ -130,9 +133,7 @@ export class ModelManager {
 
     const providerPromises = enabledProviders.map(async (provider) => {
       try {
-        const models = await this.fetchFromProvider(
-          provider as ProviderType,
-        );
+        const models = await this.fetchFromProvider(provider as ProviderType);
         return {
           provider,
           models,

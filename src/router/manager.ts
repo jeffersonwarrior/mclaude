@@ -91,7 +91,9 @@ let routerManagerInstance: RouterManager | null = null;
 
 export function getRouterManager(configManager?: ConfigManager): RouterManager {
   if (!routerManagerInstance) {
-    routerManagerInstance = new RouterManager(configManager || new ConfigManager());
+    routerManagerInstance = new RouterManager(
+      configManager || new ConfigManager(),
+    );
   }
   return routerManagerInstance;
 }

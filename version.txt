@@ -1,1 +1,1 @@
-Version 1.7.0 : Jefferson Nunn + Cerebras GLM 4.6, X.AI 4.1
+Version 1.7.2 : Jefferson Nunn + Cerebras GLM 4.6, X.AI 4.1

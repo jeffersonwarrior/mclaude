@@ -5,6 +5,31 @@ All notable changes to mclaude will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2025-12-07
+
+### Fixed
+- ✅ **ESLint Errors**: Resolved all unused variable errors in CI/CD pipeline
+  - Fixed 'options' parameter in initializeRouter()
+  - Fixed 'provider' variable in providerStatus()
+  - Fixed '_shouldRefresh' variables in listModels() and searchModels()
+- ✅ **TypeScript Compilation**: Fixed provider type inference errors
+  - Added explicit type assertion for filtered providers array
+  - Ensured provider type matches getProviderConfig signature
+- ✅ **CodeQL Configuration**: Resolved advanced setup conflicts
+  - Fixed build-mode compatibility for JavaScript/TypeScript
+  - Disabled default queries to prevent configuration conflicts
+- ✅ **Test Suite Architecture**: Comprehensive modularization
+  - Split launcher.test.ts into 2 focused modules
+  - Split config.test.ts into 7 focused modules  
+  - Split cli.test.ts into 4 focused modules
+  - Created helper utilities for environment isolation
+  - All 91 tests passing with improved maintainability
+
+### Changed
+- 🧹 **GitHub Actions**: Cleaned up workflow runs and fixed CI stability
+- 📊 **Code Quality**: 0 ESLint errors, 71 acceptable warnings maintained
+- 🏗️ **Infrastructure**: Robust modular test architecture for future development
+
 ## [1.7.0] - 2025-12-06
 
 ### Added

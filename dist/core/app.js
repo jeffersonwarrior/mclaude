@@ -1405,13 +1405,12 @@ class SyntheticClaudeApp {
             this.ui.error(`Failed to set default provider "${provider}"`);
         }
     }
-    async providerStatus(options) {
-        const { provider } = options ?? {};
-        const providers = options.provider
-            ? [options.provider].filter((p) => ["synthetic", "minimax", "auto"].includes(p))
+    async providerStatus(_options) {
+        const providers = _options.provider
+            ? [_options.provider].filter((p) => ["synthetic", "minimax", "auto"].includes(p))
             : ["synthetic", "minimax", "auto"];
-        if (options.provider && providers.length === 0) {
-            this.ui.error(`Invalid provider: ${options.provider}. Valid providers: synthetic, minimax, auto`);
+        if (_options.provider && providers.length === 0) {
+            this.ui.error(`Invalid provider: ${_options.provider}. Valid providers: synthetic, minimax, auto`);
             return;
         }
         this.ui.info("Provider Status:");
@@ -1450,7 +1449,7 @@ class SyntheticClaudeApp {
                 this.ui.info(`Available Models: Could not fetch (${errorMessage})`);
             }
         }
-        if (!options.provider) {
+        if (!_options.provider) {
             const defaultProvider = this.configManager.getDefaultProvider();
             this.ui.info(`\nDefault Provider: ${defaultProvider}`);
         }
@@ -1620,7 +1619,6 @@ class SyntheticClaudeApp {
         try {
             const modelManager = this.getModelManager();
             // shouldRefresh unused
-            const _shouldRefresh = options.refresh;
             if (options.provider) {
                 // Provider-specific model listing
                 if (!["synthetic", "minimax", "auto"].includes(options.provider)) {
@@ -1675,7 +1673,6 @@ class SyntheticClaudeApp {
         try {
             const modelManager = this.getModelManager();
             // shouldRefresh unused
-            const _shouldRefresh = options.refresh;
             if (options.provider) {
                 // Provider-specific search
                 if (!["synthetic", "minimax", "auto"].includes(options.provider)) {

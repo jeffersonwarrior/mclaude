@@ -1,4 +1,4 @@
-## MClaude v1.7.1
+## MClaude v1.7.2
 
 ### About
 MClaude allows you to pick from any model within the setup for the 4 models that Claude uses. Currently supports Synthetic.New and MiniMax with more networks being added regularly.

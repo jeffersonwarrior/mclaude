@@ -1,5 +1,5 @@
 import { ConfigManager } from "../config";
-import { ProxyStartOptions, ProxyStatus } from "./types";
+import { ProxyStatus } from "./types";
 export declare class RouterManager {
     private proxy;
     private configManager;
@@ -7,7 +7,7 @@ export declare class RouterManager {
     /**
      * Initialize and start the router if enabled
      */
-    initializeRouter(options?: ProxyStartOptions): Promise<ProxyStatus>;
+    initializeRouter(): Promise<ProxyStatus>;
     /**
      * Stop the router
      */

@@ -14,7 +14,7 @@ class RouterManager {
     /**
      * Initialize and start the router if enabled
      */
-    async initializeRouter(options = {}) {
+    async initializeRouter() {
         const config = this.configManager.config;
         // Check if router is enabled in config (support both liteLLM and tensorzero for migration)
         const proxyConfig = config.tensorzero || config.liteLLM;
