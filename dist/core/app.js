@@ -1562,10 +1562,6 @@ class SyntheticClaudeApp {
         }
     }
     async getProviderConfigInfo(provider) {
-        if (!["synthetic", "minimax", "auto"].includes(provider)) {
-            this.ui.error(`Invalid provider: ${provider}. Valid providers: synthetic, minimax, auto`);
-            return;
-        }
         const config = this.configManager.getProviderConfig(provider);
         this.ui.info(`Configuration for ${provider}:`);
         this.ui.info("=".repeat(20 + provider.length));
