@@ -1883,17 +1883,16 @@ export class SyntheticClaudeApp {
     }
   }
 
-  async providerStatus(options: { provider?: string }): Promise<void> {
-  const { provider } = options ?? {};
-    const providers = options.provider
-      ? [options.provider as any].filter((p) =>
+  async providerStatus(_options: { provider?: string }): Promise<void> {
+    const providers = _options.provider
+      ? [_options.provider].filter((p) =>
           ["synthetic", "minimax", "auto"].includes(p),
         )
       : (["synthetic", "minimax", "auto"] as const);
 
-    if (options.provider && providers.length === 0) {
+    if (_options.provider && providers.length === 0) {
       this.ui.error(
-        `Invalid provider: ${options.provider}. Valid providers: synthetic, minimax, auto`,
+        `Invalid provider: ${_options.provider}. Valid providers: synthetic, minimax, auto`,
       );
       return;
     }
@@ -1940,7 +1939,7 @@ export class SyntheticClaudeApp {
       }
     }
 
-    if (!options.provider) {
+    if (!_options.provider) {
       const defaultProvider = this.configManager.getDefaultProvider();
       this.ui.info(`\nDefault Provider: ${defaultProvider}`);
     }
@@ -2157,7 +2156,6 @@ export class SyntheticClaudeApp {
     try {
       const modelManager = this.getModelManager();
       // shouldRefresh unused
-  const _shouldRefresh = options.refresh;
 
       if (options.provider) {
         // Provider-specific model listing
@@ -2239,7 +2237,6 @@ export class SyntheticClaudeApp {
     try {
       const modelManager = this.getModelManager();
       // shouldRefresh unused
-  const _shouldRefresh = options.refresh;
 
       if (options.provider) {
         // Provider-specific search

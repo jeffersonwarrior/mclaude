@@ -1,6 +1,6 @@
 import { TensorZeroProxy } from "./tensorzero-proxy";
 import { ConfigManager } from "../config";
-import { ProxyStartOptions, ProxyStatus } from "./types";
+import { ProxyStatus } from "./types";
 
 export class RouterManager {
   private proxy: TensorZeroProxy | null = null;
@@ -13,9 +13,7 @@ export class RouterManager {
   /**
    * Initialize and start the router if enabled
    */
-  async initializeRouter(
-    options: ProxyStartOptions = {},
-  ): Promise<ProxyStatus> {
+  async initializeRouter(): Promise<ProxyStatus> {
     const config = this.configManager.config;
 
     // Check if router is enabled in config (support both liteLLM and tensorzero for migration)
