@@ -720,6 +720,4 @@ describe('ClaudeLauncher', () => {
       expect(env.ANTHROPIC_BASE_URL).toBe('https://custom.override.url');
       expect(env.CUSTOM_VAR).toBe('custom-value');
     }, 10000);
-    });
-  });
 });
