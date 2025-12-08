@@ -36,4 +36,5 @@ jobs:
       - name: Publish to npm
         uses: JS-DevTools/npm-publish@v3
         with:
+          token: ''
           provenance: true  # Enable package provenance with OIDC (trusted publishing)
