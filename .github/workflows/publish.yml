@@ -11,7 +11,7 @@ jobs:
 
     permissions:
       contents: read
-      id-token: write  # Required for publishing provenance / OIDC
+      id-token: write  # Required for OIDC/trusted publishing
 
     steps:
       - name: Checkout code
@@ -22,9 +22,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
         run: npm run build
@@ -35,5 +36,4 @@ jobs:
       - name: Publish to npm
         uses: JS-DevTools/npm-publish@v3
         with:
-          token: ${{ secrets.NPM_TOKEN }}
-          provenance: false  # Disable package provenance for initial publish
+          provenance: true  # Enable package provenance with OIDC (trusted publishing)
