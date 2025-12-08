@@ -11,6 +11,7 @@ import { ConfigCliManager } from "./managers/config-cli-manager";
 import { ConfigMigrationManager } from "./managers/config-migration-manager";
 import { ProviderManager } from "./managers/provider-manager";
 import { ModelInteractionManager } from "./managers/model-interaction-manager";
+import { ProxyCliManager } from "./managers/proxy-cli-manager";
 import { SetupManager } from "./managers/setup-manager";
 import { SystemManager } from "./managers/system-manager";
 import { RouterManager } from "../router/manager";
@@ -36,7 +37,7 @@ export interface AppOptions {
 export class SyntheticClaudeApp {
   private modelManager: ModelManager | null = null;
   private configManager: ConfigManager;
-  private ui: UserInterface;
+  public ui: UserInterface; // Made public for access by CLI commands
   private launcher: ClaudeLauncher;
   private routerManager: RouterManager;
   private authManager: AuthManager;
@@ -44,6 +45,7 @@ export class SyntheticClaudeApp {
   private configMigrationManager: ConfigMigrationManager;
   private providerManager: ProviderManager;
   private modelInteractionManager: ModelInteractionManager;
+  private proxyCliManager: ProxyCliManager;
   private setupManager: SetupManager;
   private systemManager: SystemManager;
 
@@ -81,6 +83,7 @@ export class SyntheticClaudeApp {
       this.ui,
       this.getModelManager(),
     );
+    this.proxyCliManager = new ProxyCliManager(this.configManager);
     this.setupManager = new SetupManager(
       this.configManager,
       this.ui,
@@ -111,6 +114,7 @@ export class SyntheticClaudeApp {
       configMigrationManager: this.configMigrationManager,
       providerManager: this.providerManager,
       modelInteractionManager: this.modelInteractionManager,
+      proxyCliManager: this.proxyCliManager,
       setupManager: this.setupManager,
       systemManager: this.systemManager,
     };

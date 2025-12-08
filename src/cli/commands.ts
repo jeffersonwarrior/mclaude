@@ -124,6 +124,7 @@ export function createProgram(): Command {
         "config",
         "setup",
         "doctor",
+        "proxy",
         "dangerously",
         "dangerous",
         "danger",
@@ -719,6 +720,86 @@ export function createProgram(): Command {
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
       await app.managers.configCliManager.manageSysprompt(options);
+    });
+
+  // Proxy management commands
+  const proxyCmd = program
+    .command("proxy")
+    .description("Manage the TensorZero proxy for model routing");
+
+  proxyCmd
+    .command("start")
+    .description("Start the TensorZero proxy")
+    .option("-v, --verbose", "Enable verbose output")
+    .option("-p, --port <port>", "Specify port number")
+    .action(async (options) => {
+      const app = new SyntheticClaudeApp();
+      try {
+        await app.managers.proxyCliManager.startProxy(options);
+        console.log("✓ Proxy start completed");
+        process.exit(0);
+      } catch (error) {
+        console.error("Error:", error);
+        process.exit(1);
+      }
+    });
+
+  proxyCmd
+    .command("stop")
+    .description("Stop the TensorZero proxy")
+    .option("-v, --verbose", "Enable verbose output")
+    .action(async (options) => {
+      const app = new SyntheticClaudeApp();
+      try {
+        await app.managers.proxyCliManager.stopProxy(options);
+        console.log("✓ Proxy stop completed");
+        process.exit(0);
+      } catch (error) {
+        console.error("Error:", error);
+        process.exit(1);
+      }
+    });
+
+  proxyCmd
+    .command("restart")
+    .description("Restart the TensorZero proxy")
+    .option("-v, --verbose", "Enable verbose output")
+    .option("-p, --port <port>", "Specify port number")
+    .action(async (options) => {
+      const app = new SyntheticClaudeApp();
+      try {
+        await app.managers.proxyCliManager.restartProxy(options);
+        console.log("✓ Proxy restart completed");
+        process.exit(0);
+      } catch (error) {
+        console.error("Error:", error);
+        process.exit(1);
+      }
+    });
+
+  proxyCmd
+    .command("status")
+    .description("Check TensorZero proxy status")
+    .action(async () => {
+      const app = new SyntheticClaudeApp();
+      try {
+        const status = await app.managers.proxyCliManager.getProxyStatus();
+        
+        if (status && status.running) {
+          app.ui.showStatus("success", "TensorZero proxy is running");
+          app.ui.info(`URL: ${status.url}`);
+          app.ui.info(`Routes: ${status.routes}`);
+          app.ui.info(`Uptime: ${(status.uptime / 1000).toFixed(1)}s`);
+        } else {
+          app.ui.showStatus("error", "TensorZero proxy is not running");
+          app.ui.info("Start it with: mclaude proxy start");
+        }
+        console.log("\n✓ Proxy status check completed");
+        process.exit(0);
+      } catch (error) {
+        console.error("Error:", error);
+        process.exit(1);
+      }
     });
 
   // Help commands are handled in the main action

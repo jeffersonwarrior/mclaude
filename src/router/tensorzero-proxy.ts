@@ -129,8 +129,6 @@ export class TensorZeroProxy {
       };
     }
 
-    // Silent startup
-
     try {
       const config = await this.createTensorZeroConfig();
 
@@ -147,11 +145,11 @@ export class TensorZeroProxy {
 import asyncio
 import json
 import os
+import sys
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse
 import urllib.request
 import urllib.error
-import sys
 
 class TensorZeroGateway(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -335,14 +333,13 @@ if __name__ == '__main__':
         this.configManager.config.liteLLM?.port ||
         9313;
 
-      // Always silent - capture stderr for error detection only
       this.process = spawn("python3", [scriptPath], {
         stdio: "ignore",
         detached: true,
       });
 
       if (this.process) {
-        this.process.on("exit", () => {
+        this.process.on("exit", (code, signal) => {
           this.process = null;
         });
 
