@@ -1,1 +1,1 @@
-Version 1.8.0 : Jefferson Nunn + Cerebras GLM 4.6, X.AI 4.1, Gemini 2.5 Flash
+Version 1.8.5 : Fix TensorZero proxy routing and comprehensive proxy management CLI
