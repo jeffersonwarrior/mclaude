@@ -3,9 +3,7 @@ import { UserInterface } from "../../ui";
 import { RouterManager } from "../../router/manager";
 import { ProviderManagerInterface } from "./provider-manager.interface";
 import { ModelManager } from "../../models/manager";
-import {
-  sanitizeApiError,
-} from "../../utils/error-sanitizer";
+import { sanitizeApiError } from "../../utils/error-sanitizer";
 
 export class ProviderManager implements ProviderManagerInterface {
   constructor(
@@ -14,8 +12,6 @@ export class ProviderManager implements ProviderManagerInterface {
     private routerManager: RouterManager,
     private modelManager: ModelManager,
   ) {}
-
-
 
   async listProviders(): Promise<void> {
     this.ui.info("Available Providers:");
@@ -396,5 +392,4 @@ export class ProviderManager implements ProviderManagerInterface {
 
     await this.configManager.setConfig(configKey, value);
   }
-
 }

@@ -306,7 +306,8 @@ export class ConfigManager {
         }
 
         // Ensure the directory exists
-        const configDir = this.localProjectDir || join(process.cwd(), ".mclaude");
+        const configDir =
+          this.localProjectDir || join(process.cwd(), ".mclaude");
         await mkdir(configDir, { recursive: true });
 
         // Rename temp file to final location (atomic operation)
@@ -668,7 +669,7 @@ export class ConfigManager {
           },
           minimax: {
             // MiniMax was not part of legacy config, so it starts empty
-            apiKey: "", 
+            apiKey: "",
             baseUrl: "https://api.minimax.io",
             anthropicBaseUrl: "https://api.minimax.io/anthropic",
             modelsApiUrl: "https://api.minimax.io/v1/models",
@@ -1666,7 +1667,7 @@ export class ConfigManager {
   async setConfig(key: string, value: any): Promise<boolean> {
     try {
       const currentConfig = JSON.parse(JSON.stringify(this.config)); // Deep copy to avoid direct mutation
-      const path = key.split('.');
+      const path = key.split(".");
       let currentLevel: any = currentConfig;
 
       for (let i = 0; i < path.length; i++) {
@@ -1674,7 +1675,10 @@ export class ConfigManager {
         if (i === path.length - 1) {
           currentLevel[segment] = value;
         } else {
-          if (typeof currentLevel[segment] !== 'object' || currentLevel[segment] === null) {
+          if (
+            typeof currentLevel[segment] !== "object" ||
+            currentLevel[segment] === null
+          ) {
             currentLevel[segment] = {}; // Initialize if not already an object
           }
           currentLevel = currentLevel[segment];
@@ -1749,35 +1753,35 @@ export class ConfigManager {
     for (let i = 1; i <= 10; i++) {
       const comboKey = `combination${i}` as keyof typeof currentConfig;
       const existing = currentConfig[comboKey];
-      
+
       if (
         !existing ||
-        (typeof existing === "object" && 
-         existing !== null && 
-         "name" in existing && 
-         existing.name === name)
+        (typeof existing === "object" &&
+          existing !== null &&
+          "name" in existing &&
+          existing.name === name)
       ) {
         const updates: any = {};
         updates[comboKey] = combination;
         return this.updateConfig(updates);
       }
     }
-    
+
     throw new Error("Maximum number of combinations (10) reached");
   }
 
   async deleteModelCombination(name: string): Promise<boolean> {
     const currentConfig = this.config;
-    
+
     // Find and remove the combination with the given name
     for (let i = 1; i <= 10; i++) {
       const comboKey = `combination${i}` as keyof typeof currentConfig;
       const existing = currentConfig[comboKey];
-      
+
       if (
-        typeof existing === "object" && 
-        existing !== null && 
-        "name" in existing && 
+        typeof existing === "object" &&
+        existing !== null &&
+        "name" in existing &&
         existing.name === name
       ) {
         const updates: any = {};
@@ -1785,7 +1789,7 @@ export class ConfigManager {
         return this.updateConfig(updates);
       }
     }
-    
+
     // Combination not found - not an error
     return true;
   }

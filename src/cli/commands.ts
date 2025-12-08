@@ -203,7 +203,10 @@ export function createProgram(): Command {
     )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      const success = await app.managers.modelInteractionManager.interactiveModelSelection(options);
+      const success =
+        await app.managers.modelInteractionManager.interactiveModelSelection(
+          options,
+        );
 
       // After successful model selection, launch Claude Code
       if (success) {

@@ -1,12 +1,4 @@
 export interface ProviderManagerInterface {
-
-
-
-
-
-
-
-
   enableProvider(provider: string): Promise<void>;
   disableProvider(provider: string): Promise<void>;
   setDefaultProvider(provider: string): Promise<void>;

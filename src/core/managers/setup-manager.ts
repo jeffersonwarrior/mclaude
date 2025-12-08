@@ -70,7 +70,10 @@ export class SetupManager implements ISetupManager {
         name: "Authentication Testing",
         action: () => this.setupAuthenticationTesting(),
       },
-      { name: "Model Selection", action: () => this.modelInteractionManager.setupModelSelection() },
+      {
+        name: "Model Selection",
+        action: () => this.modelInteractionManager.setupModelSelection(),
+      },
       { name: "Finalization", action: () => this.setupFinalization() },
     ];
 
@@ -523,7 +526,8 @@ export class SetupManager implements ISetupManager {
         if (!trimmedKey.match(/^syn_[a-zA-Z0-9]+$/)) {
           return {
             valid: false,
-            error: "Synthetic API key should start with 'syn_' followed by alphanumeric characters",
+            error:
+              "Synthetic API key should start with 'syn_' followed by alphanumeric characters",
           };
         }
         break;
@@ -533,7 +537,8 @@ export class SetupManager implements ISetupManager {
         if (trimmedKey.length < 20 || !trimmedKey.match(/^[a-zA-Z0-9]+$/)) {
           return {
             valid: false,
-            error: "MiniMax API key should be at least 20 alphanumeric characters",
+            error:
+              "MiniMax API key should be at least 20 alphanumeric characters",
           };
         }
         break;

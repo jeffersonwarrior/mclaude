@@ -37,39 +37,51 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
 
   async setConfig(key: string, value: string): Promise<void> {
     const validKeys = [
-      'apiKey', 'baseUrl', 'modelsApiUrl', 'cacheDurationHours',
-      'selectedModel', 'selectedThinkingModel', 'defaultProvider',
-      'synthetic.apiKey', 'synthetic.baseUrl', 'minimax.apiKey', 'minimax.groupId'
+      "apiKey",
+      "baseUrl",
+      "modelsApiUrl",
+      "cacheDurationHours",
+      "selectedModel",
+      "selectedThinkingModel",
+      "defaultProvider",
+      "synthetic.apiKey",
+      "synthetic.baseUrl",
+      "minimax.apiKey",
+      "minimax.groupId",
     ];
 
     if (!validKeys.includes(key)) {
       this.ui.error(`Invalid config key: ${key}`);
-      this.ui.info(`Valid keys: ${validKeys.join(', ')}`);
+      this.ui.info(`Valid keys: ${validKeys.join(", ")}`);
       return;
     }
 
     // Handle nested keys
-    if (key.startsWith('synthetic.') || key.startsWith('minimax.')) {
-      const [provider, setting] = key.split('.');
-      await this.configManager.setProviderConfig(provider as "synthetic" | "minimax", setting || '', value);
+    if (key.startsWith("synthetic.") || key.startsWith("minimax.")) {
+      const [provider, setting] = key.split(".");
+      await this.configManager.setProviderConfig(
+        provider as "synthetic" | "minimax",
+        setting || "",
+        value,
+      );
       this.ui.success(`✓ Set ${key} = ${value}`);
       return;
     }
 
     // Handle flat keys using type-safe methods
     switch (key) {
-      case 'cacheDurationHours':
+      case "cacheDurationHours":
         await this.configManager.setCacheDuration(parseInt(value));
         break;
-      case 'selectedModel':
+      case "selectedModel":
         await this.configManager.setSavedModel(value);
         break;
-      case 'selectedThinkingModel':
+      case "selectedThinkingModel":
         await this.configManager.setSavedThinkingModel(value);
         break;
-      case 'defaultProvider':
-        if (!['synthetic', 'minimax', 'auto'].includes(value)) {
-          this.ui.error('Invalid provider. Use: synthetic, minimax, or auto');
+      case "defaultProvider":
+        if (!["synthetic", "minimax", "auto"].includes(value)) {
+          this.ui.error("Invalid provider. Use: synthetic, minimax, or auto");
           return;
         }
         await this.configManager.setDefaultProvider(value as any);
@@ -107,7 +119,9 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
         return;
       }
 
-      this.ui.error("Global configuration reset is not yet fully implemented. For now, delete ~/.config/mclaude/config.json manually.");
+      this.ui.error(
+        "Global configuration reset is not yet fully implemented. For now, delete ~/.config/mclaude/config.json manually.",
+      );
     } else {
       this.ui.error(`Invalid scope: ${scope}. Use 'local' or 'global'.`);
     }
@@ -117,7 +131,9 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
     this.ui.info("Configuration Context:");
     this.ui.info("========================");
 
-    this.ui.coloredInfo("ℹ Active config depends on your current directory and if there's a .mclaude folder.");
+    this.ui.coloredInfo(
+      "ℹ Active config depends on your current directory and if there's a .mclaude folder.",
+    );
     this.ui.info(
       "Local config location: ./.mclaude/config.json (within your project directory)",
     );
@@ -135,8 +151,8 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
 
     this.ui.info("Saved Model Combinations:");
     this.ui.info("==========================");
-    
-    combinations.forEach(combination => {
+
+    combinations.forEach((combination) => {
       this.ui.info(`📦 ${combination.name}:`);
       this.ui.info(`   Model: ${combination.model}`);
       if (combination.thinkingModel) {
@@ -146,7 +162,11 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
     });
   }
 
-  async saveCombination(name: string, model: string, thinkingModel?: string): Promise<void> {
+  async saveCombination(
+    name: string,
+    model: string,
+    thinkingModel?: string,
+  ): Promise<void> {
     if (!name || !model) {
       this.ui.error("Name and model are required");
       return;
@@ -164,7 +184,7 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
 
     const confirmed = await this.ui.confirm(
       `Delete model combination '${name}'?`,
-      false
+      false,
     );
 
     if (!confirmed) {
@@ -174,8 +194,8 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
 
     // Check if combination exists
     const combinations = this.configManager.getModelCombinations();
-    const exists = combinations.some(c => c.name === name);
-    
+    const exists = combinations.some((c) => c.name === name);
+
     if (!exists) {
       this.ui.error(`Model combination '${name}' not found`);
       return;
@@ -185,14 +205,17 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
     this.ui.success(`✓ Deleted combination '${name}'`);
   }
 
-  async showStats(options?: { reset?: boolean; format?: string }): Promise<void> {
+  async showStats(options?: {
+    reset?: boolean;
+    format?: string;
+  }): Promise<void> {
     const config = this.configManager.config;
     const usage = config.tokenUsage;
 
     if (options?.reset) {
       const confirmed = await this.ui.confirm(
         "Reset token usage statistics?",
-        false
+        false,
       );
 
       if (confirmed) {
@@ -204,12 +227,12 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
 
     this.ui.info("Token Usage Statistics:");
     this.ui.info("=======================");
-    
+
     const stats = {
       "Total Input Tokens": usage.totalInputTokens.toLocaleString(),
       "Total Output Tokens": usage.totalOutputTokens.toLocaleString(),
       "Session Tokens": usage.sessionTokens.toLocaleString(),
-      "Last Updated": usage.lastUpdated || "Never"
+      "Last Updated": usage.lastUpdated || "Never",
     };
 
     if (options?.format === "json") {
@@ -221,21 +244,28 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
     if (usage.history.length > 0) {
       this.ui.info("\nRecent History:");
       usage.history.slice(-5).forEach((h, index) => {
-        this.ui.info(`${index + 1}. ${h.date}: ${h.inputTokens} input, ${h.outputTokens} output tokens`);
+        this.ui.info(
+          `${index + 1}. ${h.date}: ${h.inputTokens} input, ${h.outputTokens} output tokens`,
+        );
       });
     }
   }
 
-  async manageSysprompt(options: { global?: boolean; show?: boolean; clear?: boolean; raw?: boolean }): Promise<void> {
+  async manageSysprompt(options: {
+    global?: boolean;
+    show?: boolean;
+    clear?: boolean;
+    raw?: boolean;
+  }): Promise<void> {
     const { global, show, clear, raw } = options;
     const { configManager, ui } = this;
 
     const activePath = this.configManager.getActiveSyspromptPath();
-    const isLocal = activePath.type === 'local' && !global;
+    const isLocal = activePath.type === "local" && !global;
 
     if (clear) {
       const confirmed = await ui.confirm(
-        `Are you sure you want to clear the ${isLocal ? 'local' : 'global'} system prompt?`,
+        `Are you sure you want to clear the ${isLocal ? "local" : "global"} system prompt?`,
         false,
       );
       if (!confirmed) {
@@ -243,7 +273,7 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
         return;
       }
       await configManager.clearSysprompt(global);
-      ui.success(`✓ ${isLocal ? 'Local' : 'Global'} system prompt cleared.`);
+      ui.success(`✓ ${isLocal ? "Local" : "Global"} system prompt cleared.`);
       return;
     }
 
@@ -254,10 +284,11 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
         return;
       }
       ui.info(`
---- Active System Prompt (${type || 'default'}, ${(size / 1024).toFixed(1)}KB) ---`);
+--- Active System Prompt (${type || "default"}, ${(size / 1024).toFixed(1)}KB) ---`);
       ui.info(content);
       ui.info("---------------------------------------");
-      const { valid, warning, message } = configManager.validateSyspromptSize(size);
+      const { valid, warning, message } =
+        configManager.validateSyspromptSize(size);
       if (warning) {
         ui.warning(message);
       } else if (!valid) {
@@ -267,24 +298,34 @@ export class ConfigCliManager implements ConfigCliManagerInterface {
     }
 
     // Default action: edit
-    const { content: currentContent } = await configManager.loadSysprompt(false); // Load raw content for editing
+    const { content: currentContent } =
+      await configManager.loadSysprompt(false); // Load raw content for editing
     const defaultContent = configManager.getDefaultSyspromptTemplate();
-    
+
     // Use an external editor (placeholder for now, as direct editor invocation is not available in agent)
     // For now, we'll provide a prompt to the user to manually edit and paste back.
     ui.info(`
-To edit the ${isLocal ? 'local' : 'global'} system prompt, please copy the content below, make your changes, and paste it back.
+To edit the ${isLocal ? "local" : "global"} system prompt, please copy the content below, make your changes, and paste it back.
 `);
-    ui.info(`File location: ${isLocal ? 'Local (.mclaude/config.json)' : 'Global (~/.config/mclaude/config.json)'}`);
+    ui.info(
+      `File location: ${isLocal ? "Local (.mclaude/config.json)" : "Global (~/.config/mclaude/config.json)"}`,
+    );
     ui.info("---------------------------------------");
     ui.info(currentContent || defaultContent);
     ui.info("---------------------------------------");
-    ui.info("Paste your updated system prompt content here (press Ctrl+D when done, Ctrl+C to cancel):\n");
+    ui.info(
+      "Paste your updated system prompt content here (press Ctrl+D when done, Ctrl+C to cancel):\n",
+    );
 
     let newContent = "";
     try {
-      ui.info("Editing system prompt (enter new content, press Enter when done):");
-      newContent = await ui.ask("Enter your system prompt", currentContent || defaultContent);
+      ui.info(
+        "Editing system prompt (enter new content, press Enter when done):",
+      );
+      newContent = await ui.ask(
+        "Enter your system prompt",
+        currentContent || defaultContent,
+      );
     } catch (e: any) {
       ui.info("System prompt edit cancelled.");
       return;
@@ -297,7 +338,7 @@ To edit the ${isLocal ? 'local' : 'global'} system prompt, please copy the conte
 
     const saved = await configManager.saveSysprompt(newContent, global);
     if (saved) {
-      ui.success(`✓ ${isLocal ? 'Local' : 'Global'} system prompt updated.`);
+      ui.success(`✓ ${isLocal ? "Local" : "Global"} system prompt updated.`);
     } else {
       ui.error("Failed to save system prompt.");
     }

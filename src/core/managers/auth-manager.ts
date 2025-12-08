@@ -3,9 +3,9 @@ import { UserInterface } from "../../ui";
 import { ApiClient } from "../../api/client";
 import { MiniMaxClient } from "../../api/minimax-client";
 import { AuthManagerInterface } from "./auth-manager.interface";
-import { 
+import {
   sanitizeApiError,
-  getAuthErrorMessage
+  getAuthErrorMessage,
 } from "../../utils/error-sanitizer";
 
 export class AuthManager implements AuthManagerInterface {
@@ -88,16 +88,24 @@ export class AuthManager implements AuthManagerInterface {
     }
   }
 
-  async testAuth(provider: string): Promise<{ valid: boolean; error?: string }> {
+  async testAuth(
+    provider: string,
+  ): Promise<{ valid: boolean; error?: string }> {
     if (!["synthetic", "minimax"].includes(provider)) {
-      return { valid: false, error: `Invalid provider: ${provider}. Valid providers: synthetic, minimax` };
+      return {
+        valid: false,
+        error: `Invalid provider: ${provider}. Valid providers: synthetic, minimax`,
+      };
     }
 
     try {
       const result = await this.testProviderAuth(provider);
       return result; // result will be { valid: boolean; error?: string }
     } catch (error: any) {
-      return { valid: false, error: this.formatAuthenticationError(provider, error) };
+      return {
+        valid: false,
+        error: this.formatAuthenticationError(provider, error),
+      };
     }
   }
 
@@ -137,20 +145,20 @@ export class AuthManager implements AuthManagerInterface {
 
   async refreshAuth(provider?: string): Promise<void> {
     this.ui.info("🔄 Refreshing authentication...");
-    
-    const providers = provider
-      ? [provider]
-      : ["synthetic", "minimax"];
+
+    const providers = provider ? [provider] : ["synthetic", "minimax"];
 
     let allValid = true;
 
     for (const p of providers) {
       this.ui.info(`\nTesting ${p}...`);
       const { valid, error } = await this.testProviderAuth(p);
-      
+
       if (!valid) {
         allValid = false;
-        this.ui.error(`❌ ${p}: Authentication failed${error ? `: ${error}` : ""}`);
+        this.ui.error(
+          `❌ ${p}: Authentication failed${error ? `: ${error}` : ""}`,
+        );
       } else {
         this.ui.coloredSuccess(`✓ ${p}: Authentication successful`);
       }

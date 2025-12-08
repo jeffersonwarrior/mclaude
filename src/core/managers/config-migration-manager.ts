@@ -1,7 +1,10 @@
 import { ConfigManager } from "../../config";
 import { UserInterface } from "../../ui";
 import { AppConfig } from "../../config/types";
-import { ConfigMigrationManagerInterface, MigrationOptions } from "./config-migration-manager.interface";
+import {
+  ConfigMigrationManagerInterface,
+  MigrationOptions,
+} from "./config-migration-manager.interface";
 
 /**
  * ConfigMigrationManager handles configuration migration operations.
@@ -64,9 +67,7 @@ export class ConfigMigrationManager implements ConfigMigrationManagerInterface {
 
       if (shouldMigrate) {
         await this.configManager.migrateToLocal();
-        this.ui.success(
-          "✓ Global configuration migrated to local project",
-        );
+        this.ui.success("✓ Global configuration migrated to local project");
         return true;
       }
 
@@ -99,7 +100,7 @@ export class ConfigMigrationManager implements ConfigMigrationManagerInterface {
       config.selectedModel = config.recommendedModels.default?.primary || "";
       config.selectedThinkingModel =
         config.recommendedModels.thinking?.primary || "";
-      
+
       // Save the migrated config
       await this.configManager.saveConfig(config);
     }
@@ -115,11 +116,17 @@ export class ConfigMigrationManager implements ConfigMigrationManagerInterface {
     isLegacyFormat: boolean;
   } {
     const config = this.configManager.config;
-    
+
     return {
       configVersion: config.configVersion || 1,
-      supportsMultiProvider: !!(config.configVersion && config.configVersion >= 2),
-      needsSelectedModelMigration: !!(config.recommendedModels && !config.selectedModel && config.firstRunCompleted),
+      supportsMultiProvider: !!(
+        config.configVersion && config.configVersion >= 2
+      ),
+      needsSelectedModelMigration: !!(
+        config.recommendedModels &&
+        !config.selectedModel &&
+        config.firstRunCompleted
+      ),
       isLegacyFormat: !config.configVersion || config.configVersion < 2,
     };
   }
@@ -201,13 +208,15 @@ export class ConfigMigrationManager implements ConfigMigrationManagerInterface {
    */
   async showMigrationStatus(): Promise<void> {
     const status = this.getMigrationStatus();
-    
+
     this.ui.info("Migration Status:");
     this.ui.info("================");
     this.ui.info(`Config Version: ${status.configVersion}`);
-    this.ui.info(`Multi-Provider Support: ${status.supportsMultiProvider ? "Yes" : "No"}`);
+    this.ui.info(
+      `Multi-Provider Support: ${status.supportsMultiProvider ? "Yes" : "No"}`,
+    );
     this.ui.info(`Legacy Format: ${status.isLegacyFormat ? "Yes" : "No"}`);
-    
+
     if (status.needsSelectedModelMigration) {
       this.ui.coloredWarning("⚠ Recommended models migration available");
       this.ui.info("Run configuration update to migrate model selections");

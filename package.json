@@ -1,6 +1,6 @@
 {
   "name": "mclaude",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Interactive model selection tool for Claude Code with MiniMax and Synthetic AI models via TensorZero proxy",
   "main": "dist/index.js",
   "bin": {

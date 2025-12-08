@@ -5,7 +5,9 @@ import { ModelInfoImpl } from "../../models"; // Added ModelInfoImpl
 import { ModelInteractionManagerInterface } from "./model-interaction-manager.interface";
 import { sanitizeApiError } from "../../utils/error-sanitizer";
 
-export class ModelInteractionManager implements ModelInteractionManagerInterface {
+export class ModelInteractionManager
+  implements ModelInteractionManagerInterface
+{
   constructor(
     private configManager: ConfigManager,
     private ui: UserInterface,
@@ -63,7 +65,6 @@ export class ModelInteractionManager implements ModelInteractionManagerInterface
     thinkingProvider?: string;
     saveCombination?: string;
   }): Promise<boolean> {
-
     try {
       // Simplified provider availability check using atomic state
       const providerState = this.configManager.getAtomicProviderState();
@@ -476,7 +477,6 @@ export class ModelInteractionManager implements ModelInteractionManagerInterface
    * Step 3: Select models (simplified)
    */
   async setupModelSelection(): Promise<void> {
-
     // v1.3.1: Show recommended models first
     this.ui.info("\n🎯 Recommended Models:");
     this.ui.info("━━━━━━━━━━━━━━━━━━━━━━");
@@ -563,7 +563,6 @@ export class ModelInteractionManager implements ModelInteractionManagerInterface
     }
   }
 
-
   async selectModel(preselectedModel?: string): Promise<string | null> {
     if (preselectedModel) {
       return preselectedModel;
@@ -578,7 +577,9 @@ export class ModelInteractionManager implements ModelInteractionManagerInterface
     return null;
   }
 
-  async selectThinkingModel(preselectedThinkingModel?: string): Promise<string | null> {
+  async selectThinkingModel(
+    preselectedThinkingModel?: string,
+  ): Promise<string | null> {
     if (preselectedThinkingModel) {
       return preselectedThinkingModel;
     }
@@ -638,7 +639,8 @@ export class ModelInteractionManager implements ModelInteractionManagerInterface
       } else {
         // Original model listing with provider information
         const allModels = await this.modelManager.fetchModels();
-        const categorizedModels = this.modelManager.getCategorizedModels(allModels);
+        const categorizedModels =
+          this.modelManager.getCategorizedModels(allModels);
         const totalCount = Object.values(categorizedModels).reduce(
           (sum, models) => sum + models.length,
           0,
@@ -779,9 +781,7 @@ export class ModelInteractionManager implements ModelInteractionManagerInterface
   /**
    * v1.3.1: Check availability of recommended models
    */
-  async checkRecommendedModelAvailability(
-    recommended: any,
-  ): Promise<string[]> {
+  async checkRecommendedModelAvailability(recommended: any): Promise<string[]> {
     const availableModels: string[] = [];
 
     try {

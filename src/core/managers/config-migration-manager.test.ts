@@ -14,7 +14,7 @@ describe("ConfigMigrationManager", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     configManager = {
       getConfigType: jest.fn(),
       migrateToLocal: jest.fn(),
@@ -26,7 +26,7 @@ describe("ConfigMigrationManager", () => {
     };
 
     // Make config property fully configurable for tests
-    Object.defineProperty(configManager, 'config', {
+    Object.defineProperty(configManager, "config", {
       value: {} as AppConfig,
       writable: true,
       enumerable: true,
@@ -56,9 +56,15 @@ describe("ConfigMigrationManager", () => {
 
       // Assert
       expect(configManager.migrateToLocal).toHaveBeenCalledTimes(1);
-      expect(ui.success).toHaveBeenCalledWith("✓ Configuration migrated to local project");
-      expect(ui.info).toHaveBeenCalledWith(`Local config: ${process.cwd()}/.mclaude/config.json`);
-      expect(ui.info).toHaveBeenCalledWith("Global config preserved for other projects");
+      expect(ui.success).toHaveBeenCalledWith(
+        "✓ Configuration migrated to local project",
+      );
+      expect(ui.info).toHaveBeenCalledWith(
+        `Local config: ${process.cwd()}/.mclaude/config.json`,
+      );
+      expect(ui.info).toHaveBeenCalledWith(
+        "Global config preserved for other projects",
+      );
     });
 
     it("should warn when local config already exists and no force flag", async () => {
@@ -70,8 +76,12 @@ describe("ConfigMigrationManager", () => {
 
       // Assert
       expect(configManager.migrateToLocal).not.toHaveBeenCalled();
-      expect(ui.coloredWarning).toHaveBeenCalledWith("Local project configuration already exists");
-      expect(ui.info).toHaveBeenCalledWith("Use --force to overwrite and migrate again");
+      expect(ui.coloredWarning).toHaveBeenCalledWith(
+        "Local project configuration already exists",
+      );
+      expect(ui.info).toHaveBeenCalledWith(
+        "Use --force to overwrite and migrate again",
+      );
     });
 
     it("should migrate when local config exists but force flag is set", async () => {
@@ -85,19 +95,25 @@ describe("ConfigMigrationManager", () => {
 
       // Assert
       expect(configManager.migrateToLocal).toHaveBeenCalledTimes(1);
-      expect(ui.success).toHaveBeenCalledWith("✓ Configuration migrated to local project");
+      expect(ui.success).toHaveBeenCalledWith(
+        "✓ Configuration migrated to local project",
+      );
     });
 
     it("should handle migration errors gracefully", async () => {
       // Arrange
       configManager.getConfigType.mockReturnValue("global");
-      configManager.migrateToLocal.mockRejectedValue(new Error("Migration failed"));
+      configManager.migrateToLocal.mockRejectedValue(
+        new Error("Migration failed"),
+      );
 
       // Act
       await migrationManager.migrateConfig({});
 
       // Assert
-      expect(ui.error).toHaveBeenCalledWith("Failed to migrate configuration: Migration failed");
+      expect(ui.error).toHaveBeenCalledWith(
+        "Failed to migrate configuration: Migration failed",
+      );
       expect(ui.success).not.toHaveBeenCalled();
     });
   });
@@ -105,7 +121,7 @@ describe("ConfigMigrationManager", () => {
   describe("promptForMigrationOnLocalInit", () => {
     beforeEach(() => {
       // Set up config property for each test
-      Object.defineProperty(configManager, 'config', {
+      Object.defineProperty(configManager, "config", {
         value: { configVersion: 2 } as AppConfig,
         writable: true,
         enumerable: true,
@@ -176,14 +192,18 @@ describe("ConfigMigrationManager", () => {
         minimax: { hasApiKey: false, enabled: false, available: false },
       });
       ui.confirm.mockResolvedValue(true);
-      configManager.migrateToLocal.mockRejectedValue(new Error("Prompt migration failed"));
+      configManager.migrateToLocal.mockRejectedValue(
+        new Error("Prompt migration failed"),
+      );
 
       // Act
       const result = await migrationManager.promptForMigrationOnLocalInit();
 
       // Assert
       expect(result).toBe(false);
-      expect(ui.error).toHaveBeenCalledWith("Migration failed: Prompt migration failed");
+      expect(ui.error).toHaveBeenCalledWith(
+        "Migration failed: Prompt migration failed",
+      );
       expect(ui.success).not.toHaveBeenCalled();
     });
   });
@@ -199,7 +219,9 @@ describe("ConfigMigrationManager", () => {
 
     it("should return true for config with version < 2", () => {
       // Arrange & Act
-      const result = migrationManager.needsLegacyMigration({ configVersion: 1 });
+      const result = migrationManager.needsLegacyMigration({
+        configVersion: 1,
+      });
 
       // Assert
       expect(result).toBe(true);
@@ -207,7 +229,9 @@ describe("ConfigMigrationManager", () => {
 
     it("should return false for config with version >= 2", () => {
       // Arrange & Act
-      const result = migrationManager.needsLegacyMigration({ configVersion: 2 });
+      const result = migrationManager.needsLegacyMigration({
+        configVersion: 2,
+      });
 
       // Assert
       expect(result).toBe(false);
@@ -215,7 +239,9 @@ describe("ConfigMigrationManager", () => {
 
     it("should return false for config with version > 2", () => {
       // Arrange & Act
-      const result = migrationManager.needsLegacyMigration({ configVersion: 3 });
+      const result = migrationManager.needsLegacyMigration({
+        configVersion: 3,
+      });
 
       // Assert
       expect(result).toBe(false);
@@ -232,7 +258,10 @@ describe("ConfigMigrationManager", () => {
       const config: AppConfig = {
         recommendedModels: {
           default: { primary: "synthetic:deepseek-v3", backup: "minimax:m2" },
-          thinking: { primary: "synthetic:thinking", backup: "minimax:thinking" },
+          thinking: {
+            primary: "synthetic:thinking",
+            backup: "minimax:thinking",
+          },
           smallFast: { primary: "synthetic:fast", backup: "minimax:fast" },
           subagent: { primary: "synthetic:sub", backup: "minimax:sub" },
         },
@@ -240,14 +269,14 @@ describe("ConfigMigrationManager", () => {
         selectedThinkingModel: "",
         firstRunCompleted: true,
         configVersion: 2,
-        providers: { 
-          synthetic: { 
+        providers: {
+          synthetic: {
             apiKey: "test-key",
             baseUrl: "https://api.synthetic.new",
             anthropicBaseUrl: "https://api.synthetic.new/anthropic",
             modelsApiUrl: "https://api.synthetic.new/openai/v1/models",
-            enabled: true 
-          }, 
+            enabled: true,
+          },
           minimax: {
             apiKey: "test-key",
             baseUrl: "https://api.minimax.chat",
@@ -257,16 +286,31 @@ describe("ConfigMigrationManager", () => {
             parallelToolCalls: true,
             streaming: true,
             memoryCompact: false,
-            enabled: true
-          }
+            enabled: true,
+          },
         },
         defaultProvider: "synthetic",
         cacheDurationHours: 24,
         envOverrides: {},
-        tokenUsage: { totalInputTokens: 0, totalOutputTokens: 0, sessionTokens: 0, history: [] },
+        tokenUsage: {
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          sessionTokens: 0,
+          history: [],
+        },
         responseCache: { enabled: false, ttlMinutes: 60, maxEntries: 100 },
-        tensorzero: { enabled: false, port: 9313, host: "0.0.0.0", timeout: 300000 },
-        liteLLM: { enabled: false, port: 9313, host: "127.0.0.1", timeout: 300000 },
+        tensorzero: {
+          enabled: false,
+          port: 9313,
+          host: "0.0.0.0",
+          timeout: 300000,
+        },
+        liteLLM: {
+          enabled: false,
+          port: 9313,
+          host: "127.0.0.1",
+          timeout: 300000,
+        },
       };
 
       const consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
@@ -275,11 +319,13 @@ describe("ConfigMigrationManager", () => {
       await migrationManager.migrateRecommendedModelsToSelected(config);
 
       // Assert
-      expect(consoleLogSpy).toHaveBeenCalledWith("Migrating recommended models to selected model fields...");
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        "Migrating recommended models to selected model fields...",
+      );
       expect(config.selectedModel).toBe("synthetic:deepseek-v3");
       expect(config.selectedThinkingModel).toBe("synthetic:thinking");
       expect(configManager.saveConfig).toHaveBeenCalledWith(config);
-      
+
       consoleLogSpy.mockRestore();
     });
 
@@ -290,14 +336,14 @@ describe("ConfigMigrationManager", () => {
         selectedThinkingModel: "",
         firstRunCompleted: true,
         configVersion: 2,
-        providers: { 
-          synthetic: { 
+        providers: {
+          synthetic: {
             apiKey: "test-key",
             baseUrl: "https://api.synthetic.new",
             anthropicBaseUrl: "https://api.synthetic.new/anthropic",
             modelsApiUrl: "https://api.synthetic.new/openai/v1/models",
-            enabled: true 
-          }, 
+            enabled: true,
+          },
           minimax: {
             apiKey: "test-key",
             baseUrl: "https://api.minimax.chat",
@@ -307,16 +353,31 @@ describe("ConfigMigrationManager", () => {
             parallelToolCalls: true,
             streaming: true,
             memoryCompact: false,
-            enabled: true
-          }
+            enabled: true,
+          },
         },
         defaultProvider: "synthetic",
         cacheDurationHours: 24,
         envOverrides: {},
-        tokenUsage: { totalInputTokens: 0, totalOutputTokens: 0, sessionTokens: 0, history: [] },
+        tokenUsage: {
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          sessionTokens: 0,
+          history: [],
+        },
         responseCache: { enabled: false, ttlMinutes: 60, maxEntries: 100 },
-        tensorzero: { enabled: false, port: 9313, host: "0.0.0.0", timeout: 300000 },
-        liteLLM: { enabled: false, port: 9313, host: "127.0.0.1", timeout: 300000 }
+        tensorzero: {
+          enabled: false,
+          port: 9313,
+          host: "0.0.0.0",
+          timeout: 300000,
+        },
+        liteLLM: {
+          enabled: false,
+          port: 9313,
+          host: "127.0.0.1",
+          timeout: 300000,
+        },
       };
 
       const consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
@@ -327,7 +388,7 @@ describe("ConfigMigrationManager", () => {
       // Assert
       expect(consoleLogSpy).not.toHaveBeenCalled();
       expect(configManager.saveConfig).not.toHaveBeenCalled();
-      
+
       consoleLogSpy.mockRestore();
     });
 
@@ -336,7 +397,10 @@ describe("ConfigMigrationManager", () => {
       const config: AppConfig = {
         recommendedModels: {
           default: { primary: "synthetic:deepseek-v3", backup: "minimax:m2" },
-          thinking: { primary: "synthetic:thinking", backup: "minimax:thinking" },
+          thinking: {
+            primary: "synthetic:thinking",
+            backup: "minimax:thinking",
+          },
           smallFast: { primary: "synthetic:fast", backup: "minimax:fast" },
           subagent: { primary: "synthetic:sub", backup: "minimax:sub" },
         },
@@ -344,14 +408,14 @@ describe("ConfigMigrationManager", () => {
         selectedThinkingModel: "",
         firstRunCompleted: true,
         configVersion: 2,
-        providers: { 
-          synthetic: { 
+        providers: {
+          synthetic: {
             apiKey: "test-key",
             baseUrl: "https://api.synthetic.new",
             anthropicBaseUrl: "https://api.synthetic.new/anthropic",
             modelsApiUrl: "https://api.synthetic.new/openai/v1/models",
-            enabled: true 
-          }, 
+            enabled: true,
+          },
           minimax: {
             apiKey: "test-key",
             baseUrl: "https://api.minimax.chat",
@@ -361,16 +425,31 @@ describe("ConfigMigrationManager", () => {
             parallelToolCalls: true,
             streaming: true,
             memoryCompact: false,
-            enabled: true
-          }
+            enabled: true,
+          },
         },
         defaultProvider: "synthetic",
         cacheDurationHours: 24,
         envOverrides: {},
-        tokenUsage: { totalInputTokens: 0, totalOutputTokens: 0, sessionTokens: 0, history: [] },
+        tokenUsage: {
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          sessionTokens: 0,
+          history: [],
+        },
         responseCache: { enabled: false, ttlMinutes: 60, maxEntries: 100 },
-        tensorzero: { enabled: false, port: 9313, host: "0.0.0.0", timeout: 300000 },
-        liteLLM: { enabled: false, port: 9313, host: "127.0.0.1", timeout: 300000 },
+        tensorzero: {
+          enabled: false,
+          port: 9313,
+          host: "0.0.0.0",
+          timeout: 300000,
+        },
+        liteLLM: {
+          enabled: false,
+          port: 9313,
+          host: "127.0.0.1",
+          timeout: 300000,
+        },
       };
 
       const consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
@@ -381,7 +460,7 @@ describe("ConfigMigrationManager", () => {
       // Assert
       expect(consoleLogSpy).not.toHaveBeenCalled();
       expect(configManager.saveConfig).not.toHaveBeenCalled();
-      
+
       consoleLogSpy.mockRestore();
     });
 
@@ -398,14 +477,14 @@ describe("ConfigMigrationManager", () => {
         selectedThinkingModel: "",
         firstRunCompleted: false,
         configVersion: 2,
-        providers: { 
-          synthetic: { 
+        providers: {
+          synthetic: {
             apiKey: "test-key",
             baseUrl: "https://api.synthetic.new",
             anthropicBaseUrl: "https://api.synthetic.new/anthropic",
             modelsApiUrl: "https://api.synthetic.new/openai/v1/models",
-            enabled: true 
-          }, 
+            enabled: true,
+          },
           minimax: {
             apiKey: "test-key",
             baseUrl: "https://api.minimax.chat",
@@ -415,16 +494,31 @@ describe("ConfigMigrationManager", () => {
             parallelToolCalls: true,
             streaming: true,
             memoryCompact: false,
-            enabled: true
-          }
+            enabled: true,
+          },
         },
         defaultProvider: "synthetic",
         cacheDurationHours: 24,
         envOverrides: {},
-        tokenUsage: { totalInputTokens: 0, totalOutputTokens: 0, sessionTokens: 0, history: [] },
+        tokenUsage: {
+          totalInputTokens: 0,
+          totalOutputTokens: 0,
+          sessionTokens: 0,
+          history: [],
+        },
         responseCache: { enabled: false, ttlMinutes: 60, maxEntries: 100 },
-        tensorzero: { enabled: false, port: 9313, host: "0.0.0.0", timeout: 300000 },
-        liteLLM: { enabled: false, port: 9313, host: "127.0.0.1", timeout: 300000 },
+        tensorzero: {
+          enabled: false,
+          port: 9313,
+          host: "0.0.0.0",
+          timeout: 300000,
+        },
+        liteLLM: {
+          enabled: false,
+          port: 9313,
+          host: "127.0.0.1",
+          timeout: 300000,
+        },
       };
 
       const consoleLogSpy = jest.spyOn(console, "log").mockImplementation();
@@ -435,7 +529,7 @@ describe("ConfigMigrationManager", () => {
       // Assert
       expect(consoleLogSpy).not.toHaveBeenCalled();
       expect(configManager.saveConfig).not.toHaveBeenCalled();
-      
+
       consoleLogSpy.mockRestore();
     });
   });
@@ -526,8 +620,12 @@ describe("ConfigMigrationManager", () => {
       expect(ui.info).toHaveBeenCalledWith("Config Version: 2");
       expect(ui.info).toHaveBeenCalledWith("Multi-Provider Support: Yes");
       expect(ui.info).toHaveBeenCalledWith("Legacy Format: No");
-      expect(ui.coloredWarning).toHaveBeenCalledWith("⚠ Recommended models migration available");
-      expect(ui.info).toHaveBeenCalledWith("Run configuration update to migrate model selections");
+      expect(ui.coloredWarning).toHaveBeenCalledWith(
+        "⚠ Recommended models migration available",
+      );
+      expect(ui.info).toHaveBeenCalledWith(
+        "Run configuration update to migrate model selections",
+      );
     });
 
     it("should not show warning when no migration needed", async () => {
@@ -551,7 +649,7 @@ describe("ConfigMigrationManager", () => {
 
   describe("initLocalConfig", () => {
     beforeEach(() => {
-      Object.defineProperty(configManager, 'config', {
+      Object.defineProperty(configManager, "config", {
         value: { configVersion: 2 } as AppConfig,
         writable: true,
         enumerable: true,
@@ -569,10 +667,18 @@ describe("ConfigMigrationManager", () => {
 
       // Assert
       expect(configManager.initLocalConfig).toHaveBeenCalled();
-      expect(ui.success).toHaveBeenCalledWith("✓ Local project configuration initialized");
-      expect(ui.info).toHaveBeenCalledWith(`Config directory: ${process.cwd()}/.mclaude/`);
-      expect(ui.info).toHaveBeenCalledWith("Configuration: .mclaude/config.json");
-      expect(ui.info).toHaveBeenCalledWith("Local secrets: .mclaude/.env.local (git-ignored)");
+      expect(ui.success).toHaveBeenCalledWith(
+        "✓ Local project configuration initialized",
+      );
+      expect(ui.info).toHaveBeenCalledWith(
+        `Config directory: ${process.cwd()}/.mclaude/`,
+      );
+      expect(ui.info).toHaveBeenCalledWith(
+        "Configuration: .mclaude/config.json",
+      );
+      expect(ui.info).toHaveBeenCalledWith(
+        "Local secrets: .mclaude/.env.local (git-ignored)",
+      );
     });
 
     it("should warn when local config already exists and not forced", async () => {
@@ -586,7 +692,7 @@ describe("ConfigMigrationManager", () => {
       // Assert
       expect(configManager.initLocalConfig).not.toHaveBeenCalled();
       expect(ui.warning).toHaveBeenCalledWith(
-        "Local project configuration already exists at: /test/workspace"
+        "Local project configuration already exists at: /test/workspace",
       );
       expect(ui.info).toHaveBeenCalledWith("Use --force to overwrite");
     });
@@ -601,27 +707,31 @@ describe("ConfigMigrationManager", () => {
 
       // Assert
       expect(configManager.initLocalConfig).toHaveBeenCalled();
-      expect(ui.success).toHaveBeenCalledWith("✓ Local project configuration initialized");
+      expect(ui.success).toHaveBeenCalledWith(
+        "✓ Local project configuration initialized",
+      );
     });
 
     it("should handle initialization errors", async () => {
       // Arrange
       configManager.getConfigType.mockReturnValue("global");
-      configManager.initLocalConfig.mockRejectedValue(new Error("Permission denied"));
+      configManager.initLocalConfig.mockRejectedValue(
+        new Error("Permission denied"),
+      );
 
       // Act
       await migrationManager.initLocalConfig();
 
       // Assert
       expect(ui.error).toHaveBeenCalledWith(
-        "Failed to initialize local configuration: Permission denied"
+        "Failed to initialize local configuration: Permission denied",
       );
     });
   });
 
   describe("switchToLocalConfig", () => {
     beforeEach(() => {
-      Object.defineProperty(configManager, 'config', {
+      Object.defineProperty(configManager, "config", {
         value: { configVersion: 2 } as AppConfig,
         writable: true,
         enumerable: true,
@@ -638,7 +748,9 @@ describe("ConfigMigrationManager", () => {
       await migrationManager.switchToLocalConfig();
 
       // Assert
-      expect(ui.info).toHaveBeenCalledWith("Already using local project configuration");
+      expect(ui.info).toHaveBeenCalledWith(
+        "Already using local project configuration",
+      );
       expect(ui.info).toHaveBeenCalledWith("Workspace: /test/workspace");
     });
 
@@ -651,8 +763,12 @@ describe("ConfigMigrationManager", () => {
       await migrationManager.switchToLocalConfig();
 
       // Assert
-      expect(ui.warning).toHaveBeenCalledWith("No local project configuration found");
-      expect(ui.info).toHaveBeenCalledWith("Run 'mclaude config init' to create one");
+      expect(ui.warning).toHaveBeenCalledWith(
+        "No local project configuration found",
+      );
+      expect(ui.info).toHaveBeenCalledWith(
+        "Run 'mclaude config init' to create one",
+      );
     });
 
     it("should switch to local config successfully", async () => {
@@ -664,7 +780,9 @@ describe("ConfigMigrationManager", () => {
       await migrationManager.switchToLocalConfig();
 
       // Assert
-      expect(ui.success).toHaveBeenCalledWith("Switched to local project configuration");
+      expect(ui.success).toHaveBeenCalledWith(
+        "Switched to local project configuration",
+      );
       expect(ui.info).toHaveBeenCalledWith("Workspace: /test/workspace");
     });
   });
@@ -673,7 +791,7 @@ describe("ConfigMigrationManager", () => {
     let originalConfigManager: any;
 
     beforeEach(() => {
-      Object.defineProperty(configManager, 'config', {
+      Object.defineProperty(configManager, "config", {
         value: { configVersion: 2 } as AppConfig,
         writable: true,
         enumerable: true,
@@ -699,21 +817,27 @@ describe("ConfigMigrationManager", () => {
       await migrationManager.switchToGlobalConfig();
 
       // Assert
-      expect(ui.info).toHaveBeenCalledWith("Already using global configuration");
+      expect(ui.info).toHaveBeenCalledWith(
+        "Already using global configuration",
+      );
     });
 
     it("should switch to global config successfully", async () => {
       // Arrange
       configManager.getConfigType.mockReturnValue("local");
-      
+
       // Mock the saveGlobalConfig method
-      jest.spyOn(ConfigManager.prototype, 'saveGlobalConfig').mockResolvedValue(true);
+      jest
+        .spyOn(ConfigManager.prototype, "saveGlobalConfig")
+        .mockResolvedValue(true);
 
       // Act
       await migrationManager.switchToGlobalConfig();
 
       // Assert
-      expect(ui.success).toHaveBeenCalledWith("Switched to global configuration");
+      expect(ui.success).toHaveBeenCalledWith(
+        "Switched to global configuration",
+      );
     });
   });
 });

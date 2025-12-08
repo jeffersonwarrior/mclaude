@@ -33,7 +33,11 @@ describe("SystemManager", () => {
       updateModels: jest.fn().mockResolvedValue(undefined),
     } as any;
 
-    systemManager = new SystemManager(mockConfigManager, mockUI, mockRouterManager);
+    systemManager = new SystemManager(
+      mockConfigManager,
+      mockUI,
+      mockRouterManager,
+    );
   });
 
   describe("performSilentUpdate", () => {

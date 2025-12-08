@@ -1,4 +1,3 @@
-
 import { join } from "path";
 import { ConfigManager } from "../config";
 import { ModelManager } from "../models";
@@ -16,9 +15,7 @@ import { SetupManager } from "./managers/setup-manager";
 import { SystemManager } from "./managers/system-manager";
 import { RouterManager } from "../router/manager";
 
-import {
-  sanitizeApiError,
-} from "../utils/error-sanitizer";
+import { sanitizeApiError } from "../utils/error-sanitizer";
 
 export interface AppOptions {
   verbose?: boolean;
@@ -62,18 +59,39 @@ export class SyntheticClaudeApp {
       this.configManager,
     );
     this.launcher = new ClaudeLauncher(undefined, this.configManager);
-    
+
     // Initialize core services
     this.routerManager = new RouterManager(this.configManager);
-    
+
     // Instantiate managers
     this.authManager = new AuthManager(this.configManager, this.ui);
     this.configCliManager = new ConfigCliManager(this.configManager, this.ui);
-    this.configMigrationManager = new ConfigMigrationManager(this.configManager, this.ui);
-    this.providerManager = new ProviderManager(this.configManager, this.ui, this.routerManager, this.getModelManager());
-    this.modelInteractionManager = new ModelInteractionManager(this.configManager, this.ui, this.getModelManager());
-    this.setupManager = new SetupManager(this.configManager, this.ui, this.authManager, this.modelInteractionManager);
-    this.systemManager = new SystemManager(this.configManager, this.ui, this.routerManager);
+    this.configMigrationManager = new ConfigMigrationManager(
+      this.configManager,
+      this.ui,
+    );
+    this.providerManager = new ProviderManager(
+      this.configManager,
+      this.ui,
+      this.routerManager,
+      this.getModelManager(),
+    );
+    this.modelInteractionManager = new ModelInteractionManager(
+      this.configManager,
+      this.ui,
+      this.getModelManager(),
+    );
+    this.setupManager = new SetupManager(
+      this.configManager,
+      this.ui,
+      this.authManager,
+      this.modelInteractionManager,
+    );
+    this.systemManager = new SystemManager(
+      this.configManager,
+      this.ui,
+      this.routerManager,
+    );
   }
 
   async setupLogging(options: AppOptions): Promise<void> {
@@ -116,8 +134,6 @@ export class SyntheticClaudeApp {
     }
     return this.modelManager;
   }
-
-
 
   async run(options: AppOptions & LaunchOptions): Promise<void> {
     // v1.3.1: Silent update check on launch (non-blocking)
@@ -230,7 +246,9 @@ export class SyntheticClaudeApp {
         }
       } catch (error: any) {
         // Delegate error formatting to AuthManager
-        errors.push(this.authManager.formatAuthenticationError(provider, error));
+        errors.push(
+          this.authManager.formatAuthenticationError(provider, error),
+        );
       }
     }
 
@@ -272,8 +290,6 @@ export class SyntheticClaudeApp {
     }
     return null;
   }
-
-
 
   /**
    * Simple error categorization for backward compatibility
@@ -364,17 +380,11 @@ export class SyntheticClaudeApp {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-
-
-  
-
   async interactiveThinkingModelSelection(): Promise<boolean> {
     return await this.modelInteractionManager.interactiveThinkingModelSelection();
   }
 
   // Old searchModels method is now replaced by enhanced version below
-
-
 
   /**
    * Unified Setup Orchestrator - Simplified, bulletproof setup flow
@@ -396,7 +406,11 @@ export class SyntheticClaudeApp {
         name: "Authentication Testing",
         action: () => this.setupAuthenticationTesting(),
       },
-      { name: "Model Selection", action: () => this.managers.modelInteractionManager.setupModelSelection() },
+      {
+        name: "Model Selection",
+        action: () =>
+          this.managers.modelInteractionManager.setupModelSelection(),
+      },
       { name: "Finalization", action: () => this.setupFinalization() },
     ];
 
@@ -791,11 +805,12 @@ export class SyntheticClaudeApp {
    * Step 3: Select models (simplified)
    */
 
-
   private async checkRecommendedModelAvailability(
     recommended: any,
   ): Promise<string[]> {
-    return await this.modelInteractionManager.checkRecommendedModelAvailability(recommended);
+    return await this.modelInteractionManager.checkRecommendedModelAvailability(
+      recommended,
+    );
   }
 
   /**
@@ -844,8 +859,6 @@ export class SyntheticClaudeApp {
   // Note: setupSyntheticApiKey() and setupMinimaxApiKey() methods have been replaced
   // by the unified setup orchestrator. See configureSingleProvider() for the new implementation.
 
-
-
   private async selectModel(preselectedModel?: string): Promise<string | null> {
     return await this.modelInteractionManager.selectModel(preselectedModel);
   }
@@ -853,7 +866,9 @@ export class SyntheticClaudeApp {
   private async selectThinkingModel(
     preselectedThinkingModel?: string,
   ): Promise<string | null> {
-    return await this.modelInteractionManager.selectThinkingModel(preselectedThinkingModel);
+    return await this.modelInteractionManager.selectThinkingModel(
+      preselectedThinkingModel,
+    );
   }
 
   /**
@@ -902,47 +917,17 @@ export class SyntheticClaudeApp {
     }
   }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
   // Enhanced model methods
 
-
-
   // Local Configuration Management Methods
-
-  
-
-  
-
-
 
   // ============================================
   // Stats Command (v1.3.0)
   // ============================================
 
-
-
   // ============================================
   // System Prompt Management (v1.3.0)
   // ============================================
-
-
 
   // ============================================
   // Router Management (v1.4.4)
@@ -951,6 +936,4 @@ export class SyntheticClaudeApp {
   // ============================================
   // Model Card Management (v1.3.1)
   // ============================================
-
-  
 }
