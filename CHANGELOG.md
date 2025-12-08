@@ -5,6 +5,19 @@ All notable changes to mclaude will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.1] - 2025-12-08
+
+### Fixed
+- Resolved persistent test failures in `tests/config-apikeys.test.ts` by explicitly resetting the `EnvironmentManager` singleton for each test and adjusting test expectations.
+
+### Changed
+- Updated Node.js version to v20 across all GitHub Actions workflows (`test.yml`, `build.yml`, `eslint.yml`, `publish.yml`).
+- Removed `tests/config-OLD.test.ts.backup` to prevent interference from old test data.
+- Updated `README.md` to refer to `CHANGELOG.md` for full history.
+
+### Added
+- Introduced `scripts/check-keys.sh` for pre-commit validation to prevent hardcoded API keys.
+
 ## [1.8.0] - 2025-12-07
 
 ### Added
