@@ -21,7 +21,7 @@ export const SyntheticProviderConfig = z.object({
     .describe("OpenAI-compatible models endpoint"),
   enabled: z
     .boolean()
-    .default(true)
+    .default(false)
     .describe("Whether synthetic provider is enabled"),
   timeout: z.number().optional().describe("Request timeout in milliseconds"),
 });
