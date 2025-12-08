@@ -71,4 +71,4 @@ npm version patch # Triggers GitHub Actions publish
    ```
 
 ### Previous Versions
-See [CHANGELOG.md](CHANGELOG.md) for v1.6 details
+See [CHANGELOG.md](CHANGELOG.md) for full history
