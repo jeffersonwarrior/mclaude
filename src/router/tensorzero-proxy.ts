@@ -61,7 +61,7 @@ export class TensorZeroProxy {
     // Add synthetic models with 'synthetic:' prefix for routing
     syntheticModels.forEach((model: ModelInfoImpl) => {
       models.push({
-        name: `synthetic:${model.id}`,
+        name: `synthetic:${model.id.replace('hf:', '')}`,
         provider: "anthropic",
         model_name: model.id, // Use actual model ID from provider
         api_base: syntheticBaseUrl,

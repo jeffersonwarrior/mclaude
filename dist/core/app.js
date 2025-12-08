@@ -303,7 +303,10 @@ class SyntheticClaudeApp {
                 name: "Authentication Testing",
                 action: () => this.setupAuthenticationTesting(),
             },
-            { name: "Model Selection", action: () => this.managers.modelInteractionManager.setupModelSelection() },
+            {
+                name: "Model Selection",
+                action: () => this.managers.modelInteractionManager.setupModelSelection(),
+            },
             { name: "Finalization", action: () => this.setupFinalization() },
         ];
         this.ui.info("Starting streamlined setup process...");

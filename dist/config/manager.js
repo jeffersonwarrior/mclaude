@@ -1350,7 +1350,7 @@ class ConfigManager {
     async setConfig(key, value) {
         try {
             const currentConfig = JSON.parse(JSON.stringify(this.config)); // Deep copy to avoid direct mutation
-            const path = key.split('.');
+            const path = key.split(".");
             let currentLevel = currentConfig;
             for (let i = 0; i < path.length; i++) {
                 const segment = path[i];
@@ -1358,7 +1358,8 @@ class ConfigManager {
                     currentLevel[segment] = value;
                 }
                 else {
-                    if (typeof currentLevel[segment] !== 'object' || currentLevel[segment] === null) {
+                    if (typeof currentLevel[segment] !== "object" ||
+                        currentLevel[segment] === null) {
                         currentLevel[segment] = {}; // Initialize if not already an object
                     }
                     currentLevel = currentLevel[segment];
