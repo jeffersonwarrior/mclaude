@@ -5,6 +5,14 @@ All notable changes to mclaude will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.6] - 2025-12-08
+
+### Fixed
+- **OIDC Trusted Publishing**: Replaced deprecated NPM_TOKEN authentication with GitHub Actions OIDC
+- **npm Security Compliance**: Removed dependency on expiring npm tokens before December 9 deadline
+- **Workflow Optimization**: Switched to npm ci for cleaner CI/CD dependency installation
+- **Package Provenance**: Enabled automatic provenance attestation with GitHub's OIDC identity
+
 ## [1.8.5] - 2025-12-08
 
 ### Added

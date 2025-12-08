@@ -3,7 +3,7 @@
 ## Synthetic API Models (hf: prefix)
 
 ### ✅ **Confirmed Working Models**
-The following models are tested and confirmed working through the TensorZero proxy (as of v1.8.5):
+The following models are tested and confirmed working through the TensorZero proxy (as of v1.8.6):
 
 #### **Chat & General Purpose**
 - `hf:zai-org/GLM-4.6` - GLM-4.6 conversation model
@@ -96,7 +96,7 @@ curl -s http://127.0.0.1:9313/v1/models | jq '.data[].id'
 
 ## Last Updated
 - Date: 2025-12-08
-- MClaude Version: 1.8.5
+- MClaude Version: 1.8.6
  Synthetic API Model Status: As cataloged above
 
 Always verify model availability by testing before use in production workflows.

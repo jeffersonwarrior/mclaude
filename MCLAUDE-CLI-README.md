@@ -2,7 +2,7 @@
 
 ## Overview
 
-MClaude (v1.8.5) is a CLI tool for interactive model selection with Claude Code, supporting Synthetic AI and MiniMax models through a TensorZero proxy.
+MClaude (v1.8.6) is a CLI tool for interactive model selection with Claude Code, supporting Synthetic AI and MiniMax models through a TensorZero proxy.
 
 ## Main Options
 
@@ -268,7 +268,7 @@ mclaude combination load my-favorite-setup
 
 ## Model Naming Patterns
 
-### ✅ **Confirmed Working Models** (tested with TensorZero proxy v1.8.5)
+### ✅ **Confirmed Working Models** (tested with TensorZero proxy v1.8.6)
 
 #### **Synthetic API Models (hf: prefix)**
 **Chat & General:**
@@ -366,4 +366,4 @@ mclaude search "llama"                   # search for specific models
 
 ---
 
-*MClaude v1.8.5 - Interactive model selection for Claude Code with Synthetic AI and MiniMax models*
+*MClaude v1.8.6 - Interactive model selection for Claude Code with Synthetic AI and MiniMax models*
