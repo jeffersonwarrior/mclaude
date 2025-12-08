@@ -5,6 +5,28 @@ All notable changes to mclaude will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.5] - 2025-12-08
+
+### Added
+- **TensorZero Proxy Management CLI**: Complete proxy lifecycle management with dedicated commands
+  - `mclaude proxy start/stop/restart/status` commands with comprehensive error handling
+  - Port-based collision detection prevents multiple proxy instances on same port
+  - Process cleanup for detached Python proxy processes using `lsof` and `kill -9`
+  - HTTP endpoint status checking works across different CLI command instances
+  - Verbose modes and detailed status reporting for all proxy states
+
+### Fixed
+- **CLI Command Completion**: Fixed hanging issue by adding explicit `process.exit(0)` to all proxy command success paths
+- **Proxy Process Management**: Actually stops detached Python proxy processes (not just router state)
+- **Status Detection**: Uses HTTP endpoint checking instead of singleton state for reliable cross-instance status
+- **Synthetic Model Routing**: Correct model naming format - use `synthetic:deepseek-ai/DeepSeek-V3.2` (no `hf:` prefix for proxy)
+- **Config First Run**: Fixed `firstRunCompleted: false` triggering setup flow every time
+
+### Changed
+- **Proxy Architecture**: Implemented `ProxyCliManager` with `ConsoleUI` to avoid Ink-based terminal UI hanging
+- **Process Detection**: Port-based proxy detection ensures only one proxy runs per system, regardless of CLI instances
+- **Error Messages**: Improved proxy command messaging for all states (running/stopped/already running/not found)
+
 ## [1.8.1] - 2025-12-08
 
 ### Fixed

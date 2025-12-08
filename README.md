@@ -1,4 +1,4 @@
-## MClaude v1.8.1
+## MClaude v1.8.5
 
 ### About
 MClaude allows you to pick from any model within the setup for the 4 models that Claude uses. Currently supports Synthetic.New and MiniMax with more networks being added regularly.
@@ -69,6 +69,66 @@ npm version patch # Triggers GitHub Actions publish
    ```bash
    curl -fsSL https://mclaude.sh | bash
    ```
+
+## CLI Commands
+
+### Proxy Management
+```bash
+# Start the TensorZero proxy (auto-detects if already running)
+mclaude proxy start --verbose
+
+# Check proxy status (shows URL, available routes, uptime)
+mclaude proxy status
+
+# Stop the proxy (properly kills all Python processes)
+mclaude proxy stop --verbose
+
+# Restart the proxy (full stop/start cycle)
+mclaude proxy restart
+```
+
+### Model Selection
+```bash
+# Interactive model selection
+mclaude models
+
+# Direct model launch
+mclaude --model synthetic:deepseek-ai/DeepSeek-V3.2
+mclaude --model minimax:MiniMax-M2 --dangerously-skip-permissions
+
+# Quick test command
+echo "Hello, Claude!" | mclaude --model synthetic:meta-llama/Llama-3.2-3B-Instruct
+```
+
+### Configuration & Management
+```bash
+# Initial setup
+mclaude setup
+
+# System health check
+mclaude doctor
+
+# Provider management
+mclaude providers
+mclaude auth show synthetic
+```
+
+## Proxy Management
+
+The TensorZero proxy provides model routing on port 9313. **Only one proxy instance runs per system** - CLI commands automatically detect existing instances.
+
+### Key Features:
+- **Collision Detection**: Won't start duplicate proxies
+- **Process Cleanup**: Actually kills detached Python processes  
+- **Cross-Instance Status**: Status detection works between different CLI invocations
+- **Auto-Configuration**: Enables `tensorzero.enabled: true` in config automatically
+- **26 Available Models**: Synthetic and MiniMax models routed through `/v1/models`
+
+#### Model Naming Patterns:
+- ✅ `synthetic:deepseek-ai/DeepSeek-V3.2` 
+- ✅ `synthetic:meta-llama/Llama-3.2-3B-Instruct`
+- ✅ `minimax:MiniMax-M2`
+- ❌ `hf:deepseek-ai/DeepSeek-V3.2` (proxies use `synthetic:` prefix)
 
 ### Previous Versions
 See [CHANGELOG.md](CHANGELOG.md) for full history
