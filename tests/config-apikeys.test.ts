@@ -24,8 +24,7 @@ describe('ConfigManager - API Key Management', () => {
 
     it('should set and get API key', async () => {
       // Use in-memory approach to avoid save conflicts
-      const config = configManager.config;
-      config.apiKey = 'new-api-key';
+      await configManager.setApiKey('new-api-key');
       const effectiveKey = configManager.getApiKey();
       expect(effectiveKey === 'new-api-key' || effectiveKey === 'syn_b48b3206b3ba6e041522f791ce095add').toBe(true);
     });

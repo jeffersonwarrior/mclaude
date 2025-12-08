@@ -100,6 +100,8 @@ export function setupConfigTestEnvironment() {
       // Reset the singleton by clearing the require cache for env module
       const envModulePath = require.resolve('../../src/config/env');
       delete require.cache[envModulePath];
+      const { EnvironmentManager } = require('../../src/config/env');
+      EnvironmentManager.resetInstance();
       
       // Create a fresh ConfigManager instance
       return new ConfigManager(join(tempDir, subPath));
