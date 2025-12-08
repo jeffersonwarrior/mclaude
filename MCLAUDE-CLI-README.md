@@ -268,19 +268,73 @@ mclaude combination load my-favorite-setup
 
 ## Model Naming Patterns
 
-### Synthetic Models (via proxy)
-- `synthetic:deepseek-ai/DeepSeek-V3.2`
-- `synthetic:meta-llama/Llama-3.2-3B-Instruct`
-- `synthetic:microsoft/DialoGPT-medium`
+### ✅ **Confirmed Working Models** (tested with TensorZero proxy v1.8.5)
 
-### MiniMax Models
-- `minimax:MiniMax-M2`
-- `minimax:MiniMax-Text-01`
-- `minimax:MiniMax-Music-01`
+#### **Synthetic API Models (hf: prefix)**
+**Chat & General:**
+- `hf:zai-org/GLM-4.6` ✅ GLM-4.6 conversation model
+- `hf:deepseek-ai/DeepSeek-V3-0324` ✅ Latest DeepSeek V3  
+- `hf:deepseek-ai/DeepSeek-R1-0528` ✅ Reasoning model
+- `hf:deepseek-ai/DeepSeek-V3.1` ✅ DeepSeek V3 stable
 
-### Direct HuggingFace Models
-- `hf:meta-llama/Llama-2-7b-chat-hf`
-- `hf:google/flan-t5-base`
+**Large Models:**
+- `hf:MiniMaxAI/MiniMax-M2` ✅ MiniMax M2 large model
+- `hf:moonshotai/Kimi-K2-Thinking` ✅ Kimi K2 thinking variant
+- `hf:meta-llama/Llama-3.3-70B-Instruct` ✅ Llama 3.3 instruction (70B)
+
+**Specialized:**
+- `hf:Qwen/Qwen3-VL-235B-A22B-Instruct` ✅ Vision-Language multimodal (235B)
+- `hf:Qwen/Qwen3-Coder-480B-A35B-Instruct` ✅ Code generation (480B)
+- `hf:meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8` ✅ Llama 4 Maverick
+
+#### **MiniMax Models (direct provider)**
+- `minimax:MiniMax-M2` ✅ Direct MiniMax API routing
+
+#### **Alternative Synthetic Prefix**
+- `synthetic:zai-org/GLM-4.6` ✅ Same as hf: but synthetic prefix
+- `synthetic:deepseek-ai/DeepSeek-V3-0324` ✅ Alternative format
+
+### ❌ **Known Non-Working Models** (API returns 404)
+- `hf:meta-llama/Llama-3.1-405B-Instruct` - Deprecated/moved
+- `hf:meta-llama/Llama-3.1-70B-Instruct` - Deprecated/moved  
+- `hf:deepseek-ai/DeepSeek-R1` - Use DeepSeek-R1-0528 instead
+- `hf:openai/gpt-oss-120b` - API formatting issues
+
+### Model Usage Examples
+```bash
+# Working models
+mclaude --model hf:zai-org/GLM-4.6
+mclaude --model hf:deepseek-ai/DeepSeek-V3-0324 --thinking-model hf:deepseek-ai/DeepSeek-R1-0528
+mclaude --model hf:Qwen/Qwen3-Coder-480B-A35B-Instruct
+
+# For code generation
+echo "Write a Python function" | mclaude --model hf:Qwen/Qwen3-Coder-480B-A35B-Instruct
+
+# For reasoning tasks  
+echo "Solve this step by step" | mclaude --model hf:deepseek-ai/DeepSeek-R1-0528
+
+# For multimodal visions  
+echo "Describe this image" | mclaude --model hf:Qwen/Qwen3-VL-235B-A22B-Instruct
+
+# Check proxy status first
+mclaude proxy status
+```
+
+### Model Selection Strategy
+- **General Chat**: `hf:zai-org/GLM-4.6` (fast, reliable)
+- **Reasoning**: `hf:deepseek-ai/DeepSeek-R1-0528`  
+- **Large Context**: `hf:meta-llama/Llama-3.3-70B-Instruct`
+- **Code Generation**: `hf:Qwen/Qwen3-Coder-480B-A35B-Instruct`
+- **Multimodal**: `hf:Qwen/Qwen3-VL-235B-A22B-Instruct`
+
+### Prefix Transformation
+- `hf:model-name` (automatic) → Synthetic API routing ✅
+- `synthetic:model-name` (direct) → Synthetic API routing ✅  
+- `minimax:model-name` (direct) → MiniMax API routing ✅
+
+**Note**: Use exact case as shown. Some models appear in API catalog but return 404 when used - provider catalog updates.
+
+Full list: See `WORKING-MODELS.md` for comprehensive tested model guide.
 
 ## Notes
 
