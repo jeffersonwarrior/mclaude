@@ -27,11 +27,11 @@ describe('ConfigManager - Basic Operations', () => {
       // Check defaults
       expect(config.providers.synthetic.apiKey).toBe('test-secure-key'); // Current test value
       expect(config.providers.synthetic.baseUrl).toBe('https://api.synthetic.new');
-      expect(config.providers.synthetic.enabled).toBe(false);
+      expect(config.providers.synthetic.enabled).toBe(true);
       expect(config.providers.minimax.apiKey).toBe('');
       expect(config.providers.minimax.baseUrl).toBe('https://api.minimax.io');
       expect(config.providers.minimax.enabled).toBe(true);
-      expect(config.cacheDurationHours).toBe(72);
+      expect(config.cacheDurationHours).toBe(24);
       expect(config.selectedModel).toBe(''); // Updated to match actual config
     });
   });

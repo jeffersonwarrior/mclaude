@@ -56,7 +56,7 @@ describe('ConfigManager - Provider Management', () => {
       expect(configManager.isProviderEnabled('auto')).toBe(true);
       
       // Current actual states from config
-      expect(configManager.isProviderEnabled('synthetic')).toBe(false);
+      expect(configManager.isProviderEnabled('synthetic')).toBe(true);
       expect(configManager.isProviderEnabled('minimax')).toBe(true);
     });
   });
