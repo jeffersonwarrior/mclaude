@@ -1,5 +1,7 @@
 import { Command } from "commander";
 import { SyntheticClaudeApp } from "../core/app";
+import { ConfigMigrationManager } from "../core/managers/config-migration-manager";
+import { ConfigCliManager } from "../core/managers/config-cli-manager";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { normalizeDangerousFlags } from "../utils/banner";
@@ -201,7 +203,7 @@ export function createProgram(): Command {
     )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      const success = await app.interactiveModelSelection(options);
+      const success = await app.managers.modelInteractionManager.interactiveModelSelection(options);
 
       // After successful model selection, launch Claude Code
       if (success) {
@@ -236,7 +238,8 @@ export function createProgram(): Command {
     .description("List all providers with their status")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.listProviders();
+      const { providerManager } = app.managers;
+      await providerManager.listProviders();
     });
 
   providersCmd
@@ -244,7 +247,8 @@ export function createProgram(): Command {
     .description("Enable a specific provider")
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
-      await app.enableProvider(provider);
+      const { providerManager } = app.managers;
+      await providerManager.enableProvider(provider);
     });
 
   providersCmd
@@ -252,7 +256,8 @@ export function createProgram(): Command {
     .description("Disable a specific provider")
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
-      await app.disableProvider(provider);
+      const { providerManager } = app.managers;
+      await providerManager.disableProvider(provider);
     });
 
   providersCmd
@@ -261,7 +266,8 @@ export function createProgram(): Command {
     .option("--provider <name>", "Show status for specific provider only")
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.providerStatus(options);
+      const { providerManager } = app.managers;
+      await providerManager.providerStatus(options);
     });
 
   providersCmd
@@ -269,7 +275,8 @@ export function createProgram(): Command {
     .description("Test connectivity to a specific provider")
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
-      await app.testProvider(provider);
+      const { providerManager } = app.managers;
+      await providerManager.testProvider(provider);
     });
 
   // Models command group
@@ -279,7 +286,8 @@ export function createProgram(): Command {
     .option("--refresh", "Force refresh model cache")
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.listModels(options);
+      const { modelInteractionManager } = app.managers;
+      await modelInteractionManager.listModels(options);
     });
 
   modelsCmd
@@ -292,7 +300,8 @@ export function createProgram(): Command {
     )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.listModels(options);
+      const { modelInteractionManager } = app.managers;
+      await modelInteractionManager.listModels(options);
     });
 
   modelsCmd
@@ -301,7 +310,8 @@ export function createProgram(): Command {
     .argument("[modelId]", "Model ID to show info for")
     .action(async (modelId) => {
       const app = new SyntheticClaudeApp();
-      await app.showModelInfo(modelId);
+      const { modelInteractionManager } = app.managers;
+      await modelInteractionManager.showModelInfo(modelId);
     });
 
   modelsCmd
@@ -309,7 +319,8 @@ export function createProgram(): Command {
     .description("Clear model cache")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.clearCache();
+      const { systemManager } = app.managers;
+      await systemManager.clearCache();
     });
 
   modelsCmd
@@ -318,7 +329,8 @@ export function createProgram(): Command {
     .option("--update", "Force update model cards from GitHub")
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.manageModelCards(options);
+      const { modelInteractionManager } = app.managers;
+      await modelInteractionManager.manageModelCards(options);
     });
 
   modelsCmd
@@ -327,13 +339,15 @@ export function createProgram(): Command {
     .option("--provider <name>", "Filter search by provider")
     .action(async (query, options) => {
       const app = new SyntheticClaudeApp();
-      await app.searchModels(query, options);
+      const { modelInteractionManager } = app.managers;
+      await modelInteractionManager.searchModels(query, options);
     });
 
   // Default models command (alias for list)
   modelsCmd.action(async (options) => {
     const app = new SyntheticClaudeApp();
-    await app.listModels(options);
+    const { modelInteractionManager } = app.managers;
+    await modelInteractionManager.listModels(options);
   });
 
   // Search models command (top-level for backward compatibility)
@@ -347,7 +361,8 @@ export function createProgram(): Command {
     )
     .action(async (query, options) => {
       const app = new SyntheticClaudeApp();
-      await app.searchModels(query, options);
+      const { modelInteractionManager } = app.managers;
+      await modelInteractionManager.searchModels(query, options);
     });
 
   // Configuration commands
@@ -360,7 +375,8 @@ export function createProgram(): Command {
     .description("Show current configuration")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.showConfig();
+      const { configCliManager } = app.managers;
+      await configCliManager.showConfig();
     });
 
   configCmd
@@ -370,7 +386,8 @@ export function createProgram(): Command {
     )
     .action(async (key, value) => {
       const app = new SyntheticClaudeApp();
-      await app.setConfig(key, value);
+      const { configCliManager } = app.managers;
+      await configCliManager.setConfig(key, value);
     });
 
   // Provider-specific configuration subcommands
@@ -383,7 +400,8 @@ export function createProgram(): Command {
     .description("List all provider configurations")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.listProviderConfigs();
+      const { providerManager } = app.managers;
+      await providerManager.listProviderConfigs();
     });
 
   providerConfigCmd
@@ -391,7 +409,8 @@ export function createProgram(): Command {
     .description("Get configuration for a specific provider")
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
-      await app.getProviderConfigInfo(provider);
+      const { providerManager } = app.managers;
+      await providerManager.getProviderConfigInfo(provider);
     });
 
   providerConfigCmd
@@ -399,7 +418,8 @@ export function createProgram(): Command {
     .description("Set provider-specific configuration")
     .action(async (provider, key, value) => {
       const app = new SyntheticClaudeApp();
-      await app.setProviderConfig(provider, key, value);
+      const { providerManager } = app.managers;
+      await providerManager.setProviderConfig(provider, key, value);
     });
 
   configCmd
@@ -408,7 +428,9 @@ export function createProgram(): Command {
     .option("--force", "Overwrite existing local configuration")
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.initLocalConfig(options);
+      const { configManager, ui } = app.managers;
+      const migrationManager = new ConfigMigrationManager(configManager, ui);
+      await migrationManager.initLocalConfig(options);
     });
 
   configCmd
@@ -416,7 +438,9 @@ export function createProgram(): Command {
     .description("Switch to local project configuration mode")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.switchToLocalConfig();
+      const { configManager, ui } = app.managers;
+      const migrationManager = new ConfigMigrationManager(configManager, ui);
+      await migrationManager.switchToLocalConfig();
     });
 
   configCmd
@@ -424,7 +448,9 @@ export function createProgram(): Command {
     .description("Switch to global configuration mode")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.switchToGlobalConfig();
+      const { configManager, ui } = app.managers;
+      const migrationManager = new ConfigMigrationManager(configManager, ui);
+      await migrationManager.switchToGlobalConfig();
     });
 
   configCmd
@@ -433,7 +459,9 @@ export function createProgram(): Command {
     .option("--force", "Overwrite existing local configuration")
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.migrateConfig(options);
+      const { configManager, ui } = app.managers;
+      const migrationManager = new ConfigMigrationManager(configManager, ui);
+      await migrationManager.migrateConfig(options);
     });
 
   configCmd
@@ -441,7 +469,9 @@ export function createProgram(): Command {
     .description("Show current configuration context and workspace")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.showConfigContext();
+      const { configManager, ui } = app.managers;
+      const configCliManager = new ConfigCliManager(configManager, ui);
+      await configCliManager.showConfigContext();
     });
 
   configCmd
@@ -453,7 +483,9 @@ export function createProgram(): Command {
     )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.resetConfig(options);
+      const { configManager, ui } = app.managers;
+      const configCliManager = new ConfigCliManager(configManager, ui);
+      await configCliManager.resetConfig(options);
     });
 
   configCmd
@@ -461,7 +493,8 @@ export function createProgram(): Command {
     .description("Set the default provider (synthetic, minimax, auto)")
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
-      await app.setDefaultProvider(provider);
+      const { providerManager } = app.managers;
+      await providerManager.setDefaultProvider(provider);
     });
 
   // Combination management commands
@@ -474,7 +507,8 @@ export function createProgram(): Command {
     .description("List saved model combinations")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.listCombinations();
+      const { configCliManager } = app.managers;
+      await configCliManager.listCombinations();
     });
 
   combinationCmd
@@ -482,7 +516,8 @@ export function createProgram(): Command {
     .description("Save a model combination")
     .action(async (name, model, thinkingModel) => {
       const app = new SyntheticClaudeApp();
-      await app.saveCombination(name, model, thinkingModel);
+      const { configCliManager } = app.managers;
+      await configCliManager.saveCombination(name, model, thinkingModel);
     });
 
   combinationCmd
@@ -490,13 +525,15 @@ export function createProgram(): Command {
     .description("Delete a saved model combination")
     .action(async (name) => {
       const app = new SyntheticClaudeApp();
-      await app.deleteCombination(name);
+      const { configCliManager } = app.managers;
+      await configCliManager.deleteCombination(name);
     });
 
   // Default combination command (alias for list)
   combinationCmd.action(async () => {
     const app = new SyntheticClaudeApp();
-    await app.listCombinations();
+    const { configCliManager } = app.managers;
+    await configCliManager.listCombinations();
   });
 
   // Setup command
@@ -505,7 +542,8 @@ export function createProgram(): Command {
     .description("Run initial setup")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.setup();
+      const { setupManager } = app.managers;
+      await setupManager.setup();
     });
 
   // Doctor command - check system health
@@ -514,7 +552,8 @@ export function createProgram(): Command {
     .description("Check system health and configuration")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.doctor();
+      const { systemManager } = app.managers;
+      await systemManager.doctor();
     });
 
   // Dangerous command - launch Claude Code with --dangerously-skip-permissions
@@ -550,7 +589,8 @@ export function createProgram(): Command {
         });
       } else {
         // Need to select models first
-        await app.interactiveModelSelection();
+        const { modelInteractionManager } = app.managers;
+        await modelInteractionManager.interactiveModelSelection();
 
         // After successful model selection, launch Claude Code with --dangerously-skip-permissions
         const updatedConfig = app.getConfig();
@@ -576,7 +616,7 @@ export function createProgram(): Command {
     .description("Clear model cache")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.clearCache();
+      await app.managers.systemManager.clearCache();
     });
 
   cacheCmd
@@ -584,7 +624,8 @@ export function createProgram(): Command {
     .description("Show cache information")
     .action(async () => {
       const app = new SyntheticClaudeApp();
-      await app.cacheInfo();
+      const { systemManager } = app.managers;
+      await systemManager.cacheInfo();
     });
 
   // Authentication management commands
@@ -601,7 +642,8 @@ export function createProgram(): Command {
     )
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.checkAuth(options);
+      const { authManager } = app.managers;
+      await authManager.checkAuth(options);
     });
 
   authCmd
@@ -609,7 +651,8 @@ export function createProgram(): Command {
     .description("Test authentication for a specific provider")
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
-      await app.testAuth(provider);
+      const { authManager } = app.managers;
+      await authManager.testAuth(provider);
     });
 
   authCmd
@@ -617,7 +660,8 @@ export function createProgram(): Command {
     .description("Reset authentication credentials for a specific provider")
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
-      await app.resetAuth(provider);
+      const { authManager } = app.managers;
+      await authManager.resetAuth(provider);
     });
 
   authCmd
@@ -627,7 +671,8 @@ export function createProgram(): Command {
     )
     .action(async (provider) => {
       const app = new SyntheticClaudeApp();
-      await app.refreshAuth(provider);
+      const { authManager } = app.managers;
+      await authManager.refreshAuth(provider);
     });
 
   authCmd
@@ -636,7 +681,8 @@ export function createProgram(): Command {
     .option("--format <format>", "Output format (table, json)", "table")
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.authStatus(options);
+      const { authManager } = app.managers;
+      await authManager.authStatus(options);
     });
 
   // Stats command - Token usage tracking
@@ -647,7 +693,8 @@ export function createProgram(): Command {
     .option("--format <format>", "Output format (table, json)", "table")
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.showStats(options);
+      const { configCliManager } = app.managers;
+      await configCliManager.showStats(options);
     });
 
   // System prompt management command
@@ -668,7 +715,7 @@ export function createProgram(): Command {
     .option("--raw", "Show raw system prompt without resolving variables")
     .action(async (options) => {
       const app = new SyntheticClaudeApp();
-      await app.manageSysprompt(options);
+      await app.managers.configCliManager.manageSysprompt(options);
     });
 
   // Help commands are handled in the main action

@@ -3,6 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createProgram = createProgram;
 const commander_1 = require("commander");
 const app_1 = require("../core/app");
+const config_migration_manager_1 = require("../core/managers/config-migration-manager");
+const config_cli_manager_1 = require("../core/managers/config-cli-manager");
 const fs_1 = require("fs");
 const path_1 = require("path");
 const banner_1 = require("../utils/banner");
@@ -167,7 +169,7 @@ function createProgram() {
         .option("--save-combination <name>", "Save this provider combination for future use")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        const success = await app.interactiveModelSelection(options);
+        const success = await app.managers.modelInteractionManager.interactiveModelSelection(options);
         // After successful model selection, launch Claude Code
         if (success) {
             const config = app.getConfig();
@@ -198,21 +200,24 @@ function createProgram() {
         .description("List all providers with their status")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.listProviders();
+        const { providerManager } = app.managers;
+        await providerManager.listProviders();
     });
     providersCmd
         .command("enable <provider>")
         .description("Enable a specific provider")
         .action(async (provider) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.enableProvider(provider);
+        const { providerManager } = app.managers;
+        await providerManager.enableProvider(provider);
     });
     providersCmd
         .command("disable <provider>")
         .description("Disable a specific provider")
         .action(async (provider) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.disableProvider(provider);
+        const { providerManager } = app.managers;
+        await providerManager.disableProvider(provider);
     });
     providersCmd
         .command("status")
@@ -220,14 +225,16 @@ function createProgram() {
         .option("--provider <name>", "Show status for specific provider only")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.providerStatus(options);
+        const { providerManager } = app.managers;
+        await providerManager.providerStatus(options);
     });
     providersCmd
         .command("test <provider>")
         .description("Test connectivity to a specific provider")
         .action(async (provider) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.testProvider(provider);
+        const { providerManager } = app.managers;
+        await providerManager.testProvider(provider);
     });
     // Models command group
     const modelsCmd = program
@@ -236,7 +243,8 @@ function createProgram() {
         .option("--refresh", "Force refresh model cache")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.listModels(options);
+        const { modelInteractionManager } = app.managers;
+        await modelInteractionManager.listModels(options);
     });
     modelsCmd
         .command("list")
@@ -245,7 +253,8 @@ function createProgram() {
         .option("--provider <name>", "Filter models by provider (synthetic, minimax, auto)")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.listModels(options);
+        const { modelInteractionManager } = app.managers;
+        await modelInteractionManager.listModels(options);
     });
     modelsCmd
         .command("info")
@@ -253,14 +262,16 @@ function createProgram() {
         .argument("[modelId]", "Model ID to show info for")
         .action(async (modelId) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.showModelInfo(modelId);
+        const { modelInteractionManager } = app.managers;
+        await modelInteractionManager.showModelInfo(modelId);
     });
     modelsCmd
         .command("clear-cache")
         .description("Clear model cache")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.clearCache();
+        const { systemManager } = app.managers;
+        await systemManager.clearCache();
     });
     modelsCmd
         .command("cards")
@@ -268,7 +279,8 @@ function createProgram() {
         .option("--update", "Force update model cards from GitHub")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.manageModelCards(options);
+        const { modelInteractionManager } = app.managers;
+        await modelInteractionManager.manageModelCards(options);
     });
     modelsCmd
         .command("search <query>")
@@ -276,12 +288,14 @@ function createProgram() {
         .option("--provider <name>", "Filter search by provider")
         .action(async (query, options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.searchModels(query, options);
+        const { modelInteractionManager } = app.managers;
+        await modelInteractionManager.searchModels(query, options);
     });
     // Default models command (alias for list)
     modelsCmd.action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.listModels(options);
+        const { modelInteractionManager } = app.managers;
+        await modelInteractionManager.listModels(options);
     });
     // Search models command (top-level for backward compatibility)
     program
@@ -291,7 +305,8 @@ function createProgram() {
         .option("--provider <name>", "Search within specific provider (synthetic, minimax, auto)")
         .action(async (query, options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.searchModels(query, options);
+        const { modelInteractionManager } = app.managers;
+        await modelInteractionManager.searchModels(query, options);
     });
     // Configuration commands
     const configCmd = program
@@ -302,14 +317,16 @@ function createProgram() {
         .description("Show current configuration")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.showConfig();
+        const { configCliManager } = app.managers;
+        await configCliManager.showConfig();
     });
     configCmd
         .command("set <key> <value>")
         .description("Set configuration value (keys: apiKey, baseUrl, modelsApiUrl, cacheDurationHours, selectedModel, selectedThinkingModel, defaultProvider, synthetic.apiKey, synthetic.baseUrl, minimax.apiKey, minimax.groupId)")
         .action(async (key, value) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.setConfig(key, value);
+        const { configCliManager } = app.managers;
+        await configCliManager.setConfig(key, value);
     });
     // Provider-specific configuration subcommands
     const providerConfigCmd = configCmd
@@ -320,21 +337,24 @@ function createProgram() {
         .description("List all provider configurations")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.listProviderConfigs();
+        const { providerManager } = app.managers;
+        await providerManager.listProviderConfigs();
     });
     providerConfigCmd
         .command("get <provider>")
         .description("Get configuration for a specific provider")
         .action(async (provider) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.getProviderConfigInfo(provider);
+        const { providerManager } = app.managers;
+        await providerManager.getProviderConfigInfo(provider);
     });
     providerConfigCmd
         .command("set <provider> <key> <value>")
         .description("Set provider-specific configuration")
         .action(async (provider, key, value) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.setProviderConfig(provider, key, value);
+        const { providerManager } = app.managers;
+        await providerManager.setProviderConfig(provider, key, value);
     });
     configCmd
         .command("init")
@@ -342,21 +362,27 @@ function createProgram() {
         .option("--force", "Overwrite existing local configuration")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.initLocalConfig(options);
+        const { configManager, ui } = app.managers;
+        const migrationManager = new config_migration_manager_1.ConfigMigrationManager(configManager, ui);
+        await migrationManager.initLocalConfig(options);
     });
     configCmd
         .command("local")
         .description("Switch to local project configuration mode")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.switchToLocalConfig();
+        const { configManager, ui } = app.managers;
+        const migrationManager = new config_migration_manager_1.ConfigMigrationManager(configManager, ui);
+        await migrationManager.switchToLocalConfig();
     });
     configCmd
         .command("global")
         .description("Switch to global configuration mode")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.switchToGlobalConfig();
+        const { configManager, ui } = app.managers;
+        const migrationManager = new config_migration_manager_1.ConfigMigrationManager(configManager, ui);
+        await migrationManager.switchToGlobalConfig();
     });
     configCmd
         .command("migrate")
@@ -364,14 +390,18 @@ function createProgram() {
         .option("--force", "Overwrite existing local configuration")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.migrateConfig(options);
+        const { configManager, ui } = app.managers;
+        const migrationManager = new config_migration_manager_1.ConfigMigrationManager(configManager, ui);
+        await migrationManager.migrateConfig(options);
     });
     configCmd
         .command("whoami")
         .description("Show current configuration context and workspace")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.showConfigContext();
+        const { configManager, ui } = app.managers;
+        const configCliManager = new config_cli_manager_1.ConfigCliManager(configManager, ui);
+        await configCliManager.showConfigContext();
     });
     configCmd
         .command("reset")
@@ -379,14 +409,17 @@ function createProgram() {
         .option("--scope <scope>", "Reset scope: 'local' or 'global' (falls back to current mode)")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.resetConfig(options);
+        const { configManager, ui } = app.managers;
+        const configCliManager = new config_cli_manager_1.ConfigCliManager(configManager, ui);
+        await configCliManager.resetConfig(options);
     });
     configCmd
         .command("set-default-provider <provider>")
         .description("Set the default provider (synthetic, minimax, auto)")
         .action(async (provider) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.setDefaultProvider(provider);
+        const { providerManager } = app.managers;
+        await providerManager.setDefaultProvider(provider);
     });
     // Combination management commands
     const combinationCmd = program
@@ -397,26 +430,30 @@ function createProgram() {
         .description("List saved model combinations")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.listCombinations();
+        const { configCliManager } = app.managers;
+        await configCliManager.listCombinations();
     });
     combinationCmd
         .command("save <name> <model> [thinkingModel]")
         .description("Save a model combination")
         .action(async (name, model, thinkingModel) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.saveCombination(name, model, thinkingModel);
+        const { configCliManager } = app.managers;
+        await configCliManager.saveCombination(name, model, thinkingModel);
     });
     combinationCmd
         .command("delete <name>")
         .description("Delete a saved model combination")
         .action(async (name) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.deleteCombination(name);
+        const { configCliManager } = app.managers;
+        await configCliManager.deleteCombination(name);
     });
     // Default combination command (alias for list)
     combinationCmd.action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.listCombinations();
+        const { configCliManager } = app.managers;
+        await configCliManager.listCombinations();
     });
     // Setup command
     program
@@ -424,7 +461,8 @@ function createProgram() {
         .description("Run initial setup")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.setup();
+        const { setupManager } = app.managers;
+        await setupManager.setup();
     });
     // Doctor command - check system health
     program
@@ -432,7 +470,8 @@ function createProgram() {
         .description("Check system health and configuration")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.doctor();
+        const { systemManager } = app.managers;
+        await systemManager.doctor();
     });
     // Dangerous command - launch Claude Code with --dangerously-skip-permissions
     program
@@ -460,7 +499,8 @@ function createProgram() {
         }
         else {
             // Need to select models first
-            await app.interactiveModelSelection();
+            const { modelInteractionManager } = app.managers;
+            await modelInteractionManager.interactiveModelSelection();
             // After successful model selection, launch Claude Code with --dangerously-skip-permissions
             const updatedConfig = app.getConfig();
             if (updatedConfig.selectedModel ||
@@ -481,14 +521,15 @@ function createProgram() {
         .description("Clear model cache")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.clearCache();
+        await app.managers.systemManager.clearCache();
     });
     cacheCmd
         .command("info")
         .description("Show cache information")
         .action(async () => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.cacheInfo();
+        const { systemManager } = app.managers;
+        await systemManager.cacheInfo();
     });
     // Authentication management commands
     const authCmd = program
@@ -500,28 +541,32 @@ function createProgram() {
         .option("--provider <name>", "Check specific provider only (synthetic, minimax)")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.checkAuth(options);
+        const { authManager } = app.managers;
+        await authManager.checkAuth(options);
     });
     authCmd
         .command("test <provider>")
         .description("Test authentication for a specific provider")
         .action(async (provider) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.testAuth(provider);
+        const { authManager } = app.managers;
+        await authManager.testAuth(provider);
     });
     authCmd
         .command("reset <provider>")
         .description("Reset authentication credentials for a specific provider")
         .action(async (provider) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.resetAuth(provider);
+        const { authManager } = app.managers;
+        await authManager.resetAuth(provider);
     });
     authCmd
         .command("refresh [provider]")
         .description("Refresh authentication for all providers or specific provider")
         .action(async (provider) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.refreshAuth(provider);
+        const { authManager } = app.managers;
+        await authManager.refreshAuth(provider);
     });
     authCmd
         .command("status")
@@ -529,7 +574,8 @@ function createProgram() {
         .option("--format <format>", "Output format (table, json)", "table")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.authStatus(options);
+        const { authManager } = app.managers;
+        await authManager.authStatus(options);
     });
     // Stats command - Token usage tracking
     program
@@ -539,7 +585,8 @@ function createProgram() {
         .option("--format <format>", "Output format (table, json)", "table")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.showStats(options);
+        const { configCliManager } = app.managers;
+        await configCliManager.showStats(options);
     });
     // System prompt management command
     const syspromptCmd = program
@@ -552,7 +599,7 @@ function createProgram() {
         .option("--raw", "Show raw system prompt without resolving variables")
         .action(async (options) => {
         const app = new app_1.SyntheticClaudeApp();
-        await app.manageSysprompt(options);
+        await app.managers.configCliManager.manageSysprompt(options);
     });
     // Help commands are handled in the main action
     // This prevents double registration and cleaner handling

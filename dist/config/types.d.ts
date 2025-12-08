@@ -683,7 +683,7 @@ export declare const AppConfigSchema: z.ZodObject<{
             responseFormat?: "text" | "json_object" | undefined;
         };
     };
-    defaultProvider: "synthetic" | "auto" | "minimax";
+    defaultProvider: "synthetic" | "minimax" | "auto";
     cacheDurationHours: number;
     selectedModel: string;
     selectedThinkingModel: string;
@@ -854,7 +854,7 @@ export declare const AppConfigSchema: z.ZodObject<{
             memoryCompact?: boolean | undefined;
         } | undefined;
     } | undefined;
-    defaultProvider?: "synthetic" | "auto" | "minimax" | undefined;
+    defaultProvider?: "synthetic" | "minimax" | "auto" | undefined;
     cacheDurationHours?: number | undefined;
     selectedModel?: string | undefined;
     selectedThinkingModel?: string | undefined;
@@ -1042,7 +1042,6 @@ export declare const ModelCardSchema: z.ZodObject<{
     provider: z.ZodString;
     verified: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
-    provider: string;
     id: string;
     priority: number;
     capabilities: {
@@ -1057,6 +1056,7 @@ export declare const ModelCardSchema: z.ZodObject<{
         max_output?: number | undefined;
     };
     speed_tier: "fast" | "medium" | "slow";
+    provider: string;
     name?: string | undefined;
     aliases?: string[] | undefined;
     roles?: string[] | undefined;
@@ -1064,8 +1064,8 @@ export declare const ModelCardSchema: z.ZodObject<{
     parameters?: string[] | undefined;
     verified?: string | undefined;
 }, {
-    provider: string;
     id: string;
+    provider: string;
     name?: string | undefined;
     aliases?: string[] | undefined;
     roles?: string[] | undefined;
@@ -1132,7 +1132,6 @@ export declare const ModelCardsSchema: z.ZodObject<{
         provider: z.ZodString;
         verified: z.ZodOptional<z.ZodString>;
     }, "strip", z.ZodTypeAny, {
-        provider: string;
         id: string;
         priority: number;
         capabilities: {
@@ -1147,6 +1146,7 @@ export declare const ModelCardsSchema: z.ZodObject<{
             max_output?: number | undefined;
         };
         speed_tier: "fast" | "medium" | "slow";
+        provider: string;
         name?: string | undefined;
         aliases?: string[] | undefined;
         roles?: string[] | undefined;
@@ -1154,8 +1154,8 @@ export declare const ModelCardsSchema: z.ZodObject<{
         parameters?: string[] | undefined;
         verified?: string | undefined;
     }, {
-        provider: string;
         id: string;
+        provider: string;
         name?: string | undefined;
         aliases?: string[] | undefined;
         roles?: string[] | undefined;
@@ -1180,7 +1180,6 @@ export declare const ModelCardsSchema: z.ZodObject<{
     version: string;
     providerPriority: string[];
     cards: {
-        provider: string;
         id: string;
         priority: number;
         capabilities: {
@@ -1195,6 +1194,7 @@ export declare const ModelCardsSchema: z.ZodObject<{
             max_output?: number | undefined;
         };
         speed_tier: "fast" | "medium" | "slow";
+        provider: string;
         name?: string | undefined;
         aliases?: string[] | undefined;
         roles?: string[] | undefined;
@@ -1208,8 +1208,8 @@ export declare const ModelCardsSchema: z.ZodObject<{
     updated?: string | undefined;
     providerPriority?: string[] | undefined;
     cards?: {
-        provider: string;
         id: string;
+        provider: string;
         name?: string | undefined;
         aliases?: string[] | undefined;
         roles?: string[] | undefined;

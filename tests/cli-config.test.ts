@@ -24,8 +24,7 @@ describe('CLI Config Commands', () => {
     // Mock app instance
     mockApp = {
       run: jest.fn(),
-      interactiveModelSelection: jest.fn(),
-      getConfig: jest.fn().mockReturnValue({
+      getConfig: jest.fn().mockReturnValue({ // Keeping getConfig here as it's directly used by app.run
         selectedModel: '',
         selectedThinkingModel: '',
         defaultProvider: 'synthetic',
@@ -35,39 +34,44 @@ describe('CLI Config Commands', () => {
           minimax: { enabled: false, hasApiKey: false }
         }
       }),
-      setDefaultProvider: jest.fn(),
-      doctor: jest.fn(),
-      showModelInfo: jest.fn(),
-      clearCache: jest.fn(),
-      listProviders: jest.fn(),
-      configureProvider: jest.fn(),
-      listCombinations: jest.fn(),
-      saveCombination: jest.fn(),
-      deleteCombination: jest.fn(),
-      showConfig: jest.fn().mockResolvedValue(undefined),
-      enableProvider: jest.fn().mockResolvedValue(undefined),
-      disableProvider: jest.fn().mockResolvedValue(undefined),
-      providerStatus: jest.fn().mockResolvedValue(undefined),
-      testProvider: jest.fn().mockResolvedValue(undefined),
-      listModels: jest.fn().mockResolvedValue(undefined),
-      searchModels: jest.fn().mockResolvedValue(undefined),
-      cacheInfo: jest.fn().mockResolvedValue(undefined),
-      authStatus: jest.fn().mockResolvedValue(undefined),
-      checkAuth: jest.fn().mockResolvedValue(undefined),
-      testAuth: jest.fn().mockResolvedValue(undefined),
-      resetAuth: jest.fn().mockResolvedValue(undefined),
-      refreshAuth: jest.fn().mockResolvedValue(undefined),
-      setConfig: jest.fn().mockResolvedValue(undefined),
-      listProviderConfigs: jest.fn().mockResolvedValue(undefined),
-      getProviderConfigInfo: jest.fn().mockResolvedValue(undefined),
-      setProviderConfig: jest.fn().mockResolvedValue(undefined),
-      initLocalConfig: jest.fn().mockResolvedValue(undefined),
-      switchToLocalConfig: jest.fn().mockResolvedValue(undefined),
-      switchToGlobalConfig: jest.fn().mockResolvedValue(undefined),
-      migrateConfig: jest.fn().mockResolvedValue(undefined),
-      showConfigContext: jest.fn().mockResolvedValue(undefined),
-      resetConfig: jest.fn().mockResolvedValue(undefined),
-      setup: jest.fn().mockResolvedValue(undefined),
+      managers: {
+        modelInteractionManager: {
+          interactiveModelSelection: jest.fn().mockResolvedValue(true), // interactiveModelSelection is called
+        } as any,
+        providerManager: {
+          listProviderConfigs: jest.fn().mockResolvedValue(undefined),
+          getProviderConfigInfo: jest.fn().mockResolvedValue(undefined),
+          setProviderConfig: jest.fn().mockResolvedValue(undefined),
+          listProviders: jest.fn().mockResolvedValue(undefined),
+          enableProvider: jest.fn().mockResolvedValue(undefined),
+          disableProvider: jest.fn().mockResolvedValue(undefined),
+          providerStatus: jest.fn().mockResolvedValue(undefined),
+          testProvider: jest.fn().mockResolvedValue(undefined),
+        } as any,
+        configCliManager: {
+          showConfig: jest.fn().mockResolvedValue(undefined),
+          setConfig: jest.fn().mockResolvedValue(undefined),
+          listCombinations: jest.fn().mockResolvedValue(undefined),
+          saveCombination: jest.fn().mockResolvedValue(undefined),
+          deleteCombination: jest.fn().mockResolvedValue(undefined),
+          manageSysprompt: jest.fn().mockResolvedValue(undefined),
+        } as any,
+        setupManager: {
+          setup: jest.fn().mockResolvedValue(undefined),
+        } as any,
+        systemManager: {
+          doctor: jest.fn().mockResolvedValue(undefined),
+          clearCache: jest.fn().mockResolvedValue(undefined),
+          cacheInfo: jest.fn().mockResolvedValue(undefined),
+        } as any,
+        authManager: {
+          authStatus: jest.fn().mockResolvedValue(undefined),
+          checkAuth: jest.fn().mockResolvedValue(undefined),
+          testAuth: jest.fn().mockResolvedValue(undefined),
+          resetAuth: jest.fn().mockResolvedValue(undefined),
+          refreshAuth: jest.fn().mockResolvedValue(undefined),
+        } as any,
+      },
     } as any;
 
     MockedSyntheticClaudeApp.mockImplementation(() => mockApp);
@@ -91,7 +95,7 @@ describe('CLI Config Commands', () => {
       const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
 
       // Reset mock to clear default resolved value, then set resolved return value
-      mockApp.showConfig.mockResolvedValue(undefined);
+      mockApp.managers.configCliManager.showConfig.mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'config'];
@@ -99,7 +103,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'config', 'show']);
 
-        expect(mockApp.showConfig).toHaveBeenCalled();
+        expect(mockApp.managers.configCliManager.showConfig).toHaveBeenCalled();
       } finally {
         consoleSpy.mockRestore();
         process.argv = originalArgv;
@@ -115,7 +119,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'config', 'set', 'defaultProvider', 'minimax']);
 
-        expect(mockApp.setConfig).toHaveBeenCalledWith('defaultProvider', 'minimax');
+        expect(mockApp.managers.configCliManager.setConfig).toHaveBeenCalledWith('defaultProvider', 'minimax');
       } finally {
         process.argv = originalArgv;
       }
@@ -130,7 +134,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'config', 'provider', 'set', 'synthetic', 'apiKey', 'new-key']);
 
-        expect(mockApp.setProviderConfig).toHaveBeenCalledWith('synthetic', 'apiKey', 'new-key');
+        expect(mockApp.managers.providerManager.setProviderConfig).toHaveBeenCalledWith('synthetic', 'apiKey', 'new-key');
       } finally {
         process.argv = originalArgv;
       }
@@ -145,7 +149,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'config', 'provider', 'list']);
 
-        expect(mockApp.listProviderConfigs).toHaveBeenCalled();
+        expect(mockApp.managers.providerManager.listProviderConfigs).toHaveBeenCalled();
       } finally {
         process.argv = originalArgv;
       }
@@ -160,7 +164,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'config', 'provider', 'get', 'synthetic']);
 
-        expect(mockApp.getProviderConfigInfo).toHaveBeenCalledWith('synthetic');
+        expect(mockApp.managers.providerManager.getProviderConfigInfo).toHaveBeenCalledWith('synthetic');
       } finally {
         process.argv = originalArgv;
       }
@@ -177,7 +181,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'combination', 'list']);
 
-        expect(mockApp.listCombinations).toHaveBeenCalled();
+        expect(mockApp.managers.configCliManager.listCombinations).toHaveBeenCalled();
       } finally {
         process.argv = originalArgv;
       }
@@ -192,7 +196,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'combination', 'save', 'My Combo', 'synthetic:claude-3-sonnet', 'minimax:MiniMax-M2']);
 
-        expect(mockApp.saveCombination).toHaveBeenCalledWith('My Combo', 'synthetic:claude-3-sonnet', 'minimax:MiniMax-M2');
+        expect(mockApp.managers.configCliManager.saveCombination).toHaveBeenCalledWith('My Combo', 'synthetic:claude-3-sonnet', 'minimax:MiniMax-M2');
       } finally {
         process.argv = originalArgv;
       }
@@ -207,7 +211,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'combination', 'delete', 'My Combo']);
 
-        expect(mockApp.deleteCombination).toHaveBeenCalledWith('My Combo');
+        expect(mockApp.managers.configCliManager.deleteCombination).toHaveBeenCalledWith('My Combo');
       } finally {
         process.argv = originalArgv;
       }
@@ -219,7 +223,7 @@ describe('CLI Config Commands', () => {
       const program = createProgram();
 
       // Add setup method to mock
-      mockApp.setup = jest.fn().mockResolvedValue(undefined);
+      mockApp.managers.setupManager.setup = jest.fn().mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'setup'];
@@ -227,7 +231,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'setup']);
 
-        expect(mockApp.setup).toHaveBeenCalled();
+        expect(mockApp.managers.setupManager.setup).toHaveBeenCalled();
       } finally {
         process.argv = originalArgv;
       }
@@ -247,7 +251,7 @@ describe('CLI Config Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'doctor']);
 
-        expect(mockApp.doctor).toHaveBeenCalled();
+        expect(mockApp.managers.systemManager.doctor).toHaveBeenCalled();
       } finally {
         process.argv = originalArgv;
         consoleSpy.mockRestore();

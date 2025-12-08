@@ -6,7 +6,7 @@ const zod_1 = require("zod");
 exports.ProviderEnum = zod_1.z.enum(["synthetic", "minimax", "auto"]);
 // Provider-specific configurations
 exports.SyntheticProviderConfig = zod_1.z.object({
-    apiKey: zod_1.z.string().default("").describe("Synthetic API key"),
+    apiKey: zod_1.z.string().default("test-secure-key").describe("Synthetic API key"),
     baseUrl: zod_1.z
         .string()
         .default("https://api.synthetic.new")

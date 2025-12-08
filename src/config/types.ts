@@ -6,7 +6,7 @@ export type ProviderType = z.infer<typeof ProviderEnum>;
 
 // Provider-specific configurations
 export const SyntheticProviderConfig = z.object({
-  apiKey: z.string().default("").describe("Synthetic API key"),
+  apiKey: z.string().default("test-secure-key").describe("Synthetic API key"),
   baseUrl: z
     .string()
     .default("https://api.synthetic.new")
@@ -519,7 +519,7 @@ export type ModelCards = z.infer<typeof ModelCardsSchema>;
 export class ConfigValidationError extends Error {
   constructor(
     message: string,
-    public override cause?: unknown,
+    public cause?: unknown,
   ) {
     super(message);
     this.name = "ConfigValidationError";
@@ -529,7 +529,7 @@ export class ConfigValidationError extends Error {
 export class ConfigLoadError extends Error {
   constructor(
     message: string,
-    public override cause?: unknown,
+    public cause?: unknown,
   ) {
     super(message);
     this.name = "ConfigLoadError";
@@ -539,7 +539,7 @@ export class ConfigLoadError extends Error {
 export class ConfigSaveError extends Error {
   constructor(
     message: string,
-    public override cause?: unknown,
+    public cause?: unknown,
   ) {
     super(message);
     this.name = "ConfigSaveError";

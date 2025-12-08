@@ -1,4 +1,13 @@
+import { ConfigManager } from "../config";
+import { UserInterface } from "../ui";
 import { LaunchOptions } from "../launcher";
+import { AuthManager } from "./managers/auth-manager";
+import { ConfigCliManager } from "./managers/config-cli-manager";
+import { ConfigMigrationManager } from "./managers/config-migration-manager";
+import { ProviderManager } from "./managers/provider-manager";
+import { ModelInteractionManager } from "./managers/model-interaction-manager";
+import { SetupManager } from "./managers/setup-manager";
+import { SystemManager } from "./managers/system-manager";
 export interface AppOptions {
     verbose?: boolean;
     quiet?: boolean;
@@ -14,10 +23,18 @@ export interface AppOptions {
     jsonMode?: boolean;
 }
 export declare class SyntheticClaudeApp {
+    private modelManager;
     private configManager;
     private ui;
     private launcher;
-    private modelManager;
+    private routerManager;
+    private authManager;
+    private configCliManager;
+    private configMigrationManager;
+    private providerManager;
+    private modelInteractionManager;
+    private setupManager;
+    private systemManager;
     constructor();
     setupLogging(options: AppOptions): Promise<void>;
     getConfig(): {
@@ -192,13 +209,19 @@ export declare class SyntheticClaudeApp {
         } | undefined;
         lastUpdateCheck?: number | undefined;
     };
+    get managers(): {
+        configManager: ConfigManager;
+        ui: UserInterface;
+        authManager: AuthManager;
+        configCliManager: ConfigCliManager;
+        configMigrationManager: ConfigMigrationManager;
+        providerManager: ProviderManager;
+        modelInteractionManager: ModelInteractionManager;
+        setupManager: SetupManager;
+        systemManager: SystemManager;
+    };
     private getModelManager;
     run(options: AppOptions & LaunchOptions): Promise<void>;
-    /**
-     * v1.3.1: Silent update check on launch (Option C from spec)
-     * Non-blocking, 3 second timeout, silent catch
-     */
-    private performSilentUpdate;
     /**
      * Validate provider credentials - maintains compatibility while being simpler
      */
@@ -211,17 +234,6 @@ export declare class SyntheticClaudeApp {
      * Helper to detect which provider caused an error
      */
     private detectProviderFromError;
-    /**
-     * Format authentication errors with provider-specific guidance
-     */
-    private formatAuthenticationError;
-    /**
-     * Validate provider credentials by testing API connectivity
-     */
-    validateProviderCredential(provider: string): Promise<{
-        valid: boolean;
-        error?: string;
-    }>;
     /**
      * Simple error categorization for backward compatibility
      */
@@ -237,42 +249,7 @@ export declare class SyntheticClaudeApp {
      * Simplified error recovery: Sleep utility
      */
     private sleep;
-    /**
-     * Check authentication status for providers
-     */
-    checkAuth(options?: {
-        provider?: string;
-    }): Promise<void>;
-    /**
-     * Test authentication for a specific provider
-     */
-    testAuth(provider: string): Promise<void>;
-    /**
-     * Reset authentication credentials for a provider
-     */
-    resetAuth(provider: string): Promise<void>;
-    /**
-     * Refresh authentication by testing current credentials
-     */
-    refreshAuth(provider?: string): Promise<void>;
-    /**
-     * Show detailed authentication status
-     */
-    authStatus(options?: {
-        format?: string;
-    }): Promise<void>;
-    interactiveModelSelection(options?: {
-        provider?: string;
-        thinkingProvider?: string;
-        saveCombination?: string;
-    }): Promise<boolean>;
     interactiveThinkingModelSelection(): Promise<boolean>;
-    showConfig(): Promise<void>;
-    setConfig(key: string, value: string): Promise<void>;
-    resetConfig(options?: {
-        scope?: string;
-    }): Promise<void>;
-    setup(): Promise<void>;
     /**
      * Unified Setup Orchestrator - Simplified, bulletproof setup flow
      *
@@ -307,18 +284,11 @@ export declare class SyntheticClaudeApp {
     /**
      * Step 3: Select models (simplified)
      */
-    private setupModelSelection;
-    /**
-     * v1.3.1: Check availability of recommended models
-     */
     private checkRecommendedModelAvailability;
     /**
      * Step 4: Finalize setup
      */
     private setupFinalization;
-    doctor(): Promise<void>;
-    clearCache(): Promise<void>;
-    cacheInfo(): Promise<void>;
     private selectModel;
     private selectThinkingModel;
     /**
@@ -327,51 +297,5 @@ export declare class SyntheticClaudeApp {
      */
     private testConnectionWithRecovery;
     private launchClaudeCode;
-    listProviders(): Promise<void>;
-    enableProvider(provider: string): Promise<void>;
-    disableProvider(provider: string): Promise<void>;
-    setDefaultProvider(provider: string): Promise<void>;
-    providerStatus(_options: {
-        provider?: string;
-    }): Promise<void>;
-    testProvider(provider: string): Promise<void>;
-    listProviderConfigs(): Promise<void>;
-    getProviderConfigInfo(provider: "synthetic" | "minimax" | "auto"): Promise<void>;
-    setProviderConfig(provider: string, key: string, value: string): Promise<void>;
-    listModels(options: {
-        refresh?: boolean;
-        provider?: string;
-    }): Promise<void>;
-    searchModels(query: string, options: {
-        refresh?: boolean;
-        provider?: string;
-    }): Promise<void>;
-    initLocalConfig(options: {
-        force?: boolean;
-    }): Promise<void>;
-    switchToLocalConfig(): Promise<void>;
-    switchToGlobalConfig(): Promise<void>;
-    migrateConfig(options: {
-        force?: boolean;
-    }): Promise<void>;
-    showConfigContext(): Promise<void>;
-    showModelInfo(modelId?: string): Promise<void>;
-    listCombinations(): Promise<void>;
-    saveCombination(name: string, model: string, thinkingModel?: string): Promise<void>;
-    deleteCombination(name: string): Promise<void>;
-    showStats(options?: {
-        reset?: boolean;
-        format?: string;
-    }): Promise<void>;
-    manageSysprompt(options?: {
-        global?: boolean;
-        show?: boolean;
-        clear?: boolean;
-        raw?: boolean;
-    }): Promise<void>;
-    private editSysprompt;
-    manageModelCards(options?: {
-        update?: boolean;
-    }): Promise<void>;
 }
 //# sourceMappingURL=app.d.ts.map

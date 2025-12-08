@@ -209,29 +209,20 @@ export declare class ConfigManager {
      */
     updateLastCheck(): Promise<boolean>;
     /**
+     * Set a specific configuration value by key path.
+     * Handles nested keys using dot notation (e.g., "providers.synthetic.apiKey").
+     */
+    setConfig(key: string, value: any): Promise<boolean>;
+    /**
      * Check if an update check is needed (24h threshold)
      */
     needsUpdateCheck(): boolean;
     /**
      * Get recommended models from config
      */
-    getRecommendedModels(): {
-        default: {
-            primary: string;
-            backup: string;
-        };
-        smallFast: {
-            primary: string;
-            backup: string;
-        };
-        thinking: {
-            primary: string;
-            backup: string;
-        };
-        subagent: {
-            primary: string;
-            backup: string;
-        };
-    };
+    getRecommendedModels(): AppConfig["recommendedModels"];
+    setProviderConfig(provider: Provider, setting: string, value: any): Promise<boolean>;
+    saveModelCombination(name: string, model: string, thinkingModel?: string): Promise<boolean>;
+    deleteModelCombination(name: string): Promise<boolean>;
 }
 //# sourceMappingURL=manager.d.ts.map

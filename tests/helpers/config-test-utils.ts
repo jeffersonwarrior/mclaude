@@ -1,8 +1,8 @@
 import { ConfigManager, AppConfigSchema, LegacyAppConfigSchema, ProviderEnum, ConfigValidationError } from '../../src/config';
-import { mkdtemp, rm, writeFile, rename, writeFile as fsWriteFile } from 'fs/promises';
-import { join } from 'path';
-import { tmpdir } from 'os';
-import { existsSync } from 'fs';
+import { mkdtemp, rm, writeFile, rename, mkdir, writeFile as fsWriteFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { existsSync } from 'node:fs';
 
 // Common test setup utilities
 export function setupConfigTestEnvironment() {
@@ -60,6 +60,8 @@ export function setupConfigTestEnvironment() {
 
     // Create a temporary directory for test configuration
     tempDir = await mkdtemp(join(tmpdir(), 'mclaude-config-test-'));
+    // Ensure the base config directory exists for the ConfigManager instance
+    await mkdir(join(tempDir, '.config', 'mclaude'), { recursive: true });
   });
 
   afterEach(async () => {

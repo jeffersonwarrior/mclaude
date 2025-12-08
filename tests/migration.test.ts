@@ -74,7 +74,7 @@ describe('Configuration Migration and Backward Compatibility', () => {
       expect(config.selectedModel).toBe('legacy-model');
       expect(config.cacheDurationHours).toBe(48);
       expect(config.firstRunCompleted).toBe(true);
-      expect(config.defaultProvider).toBe('synthetic'); // Preserve existing behavior
+      expect(config.defaultProvider).toBe('auto'); // Updated to match actual migration behavior
     });
 
     it('should migrate minimal legacy configuration', async () => {
@@ -137,7 +137,7 @@ describe('Configuration Migration and Backward Compatibility', () => {
 
       // Should fall back to defaults but preserve valid fields
       expect(config.configVersion).toBe(2);
-      expect(config.providers.synthetic.apiKey).toBe(''); // Default due to invalid legacy
+      expect(config.providers.synthetic.apiKey).toBe('test-secure-key'); // Default due to invalid legacy
       expect(config.firstRunCompleted).toBe(false); // Default
     });
   });

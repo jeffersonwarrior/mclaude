@@ -52,6 +52,13 @@ export class UserInterface {
     }
   }
 
+  // Colored warning message for important notifications
+  coloredWarning(message: string, ...args: any[]): void {
+    if (!this.quiet) {
+      console.log(chalk.yellow(`⚠ ${message}`), ...args);
+    }
+  }
+
   // MiniMax branded message for setup
   minimaxWelcome(message: string, ...args: any[]): void {
     if (!this.quiet) {
@@ -84,6 +91,23 @@ export class UserInterface {
 
   error(message: string, ...args: any[]): void {
     console.error(`✗ ${message}`, ...args);
+  }
+
+  async prompt(message: string): Promise<string> {
+    return new Promise((resolve) => {
+      process.stdout.write(chalk.yellow(`? ${message}: `));
+      process.stdin.once("data", (data) => {
+        resolve(data.toString().trim());
+      });
+    });
+  }
+
+  async confirm(message: string, defaultValue: boolean): Promise<boolean> {
+    if (this.quiet) {
+      return defaultValue;
+    }
+    const answer = await this.prompt(`${message} (y/n)`);
+    return answer.toLowerCase() === "y";
   }
 
   debug(message: string, ...args: any[]): void {
@@ -325,9 +349,24 @@ export class UserInterface {
   }
 
   // Confirm action
-  async confirm(message: string, defaultValue = false): Promise<boolean> {
-    const answer = await this.askQuestion(message, defaultValue ? 'y' : 'n');
-    return answer.toLowerCase().startsWith('y');
+  // Note: confirm method is defined above using prompt implementation
+
+  // Display a table (for config output)
+  table(data: Record<string, string>): void {
+    if (this.quiet) return;
+
+    const keys = Object.keys(data);
+    if (keys.length === 0) {
+      this.info("No configuration data to display.");
+      return;
+    }
+
+    const maxKeyLength = Math.max(...keys.map(key => key.length));
+
+    for (const key of keys) {
+      const value = data[key];
+      console.log(`${key.padEnd(maxKeyLength)} : ${value}`);
+    }
   }
 
   // Show status message using Ink component

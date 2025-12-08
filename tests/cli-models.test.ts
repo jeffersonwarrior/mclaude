@@ -24,7 +24,6 @@ describe('CLI Model Commands', () => {
     // Mock app instance
     mockApp = {
       run: jest.fn(),
-      interactiveModelSelection: jest.fn(),
       getConfig: jest.fn().mockReturnValue({
         selectedModel: '',
         selectedThinkingModel: '',
@@ -35,38 +34,19 @@ describe('CLI Model Commands', () => {
           minimax: { enabled: false, hasApiKey: false }
         }
       }),
-      setDefaultProvider: jest.fn(),
-      doctor: jest.fn(),
-      showModelInfo: jest.fn(),
-      clearCache: jest.fn(),
-      listProviders: jest.fn(),
-      configureProvider: jest.fn(),
-      listCombinations: jest.fn(),
-      saveCombination: jest.fn(),
-      deleteCombination: jest.fn(),
-      showConfig: jest.fn().mockResolvedValue(undefined),
-      enableProvider: jest.fn().mockResolvedValue(undefined),
-      disableProvider: jest.fn().mockResolvedValue(undefined),
-      providerStatus: jest.fn().mockResolvedValue(undefined),
-      testProvider: jest.fn().mockResolvedValue(undefined),
-      listModels: jest.fn().mockResolvedValue(undefined),
-      searchModels: jest.fn().mockResolvedValue(undefined),
-      cacheInfo: jest.fn().mockResolvedValue(undefined),
-      authStatus: jest.fn().mockResolvedValue(undefined),
-      checkAuth: jest.fn().mockResolvedValue(undefined),
-      testAuth: jest.fn().mockResolvedValue(undefined),
-      resetAuth: jest.fn().mockResolvedValue(undefined),
-      refreshAuth: jest.fn().mockResolvedValue(undefined),
-      setConfig: jest.fn().mockResolvedValue(undefined),
-      listProviderConfigs: jest.fn().mockResolvedValue(undefined),
-      getProviderConfigInfo: jest.fn().mockResolvedValue(undefined),
-      setProviderConfig: jest.fn().mockResolvedValue(undefined),
-      initLocalConfig: jest.fn().mockResolvedValue(undefined),
-      switchToLocalConfig: jest.fn().mockResolvedValue(undefined),
-      switchToGlobalConfig: jest.fn().mockResolvedValue(undefined),
-      migrateConfig: jest.fn().mockResolvedValue(undefined),
-      showConfigContext: jest.fn().mockResolvedValue(undefined),
-      resetConfig: jest.fn().mockResolvedValue(undefined),
+      managers: {
+        modelInteractionManager: {
+          interactiveModelSelection: jest.fn(),
+          listModels: jest.fn(),
+          showModelInfo: jest.fn(),
+          searchModels: jest.fn(),
+        } as any,
+        configCliManager: {
+          saveCombination: jest.fn(),
+        } as any,
+        setupManager: {} as any,
+        systemManager: {} as any,
+      } as any,
     } as any;
 
     MockedSyntheticClaudeApp.mockImplementation(() => mockApp);
@@ -86,8 +66,9 @@ describe('CLI Model Commands', () => {
     it('should run interactive model selection', async () => {
       const program = createProgram();
 
-      mockApp.interactiveModelSelection.mockResolvedValue(true);
-      mockApp.getConfig.mockReturnValue({
+      mockApp.managers.modelInteractionManager.interactiveModelSelection.mockResolvedValue(true);
+      mockApp.getConfig.mockReturnValue({ // This should ideally come from configCliManager, but keeping for now as it's a direct app mock for getConfig
+
         selectedModel: 'synthetic:claude-3-sonnet',
         selectedThinkingModel: '',
       });
@@ -98,7 +79,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'model']);
 
-        expect(mockApp.interactiveModelSelection).toHaveBeenCalledWith({});
+        expect(mockApp.managers.modelInteractionManager.interactiveModelSelection).toHaveBeenCalledWith({});
         expect(mockApp.run).toHaveBeenCalledWith({
           verbose: undefined,
           quiet: undefined,
@@ -112,7 +93,7 @@ describe('CLI Model Commands', () => {
     it('should handle provider filtering', async () => {
       const program = createProgram();
 
-      mockApp.interactiveModelSelection.mockResolvedValue(true);
+      mockApp.managers.modelInteractionManager.interactiveModelSelection.mockResolvedValue(true);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'model', '--provider', 'synthetic'];
@@ -120,7 +101,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'model', '--provider', 'synthetic']);
 
-        expect(mockApp.interactiveModelSelection).toHaveBeenCalledWith({
+        expect(mockApp.managers.modelInteractionManager.interactiveModelSelection).toHaveBeenCalledWith({
           provider: 'synthetic',
         });
       } finally {
@@ -131,7 +112,7 @@ describe('CLI Model Commands', () => {
     it('should handle thinking provider option', async () => {
       const program = createProgram();
 
-      mockApp.interactiveModelSelection.mockResolvedValue(true);
+      mockApp.managers.modelInteractionManager.interactiveModelSelection.mockResolvedValue(true);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'model', '--thinking-provider', 'minimax'];
@@ -139,7 +120,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'model', '--thinking-provider', 'minimax']);
 
-        expect(mockApp.interactiveModelSelection).toHaveBeenCalledWith({
+        expect(mockApp.managers.modelInteractionManager.interactiveModelSelection).toHaveBeenCalledWith({
           thinkingProvider: 'minimax',
         });
       } finally {
@@ -150,7 +131,7 @@ describe('CLI Model Commands', () => {
     it('should handle save combination option', async () => {
       const program = createProgram();
 
-      mockApp.interactiveModelSelection.mockResolvedValue(true);
+      mockApp.managers.modelInteractionManager.interactiveModelSelection.mockResolvedValue(true);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'model', '--save-combination', 'My Combo'];
@@ -158,7 +139,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'model', '--save-combination', 'My Combo']);
 
-        expect(mockApp.interactiveModelSelection).toHaveBeenCalledWith({
+        expect(mockApp.managers.modelInteractionManager.interactiveModelSelection).toHaveBeenCalledWith({
           saveCombination: 'My Combo',
         });
       } finally {
@@ -171,7 +152,7 @@ describe('CLI Model Commands', () => {
     it('should list available models', async () => {
       const program = createProgram();
 
-      mockApp.listModels.mockResolvedValue(undefined);
+      mockApp.managers.modelInteractionManager.listModels.mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'models'];
@@ -179,7 +160,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'models']);
 
-        expect(mockApp.listModels).toHaveBeenCalledWith({});
+        expect(mockApp.managers.modelInteractionManager.listModels).toHaveBeenCalledWith({});
       } finally {
         process.argv = originalArgv;
       }
@@ -188,7 +169,7 @@ describe('CLI Model Commands', () => {
     it('should handle refresh option for models list', async () => {
       const program = createProgram();
 
-      mockApp.listModels.mockResolvedValue(undefined);
+      mockApp.managers.modelInteractionManager.listModels.mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'models', '--refresh'];
@@ -196,7 +177,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'models', '--refresh']);
 
-        expect(mockApp.listModels).toHaveBeenCalledWith({
+        expect(mockApp.managers.modelInteractionManager.listModels).toHaveBeenCalledWith({
           refresh: true,
         });
       } finally {
@@ -207,7 +188,7 @@ describe('CLI Model Commands', () => {
     it('should handle models list subcommand with provider filter', async () => {
       const program = createProgram();
 
-      mockApp.listModels.mockResolvedValue(undefined);
+      mockApp.managers.modelInteractionManager.listModels.mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'models', 'list', '--provider', 'synthetic'];
@@ -215,7 +196,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'models', 'list', '--provider', 'synthetic']);
 
-        expect(mockApp.listModels).toHaveBeenCalledWith({
+        expect(mockApp.managers.modelInteractionManager.listModels).toHaveBeenCalledWith({
           provider: 'synthetic',
         });
       } finally {
@@ -228,7 +209,7 @@ describe('CLI Model Commands', () => {
     it('should search models by query', async () => {
       const program = createProgram();
 
-      mockApp.searchModels.mockResolvedValue(undefined);
+      mockApp.managers.modelInteractionManager.searchModels.mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'search', 'claude'];
@@ -236,7 +217,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'search', 'claude']);
 
-        expect(mockApp.searchModels).toHaveBeenCalledWith('claude', {});
+        expect(mockApp.managers.modelInteractionManager.searchModels).toHaveBeenCalledWith('claude', {});
       } finally {
         process.argv = originalArgv;
       }
@@ -245,7 +226,7 @@ describe('CLI Model Commands', () => {
     it('should handle provider filter for search', async () => {
       const program = createProgram();
 
-      mockApp.searchModels.mockResolvedValue(undefined);
+      mockApp.managers.modelInteractionManager.searchModels.mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'search', '--provider', 'minimax', 'claude'];
@@ -253,7 +234,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'search', '--provider', 'minimax', 'claude']);
 
-        expect(mockApp.searchModels).toHaveBeenCalledWith('claude', {
+        expect(mockApp.managers.modelInteractionManager.searchModels).toHaveBeenCalledWith('claude', {
           provider: 'minimax',
         });
       } finally {
@@ -264,7 +245,7 @@ describe('CLI Model Commands', () => {
     it('should handle refresh option for search', async () => {
       const program = createProgram();
 
-      mockApp.searchModels.mockResolvedValue(undefined);
+      mockApp.managers.modelInteractionManager.searchModels.mockResolvedValue(undefined);
 
       const originalArgv = process.argv;
       process.argv = ['node', 'mclaude', 'search', '--refresh', 'claude'];
@@ -272,7 +253,7 @@ describe('CLI Model Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'search', '--refresh', 'claude']);
 
-        expect(mockApp.searchModels).toHaveBeenCalledWith('claude', {
+        expect(mockApp.managers.modelInteractionManager.searchModels).toHaveBeenCalledWith('claude', {
           refresh: true,
         });
       } finally {

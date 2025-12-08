@@ -14,10 +14,13 @@ export declare class UserInterface {
     success(message: string, ...args: any[]): void;
     coloredSuccess(message: string, ...args: any[]): void;
     coloredInfo(message: string, ...args: any[]): void;
+    coloredWarning(message: string, ...args: any[]): void;
     minimaxWelcome(message: string, ...args: any[]): void;
     highlightInfo(message: string, highlights?: string[]): void;
     warning(message: string, ...args: any[]): void;
     error(message: string, ...args: any[]): void;
+    prompt(message: string): Promise<string>;
+    confirm(message: string, defaultValue: boolean): Promise<boolean>;
     debug(message: string, ...args: any[]): void;
     showModelList(models: ModelInfoImpl[], selectedIndex?: number): void;
     selectModel(models: ModelInfoImpl[]): Promise<ModelInfoImpl | null>;
@@ -29,7 +32,7 @@ export declare class UserInterface {
     askQuestion(question: string, defaultValue?: string): Promise<string>;
     askPassword(question: string): Promise<string>;
     ask(question: string, defaultValue?: string): Promise<string>;
-    confirm(message: string, defaultValue?: boolean): Promise<boolean>;
+    table(data: Record<string, string>): void;
     showStatus(type: 'info' | 'success' | 'warning' | 'error', message: string): void;
     showProviderStatus(providers: ProviderStatus[], details?: boolean, compact?: boolean): void;
     showProviderSummary(providers: ProviderStatus[]): void;

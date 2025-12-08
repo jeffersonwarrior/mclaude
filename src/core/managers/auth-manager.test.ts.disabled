@@ -1,0 +1,300 @@
+import { AuthManager } from "./auth-manager";
+import { ConfigManager } from "../../config";
+import { UserInterface } from "../../ui";
+import { ApiClient } from "../../api/client";
+import { MiniMaxClient } from "../../api/minimax-client";
+
+jest.mock("../../api/client");
+jest.mock("../../api/minimax-client");
+
+describe("AuthManager", () => {
+  let authManager: AuthManager;
+  let mockConfigManager: jest.Mocked<ConfigManager>;
+  let mockUI: jest.Mocked<UserInterface>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockConfigManager = {
+      hasSyntheticApiKey: jest.fn(),
+      hasMinimaxApiKey: jest.fn(),
+      getAtomicProviderState: jest.fn(),
+      getSyntheticApiKey: jest.fn(),
+      getMinimaxApiKey: jest.fn(),
+      getMinimaxGroupId: jest.fn(),
+      updateProviderConfig: jest.fn(),
+      setSyntheticApiKey: jest.fn(),
+      setMinimaxApiKey: jest.fn(),
+      getSyntheticApiUrl: jest.fn().mockReturnValue("https://api.synthetic.new"),
+      getMinimaxApiUrl: jest.fn().mockReturnValue("https://api.minimax.io/anthropic"),
+      getSyntheticApiModelsUrl: jest.fn().mockReturnValue("/v1/models"),
+      getMinimaxApiModelsUrl: jest.fn().mockReturnValue("/v1/models"),
+      updateConfig: jest.fn(),
+      saveConfig: jest.fn(),
+    } as any;
+
+    mockUI = {
+      coloredSuccess: jest.fn(),
+      info: jest.fn(),
+      success: jest.fn(),
+      error: jest.fn(),
+      confirm: jest.fn(), // Added confirm mock
+    } as any;
+
+    authManager = new AuthManager(mockConfigManager, mockUI);
+  });
+
+  describe("validateProviderCredentials", () => {
+    it("should return synthetic and minimax validation status", async () => {
+      mockConfigManager.hasSyntheticApiKey.mockReturnValue(true);
+      mockConfigManager.hasMinimaxApiKey.mockReturnValue(false);
+
+      const result = await authManager.validateProviderCredentials();
+
+      expect(result).toEqual({
+        synthetic: true,
+        minimax: false,
+      });
+      expect(mockConfigManager.hasSyntheticApiKey).toHaveBeenCalled();
+      expect(mockConfigManager.hasMinimaxApiKey).toHaveBeenCalled();
+    });
+  });
+
+  describe("authStatus", () => {
+    it("should display JSON format when requested", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { available: true, hasApiKey: true, enabled: true },
+        minimax: { available: false, hasApiKey: false, enabled: false },
+      } as any);
+      mockConfigManager.getSyntheticApiKey.mockReturnValue("syn_key");
+      mockConfigManager.getMinimaxApiKey.mockReturnValue("");
+      mockConfigManager.getMinimaxGroupId.mockReturnValue(undefined);
+
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+
+      await authManager.authStatus({ format: "json" });
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        JSON.stringify(
+          {
+            synthetic: {
+              enabled: true,
+              hasApiKey: true,
+              available: true,
+              apiKey: "***configured***",
+            },
+            minimax: {
+              enabled: false,
+              hasApiKey: false,
+              available: false,
+              apiKey: "none",
+              groupId: "none",
+            },
+          },
+          null,
+          2,
+        ),
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should display human-readable format by default", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { available: true, hasApiKey: true, enabled: true },
+        minimax: { available: false, hasApiKey: false, enabled: false },
+      } as any);
+      mockConfigManager.getSyntheticApiKey.mockReturnValue("syn_key");
+      mockConfigManager.getMinimaxApiKey.mockReturnValue("");
+      mockConfigManager.getMinimaxGroupId.mockReturnValue(undefined);
+
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+      await authManager.authStatus();
+
+      expect(mockUI.info).toHaveBeenCalledWith("Authentication Status Details");
+      expect(mockUI.info).toHaveBeenCalledWith("=============================");
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("synthetic"));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("minimax"));
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Summary: 1/2 providers available"));
+      
+      consoleSpy.mockRestore();
+    });
+
+    it("should show warning when no providers configured", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { available: false, hasApiKey: false, enabled: false },
+        minimax: { available: false, hasApiKey: false, enabled: false },
+      } as any);
+      mockConfigManager.getSyntheticApiKey.mockReturnValue("");
+      mockConfigManager.getMinimaxApiKey.mockReturnValue("");
+      mockConfigManager.getMinimaxGroupId.mockReturnValue(undefined);
+
+      const consoleSpy = jest.spyOn(console, "log").mockImplementation(() => {});
+
+      await authManager.authStatus();
+
+      expect(mockUI.info).toHaveBeenCalledWith("Authentication Status Details");
+      expect(mockUI.info).toHaveBeenCalledWith("=============================");
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Summary: 0/2 providers available"));
+
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe("resetAuth", () => {
+    it("should reset synthetic authentication", async () => {
+      mockUI.confirm = jest.fn().mockResolvedValue(true);
+      
+      await authManager.resetAuth("synthetic");
+
+      expect(mockUI.confirm).toHaveBeenCalledWith(
+        "Are you sure you want to reset authentication credentials for synthetic? This will remove the API key and disable the provider.",
+        false,
+      );
+      expect(mockConfigManager.updateProviderConfig).toHaveBeenCalledWith("synthetic", {
+        apiKey: "",
+        enabled: false,
+      });
+      expect(mockUI.coloredSuccess).toHaveBeenCalledWith("✓ Reset synthetic authentication credentials");
+      expect(mockUI.info).toHaveBeenCalledWith("Run 'mclaude setup' to reconfigure synthetic provider");
+    });
+
+    it("should reset minimax authentication", async () => {
+      mockUI.confirm = jest.fn().mockResolvedValue(true);
+      
+      await authManager.resetAuth("minimax");
+
+      expect(mockUI.confirm).toHaveBeenCalledWith(
+        "Are you sure you want to reset authentication credentials for minimax? This will remove the API key and disable the provider.",
+        false,
+      );
+      expect(mockConfigManager.updateProviderConfig).toHaveBeenCalledWith("minimax", {
+        apiKey: "",
+        enabled: false,
+      });
+      expect(mockUI.coloredSuccess).toHaveBeenCalledWith("✓ Reset minimax authentication credentials");
+      expect(mockUI.info).toHaveBeenCalledWith("Run 'mclaude setup' to reconfigure minimax provider");
+    });
+
+    it("should show error for invalid provider", async () => {
+      await authManager.resetAuth("invalid");
+
+      expect(mockUI.error).toHaveBeenCalledWith(
+        "Unknown provider: invalid. Valid providers: synthetic, minimax"
+      );
+      expect(mockConfigManager.updateProviderConfig).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("testAuth", () => {
+    it("should show success for valid synthetic provider", async () => {
+      mockConfigManager.hasSyntheticApiKey.mockReturnValue(true);
+      mockConfigManager.getSyntheticApiKey.mockReturnValue("test-synthetic-key");
+
+      const mockApiClientInstance = new ApiClient(null as any);
+      (ApiClient as jest.Mock).mockImplementationOnce(() => mockApiClientInstance);
+      mockApiClientInstance.fetchModels.mockResolvedValueOnce({ data: [{ id: "model1" }] });
+
+      const authManagerWithMocks = new AuthManager(mockConfigManager, mockUI);
+
+      const result = await authManagerWithMocks.testAuth("synthetic");
+
+      expect(result).toEqual({ valid: true });
+      expect(mockApiClientInstance.setApiKey).toHaveBeenCalledWith("test-synthetic-key");
+      expect(mockApiClientInstance.fetchModels).toHaveBeenCalledWith(
+        "test-synthetic-key",
+        "/v1/models",
+      );
+    });
+
+    it("should show success for valid minimax provider", async () => {
+      mockConfigManager.hasMinimaxApiKey.mockReturnValue(true);
+      mockConfigManager.getMinimaxApiKey.mockReturnValue("test-minimax-key");
+      mockConfigManager.getMinimaxGroupId.mockReturnValue("test-group-id");
+
+      const mockMinimaxClientInstance = new MiniMaxClient(null as any);
+      (MiniMaxClient as jest.Mock).mockImplementationOnce(() => mockMinimaxClientInstance);
+      mockMinimaxClientInstance.fetchModels.mockResolvedValueOnce({ data: [{ id: "modelA" }] });
+
+      const authManagerWithMocks = new AuthManager(mockConfigManager, mockUI);
+
+      const result = await authManagerWithMocks.testAuth("minimax");
+
+      expect(result).toEqual({ valid: true });
+      expect(mockMinimaxClientInstance.setGroupId).toHaveBeenCalledWith("test-group-id");
+      expect(mockMinimaxClientInstance.setApiKey).toHaveBeenCalledWith("test-minimax-key");
+      expect(mockMinimaxClientInstance.fetchModels).toHaveBeenCalledWith(
+        "test-minimax-key",
+        "/v1/models",
+      );
+    });
+
+    it("should show error for missing synthetic API key", async () => {
+      mockConfigManager.hasSyntheticApiKey.mockReturnValue(false);
+      mockConfigManager.getSyntheticApiKey.mockReturnValue(undefined);
+
+      const result = await authManager.testAuth("synthetic");
+
+      expect(result).toEqual({ valid: false, error: "Synthetic API key not configured" });
+    });
+
+    it("should show error for missing minimax API key", async () => {
+      mockConfigManager.hasMinimaxApiKey.mockReturnValue(false);
+      mockConfigManager.getMinimaxApiKey.mockReturnValue(undefined);
+
+      const result = await authManager.testAuth("minimax");
+
+      expect(result).toEqual({ valid: false, error: "MiniMax API key not configured" });
+    });
+
+    it("should handle API error during synthetic auth test", async () => {
+      mockConfigManager.hasSyntheticApiKey.mockReturnValue(true);
+      mockConfigManager.getSyntheticApiKey.mockReturnValue("test-synthetic-key");
+
+      const mockApiClientInstance = new ApiClient(null as any);
+      (ApiClient as jest.Mock).mockImplementationOnce(() => mockApiClientInstance);
+      mockApiClientInstance.fetchModels.mockRejectedValueOnce(new Error("Synthetic API down"));
+
+      const authManagerWithMocks = new AuthManager(mockConfigManager, mockUI);
+
+      const result = await authManagerWithMocks.testAuth("synthetic");
+
+      expect(result).toEqual({ valid: false, error: "Synthetic API down" });
+    });
+
+    it("should handle API error during minimax auth test", async () => {
+      mockConfigManager.hasMinimaxApiKey.mockReturnValue(true);
+      mockConfigManager.getMinimaxApiKey.mockReturnValue("test-minimax-key");
+      mockConfigManager.getMinimaxGroupId.mockReturnValue(undefined);
+
+      const mockMinimaxClientInstance = new MiniMaxClient(null as any);
+      (MiniMaxClient as jest.Mock).mockImplementationOnce(() => mockMinimaxClientInstance);
+      mockMinimaxClientInstance.fetchModels.mockRejectedValueOnce(new Error("MiniMax API down"));
+
+      const authManagerWithMocks = new AuthManager(mockConfigManager, mockUI);
+
+      const result = await authManagerWithMocks.testAuth("minimax");
+
+      expect(result).toEqual({ valid: false, error: "MiniMax API down" });
+    });
+
+    it("should show error for invalid provider", async () => {
+      const result = await authManager.testAuth("invalid");
+      expect(result).toEqual({ valid: false, error: "Invalid provider: invalid. Valid providers: synthetic, minimax" });
+    });
+  });
+
+  describe("validateProviderCredentials", () => {
+    it("should return correct validation results", async () => {
+      mockConfigManager.hasSyntheticApiKey.mockReturnValue(false);
+      mockConfigManager.hasMinimaxApiKey.mockReturnValue(true);
+
+      const result = await authManager.validateProviderCredentials();
+
+      expect(result).toEqual({
+        synthetic: false,
+        minimax: true,
+      });
+    });
+  });
+});

@@ -68,7 +68,7 @@ class ConfigManager {
                 configVersion: 2,
                 providers: {
                     synthetic: { enabled: true },
-                    minimax: { enabled: true },
+                    minimax: { enabled: true, groupId: "" },
                 },
                 recommendedModels: {
                     default: {
@@ -218,6 +218,7 @@ class ConfigManager {
             const configJson = JSON.stringify(config, null, 2);
             try {
                 // Write to temporary file first
+                await (0, promises_1.mkdir)((0, path_1.dirname)(tempPath), { recursive: true });
                 await (0, promises_1.writeFile)(tempPath, configJson, "utf-8");
                 // Set permissions on temp file before renaming
                 try {
@@ -244,6 +245,9 @@ class ConfigManager {
                         console.warn("Failed to create local config backup:", backupError);
                     }
                 }
+                // Ensure the directory exists
+                const configDir = this.localProjectDir || (0, path_1.join)(process.cwd(), ".mclaude");
+                await (0, promises_1.mkdir)(configDir, { recursive: true });
                 // Rename temp file to final location (atomic operation)
                 await fs.rename(tempPath, this.localConfigPath);
             }
@@ -367,6 +371,7 @@ class ConfigManager {
                 synthetic: { enabled: true },
                 minimax: { enabled: true },
             },
+            defaultProvider: "auto", // Explicitly set defaultProvider to auto
             recommendedModels: {
                 default: {
                     primary: "hf:deepseek-ai/DeepSeek-V3.2",
@@ -533,19 +538,20 @@ class ConfigManager {
                         enabled: true,
                     },
                     minimax: {
-                        // Try to load MiniMax from environment variables or .env file
-                        apiKey: env_1.envManager.getApiKey("minimax"),
-                        baseUrl: env_1.envManager.getApiUrl("minimax", "base"),
-                        anthropicBaseUrl: env_1.envManager.getApiUrl("minimax", "anthropic"),
-                        modelsApiUrl: env_1.envManager.getApiUrl("minimax", "openai"),
-                        enabled: true,
-                        defaultModel: env_1.envManager.getDefaultModel("minimax"),
+                        // MiniMax was not part of legacy config, so it starts empty
+                        apiKey: "",
+                        baseUrl: "https://api.minimax.io",
+                        anthropicBaseUrl: "https://api.minimax.io/anthropic",
+                        modelsApiUrl: "https://api.minimax.io/v1/models",
+                        enabled: true, // Should be enabled by default
+                        defaultModel: "",
                         parallelToolCalls: true,
                         streaming: true,
                         memoryCompact: false,
+                        groupId: "",
                     },
                 },
-                defaultProvider: "synthetic", // Preserve existing behavior
+                defaultProvider: "auto", // Default to auto after migration
                 cacheDurationHours: legacyConfig.cacheDurationHours || 24,
                 selectedModel: legacyConfig.selectedModel || "",
                 selectedThinkingModel: legacyConfig.selectedThinkingModel || "",
@@ -672,6 +678,7 @@ class ConfigManager {
             const configJson = JSON.stringify(config, null, 2);
             try {
                 // Write to temporary file first
+                await (0, promises_1.mkdir)((0, path_1.dirname)(tempPath), { recursive: true });
                 await (0, promises_1.writeFile)(tempPath, configJson, "utf-8");
                 // Set permissions on temp file before renaming
                 try {
@@ -1337,6 +1344,41 @@ class ConfigManager {
         }
     }
     /**
+     * Set a specific configuration value by key path.
+     * Handles nested keys using dot notation (e.g., "providers.synthetic.apiKey").
+     */
+    async setConfig(key, value) {
+        try {
+            const currentConfig = JSON.parse(JSON.stringify(this.config)); // Deep copy to avoid direct mutation
+            const path = key.split('.');
+            let currentLevel = currentConfig;
+            for (let i = 0; i < path.length; i++) {
+                const segment = path[i];
+                if (i === path.length - 1) {
+                    currentLevel[segment] = value;
+                }
+                else {
+                    if (typeof currentLevel[segment] !== 'object' || currentLevel[segment] === null) {
+                        currentLevel[segment] = {}; // Initialize if not already an object
+                    }
+                    currentLevel = currentLevel[segment];
+                }
+            }
+            const result = types_1.AppConfigSchema.safeParse(currentConfig);
+            if (!result.success) {
+                throw new types_1.ConfigValidationError(`Invalid configuration update via setConfig for key "${key}": ${result.error.message}`);
+            }
+            return await this.saveConfig(result.data);
+        }
+        catch (error) {
+            if (error instanceof types_1.ConfigValidationError ||
+                error instanceof types_1.ConfigSaveError) {
+                throw error;
+            }
+            throw new types_1.ConfigSaveError(`Failed to set config for key "${key}"`, error);
+        }
+    }
+    /**
      * Check if an update check is needed (24h threshold)
      */
     needsUpdateCheck() {
@@ -1350,25 +1392,57 @@ class ConfigManager {
      * Get recommended models from config
      */
     getRecommendedModels() {
-        const config = this.config;
-        return (config.recommendedModels || {
-            default: {
-                primary: "hf:deepseek-ai/DeepSeek-V3.2",
-                backup: "minimax:MiniMax-M2",
-            },
-            smallFast: {
-                primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct",
-                backup: "hf:meta-llama/Llama-3.1-8B-Instruct",
-            },
-            thinking: {
-                primary: "minimax:MiniMax-M2",
-                backup: "hf:deepseek-ai/DeepSeek-R1",
-            },
-            subagent: {
-                primary: "synthetic:deepseek-ai/DeepSeek-V3.2",
-                backup: "minimax:MiniMax-M2",
-            },
-        });
+        return this.config.recommendedModels ?? {};
+    }
+    async setProviderConfig(provider, setting, value) {
+        const updates = {
+            [setting]: value,
+        };
+        return this.updateProviderConfig(provider, updates);
+    }
+    async saveModelCombination(name, model, thinkingModel) {
+        const currentConfig = this.config;
+        const combination = {
+            name,
+            regularModel: model,
+            thinkingModel: thinkingModel || "",
+            regularProvider: this.getDefaultProvider(),
+            thinkingProvider: this.getDefaultProvider(),
+            createdAt: new Date().toISOString(),
+        };
+        // Find an empty combination slot or replace one with the same name
+        for (let i = 1; i <= 10; i++) {
+            const comboKey = `combination${i}`;
+            const existing = currentConfig[comboKey];
+            if (!existing ||
+                (typeof existing === "object" &&
+                    existing !== null &&
+                    "name" in existing &&
+                    existing.name === name)) {
+                const updates = {};
+                updates[comboKey] = combination;
+                return this.updateConfig(updates);
+            }
+        }
+        throw new Error("Maximum number of combinations (10) reached");
+    }
+    async deleteModelCombination(name) {
+        const currentConfig = this.config;
+        // Find and remove the combination with the given name
+        for (let i = 1; i <= 10; i++) {
+            const comboKey = `combination${i}`;
+            const existing = currentConfig[comboKey];
+            if (typeof existing === "object" &&
+                existing !== null &&
+                "name" in existing &&
+                existing.name === name) {
+                const updates = {};
+                updates[comboKey] = undefined;
+                return this.updateConfig(updates);
+            }
+        }
+        // Combination not found - not an error
+        return true;
     }
 }
 exports.ConfigManager = ConfigManager;

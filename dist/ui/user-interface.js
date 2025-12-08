@@ -43,6 +43,12 @@ class UserInterface {
             console.log(chalk_1.default.blue(`ℹ ${message}`), ...args);
         }
     }
+    // Colored warning message for important notifications
+    coloredWarning(message, ...args) {
+        if (!this.quiet) {
+            console.log(chalk_1.default.yellow(`⚠ ${message}`), ...args);
+        }
+    }
     // MiniMax branded message for setup
     minimaxWelcome(message, ...args) {
         if (!this.quiet) {
@@ -70,6 +76,21 @@ class UserInterface {
     }
     error(message, ...args) {
         console.error(`✗ ${message}`, ...args);
+    }
+    async prompt(message) {
+        return new Promise((resolve) => {
+            process.stdout.write(chalk_1.default.yellow(`? ${message}: `));
+            process.stdin.once("data", (data) => {
+                resolve(data.toString().trim());
+            });
+        });
+    }
+    async confirm(message, defaultValue) {
+        if (this.quiet) {
+            return defaultValue;
+        }
+        const answer = await this.prompt(`${message} (y/n)`);
+        return answer.toLowerCase() === "y";
     }
     debug(message, ...args) {
         if (this.verbose) {
@@ -263,9 +284,21 @@ class UserInterface {
         return this.askQuestion(question, defaultValue);
     }
     // Confirm action
-    async confirm(message, defaultValue = false) {
-        const answer = await this.askQuestion(message, defaultValue ? 'y' : 'n');
-        return answer.toLowerCase().startsWith('y');
+    // Note: confirm method is defined above using prompt implementation
+    // Display a table (for config output)
+    table(data) {
+        if (this.quiet)
+            return;
+        const keys = Object.keys(data);
+        if (keys.length === 0) {
+            this.info("No configuration data to display.");
+            return;
+        }
+        const maxKeyLength = Math.max(...keys.map(key => key.length));
+        for (const key of keys) {
+            const value = data[key];
+            console.log(`${key.padEnd(maxKeyLength)} : ${value}`);
+        }
     }
     // Show status message using Ink component
     showStatus(type, message) {

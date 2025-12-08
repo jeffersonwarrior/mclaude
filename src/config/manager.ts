@@ -1,5 +1,5 @@
 import { readFile, writeFile, mkdir, chmod } from "fs/promises";
-import { join } from "path";
+import { join, dirname } from "path";
 import { homedir } from "os";
 import { existsSync } from "fs";
 import {
@@ -96,7 +96,7 @@ export class ConfigManager {
         configVersion: 2,
         providers: {
           synthetic: { enabled: true },
-          minimax: { enabled: true },
+          minimax: { enabled: true, groupId: "" },
         },
         recommendedModels: {
           default: {
@@ -275,6 +275,7 @@ export class ConfigManager {
 
       try {
         // Write to temporary file first
+        await mkdir(dirname(tempPath), { recursive: true });
         await writeFile(tempPath, configJson, "utf-8");
 
         // Set permissions on temp file before renaming
@@ -303,6 +304,10 @@ export class ConfigManager {
             console.warn("Failed to create local config backup:", backupError);
           }
         }
+
+        // Ensure the directory exists
+        const configDir = this.localProjectDir || join(process.cwd(), ".mclaude");
+        await mkdir(configDir, { recursive: true });
 
         // Rename temp file to final location (atomic operation)
         await fs.rename(tempPath, this.localConfigPath);
@@ -454,6 +459,7 @@ export class ConfigManager {
         synthetic: { enabled: true },
         minimax: { enabled: true },
       },
+      defaultProvider: "auto", // Explicitly set defaultProvider to auto
       recommendedModels: {
         default: {
           primary: "hf:deepseek-ai/DeepSeek-V3.2",
@@ -661,19 +667,20 @@ export class ConfigManager {
             enabled: true,
           },
           minimax: {
-            // Try to load MiniMax from environment variables or .env file
-            apiKey: envManager.getApiKey("minimax"),
-            baseUrl: envManager.getApiUrl("minimax", "base"),
-            anthropicBaseUrl: envManager.getApiUrl("minimax", "anthropic"),
-            modelsApiUrl: envManager.getApiUrl("minimax", "openai"),
-            enabled: true,
-            defaultModel: envManager.getDefaultModel("minimax"),
+            // MiniMax was not part of legacy config, so it starts empty
+            apiKey: "", 
+            baseUrl: "https://api.minimax.io",
+            anthropicBaseUrl: "https://api.minimax.io/anthropic",
+            modelsApiUrl: "https://api.minimax.io/v1/models",
+            enabled: true, // Should be enabled by default
+            defaultModel: "",
             parallelToolCalls: true,
             streaming: true,
             memoryCompact: false,
+            groupId: "",
           },
         },
-        defaultProvider: "synthetic", // Preserve existing behavior
+        defaultProvider: "auto", // Default to auto after migration
         cacheDurationHours: legacyConfig.cacheDurationHours || 24,
         selectedModel: legacyConfig.selectedModel || "",
         selectedThinkingModel: legacyConfig.selectedThinkingModel || "",
@@ -807,6 +814,7 @@ export class ConfigManager {
 
       try {
         // Write to temporary file first
+        await mkdir(dirname(tempPath), { recursive: true });
         await writeFile(tempPath, configJson, "utf-8");
 
         // Set permissions on temp file before renaming
@@ -1652,6 +1660,47 @@ export class ConfigManager {
   }
 
   /**
+   * Set a specific configuration value by key path.
+   * Handles nested keys using dot notation (e.g., "providers.synthetic.apiKey").
+   */
+  async setConfig(key: string, value: any): Promise<boolean> {
+    try {
+      const currentConfig = JSON.parse(JSON.stringify(this.config)); // Deep copy to avoid direct mutation
+      const path = key.split('.');
+      let currentLevel: any = currentConfig;
+
+      for (let i = 0; i < path.length; i++) {
+        const segment = path[i] as string;
+        if (i === path.length - 1) {
+          currentLevel[segment] = value;
+        } else {
+          if (typeof currentLevel[segment] !== 'object' || currentLevel[segment] === null) {
+            currentLevel[segment] = {}; // Initialize if not already an object
+          }
+          currentLevel = currentLevel[segment];
+        }
+      }
+
+      const result = AppConfigSchema.safeParse(currentConfig);
+      if (!result.success) {
+        throw new ConfigValidationError(
+          `Invalid configuration update via setConfig for key "${key}": ${result.error.message}`,
+        );
+      }
+
+      return await this.saveConfig(result.data);
+    } catch (error) {
+      if (
+        error instanceof ConfigValidationError ||
+        error instanceof ConfigSaveError
+      ) {
+        throw error;
+      }
+      throw new ConfigSaveError(`Failed to set config for key "${key}"`, error);
+    }
+  }
+
+  /**
    * Check if an update check is needed (24h threshold)
    */
   needsUpdateCheck(): boolean {
@@ -1666,27 +1715,78 @@ export class ConfigManager {
   /**
    * Get recommended models from config
    */
-  getRecommendedModels() {
-    const config = this.config;
-    return (
-      config.recommendedModels || {
-        default: {
-          primary: "hf:deepseek-ai/DeepSeek-V3.2",
-          backup: "minimax:MiniMax-M2",
-        },
-        smallFast: {
-          primary: "hf:meta-llama/Llama-4-Scout-17B-16E-Instruct",
-          backup: "hf:meta-llama/Llama-3.1-8B-Instruct",
-        },
-        thinking: {
-          primary: "minimax:MiniMax-M2",
-          backup: "hf:deepseek-ai/DeepSeek-R1",
-        },
-        subagent: {
-          primary: "synthetic:deepseek-ai/DeepSeek-V3.2",
-          backup: "minimax:MiniMax-M2",
-        },
+  getRecommendedModels(): AppConfig["recommendedModels"] {
+    return this.config.recommendedModels ?? {};
+  }
+
+  async setProviderConfig(
+    provider: Provider,
+    setting: string,
+    value: any,
+  ): Promise<boolean> {
+    const updates: Partial<SyntheticProviderConfig | MinimaxProviderConfig> = {
+      [setting]: value,
+    };
+    return this.updateProviderConfig(provider, updates);
+  }
+
+  async saveModelCombination(
+    name: string,
+    model: string,
+    thinkingModel?: string,
+  ): Promise<boolean> {
+    const currentConfig = this.config;
+    const combination = {
+      name,
+      regularModel: model,
+      thinkingModel: thinkingModel || "",
+      regularProvider: this.getDefaultProvider(),
+      thinkingProvider: this.getDefaultProvider(),
+      createdAt: new Date().toISOString(),
+    };
+
+    // Find an empty combination slot or replace one with the same name
+    for (let i = 1; i <= 10; i++) {
+      const comboKey = `combination${i}` as keyof typeof currentConfig;
+      const existing = currentConfig[comboKey];
+      
+      if (
+        !existing ||
+        (typeof existing === "object" && 
+         existing !== null && 
+         "name" in existing && 
+         existing.name === name)
+      ) {
+        const updates: any = {};
+        updates[comboKey] = combination;
+        return this.updateConfig(updates);
       }
-    );
+    }
+    
+    throw new Error("Maximum number of combinations (10) reached");
+  }
+
+  async deleteModelCombination(name: string): Promise<boolean> {
+    const currentConfig = this.config;
+    
+    // Find and remove the combination with the given name
+    for (let i = 1; i <= 10; i++) {
+      const comboKey = `combination${i}` as keyof typeof currentConfig;
+      const existing = currentConfig[comboKey];
+      
+      if (
+        typeof existing === "object" && 
+        existing !== null && 
+        "name" in existing && 
+        existing.name === name
+      ) {
+        const updates: any = {};
+        updates[comboKey] = undefined;
+        return this.updateConfig(updates);
+      }
+    }
+    
+    // Combination not found - not an error
+    return true;
   }
 }

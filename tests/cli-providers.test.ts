@@ -67,6 +67,30 @@ describe('CLI Provider Commands', () => {
       migrateConfig: jest.fn().mockResolvedValue(undefined),
       showConfigContext: jest.fn().mockResolvedValue(undefined),
       resetConfig: jest.fn().mockResolvedValue(undefined),
+      setup: jest.fn().mockResolvedValue(undefined),
+      managers: {
+        providerManager: {
+          listProviders: jest.fn().mockResolvedValue(undefined),
+          enableProvider: jest.fn().mockResolvedValue(undefined),
+          disableProvider: jest.fn().mockResolvedValue(undefined),
+          providerStatus: jest.fn().mockResolvedValue(undefined),
+          testProvider: jest.fn().mockResolvedValue(undefined),
+        },
+        configManager: {
+          get: jest.fn(),
+          set: jest.fn(),
+        },
+        ui: {
+          info: jest.fn(),
+        },
+        authManager: {
+          authStatus: jest.fn().mockResolvedValue(undefined),
+          checkAuth: jest.fn().mockResolvedValue(undefined),
+          testAuth: jest.fn().mockResolvedValue(undefined),
+          resetAuth: jest.fn().mockResolvedValue(undefined),
+          refreshAuth: jest.fn().mockResolvedValue(undefined),
+        },
+      },
     } as any;
 
     MockedSyntheticClaudeApp.mockImplementation(() => mockApp);
@@ -92,7 +116,7 @@ describe('CLI Provider Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'providers', 'list']);
 
-        expect(mockApp.listProviders).toHaveBeenCalled();
+        expect(mockApp.managers.providerManager.listProviders).toHaveBeenCalled();
       } finally {
         process.argv = originalArgv;
       }
@@ -107,7 +131,7 @@ describe('CLI Provider Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'providers', 'enable', 'synthetic']);
 
-        expect(mockApp.enableProvider).toHaveBeenCalledWith('synthetic');
+        expect(mockApp.managers.providerManager.enableProvider).toHaveBeenCalledWith('synthetic');
       } finally {
         process.argv = originalArgv;
       }
@@ -122,7 +146,7 @@ describe('CLI Provider Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'providers', 'disable', 'minimax']);
 
-        expect(mockApp.disableProvider).toHaveBeenCalledWith('minimax');
+        expect(mockApp.managers.providerManager.disableProvider).toHaveBeenCalledWith('minimax');
       } finally {
         process.argv = originalArgv;
       }
@@ -137,7 +161,7 @@ describe('CLI Provider Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'providers', 'status']);
 
-        expect(mockApp.providerStatus).toHaveBeenCalledWith({});
+        expect(mockApp.managers.providerManager.providerStatus).toHaveBeenCalledWith({});
       } finally {
         process.argv = originalArgv;
       }
@@ -152,7 +176,7 @@ describe('CLI Provider Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'providers', 'status', '--provider', 'synthetic']);
 
-        expect(mockApp.providerStatus).toHaveBeenCalledWith({
+        expect(mockApp.managers.providerManager.providerStatus).toHaveBeenCalledWith({
           provider: 'synthetic',
         });
       } finally {
@@ -169,7 +193,7 @@ describe('CLI Provider Commands', () => {
       try {
         await program.parseAsync(['node', 'mclaude', 'providers', 'test', 'synthetic']);
 
-        expect(mockApp.testProvider).toHaveBeenCalledWith('synthetic');
+        expect(mockApp.managers.providerManager.testProvider).toHaveBeenCalledWith('synthetic');
       } finally {
         process.argv = originalArgv;
       }

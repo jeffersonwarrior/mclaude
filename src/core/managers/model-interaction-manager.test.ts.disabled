@@ -1,0 +1,930 @@
+import { ModelInteractionManager } from "./model-interaction-manager";
+import { ConfigManager } from "../../config";
+import { UserInterface } from "../../ui";
+import { ModelManager } from "../../models";
+import { ModelInfoImpl } from "../../models";
+import { z } from "zod";
+import { AppConfigSchema } from "../../config/types";
+const DEFAULT_SYNTHETIC_MODELS = {
+  default: { primary: "synthetic:claude-3-5-sonnet", backup: "synthetic:claude-3-5-sonnet-backup" },
+  smallFast: { primary: "synthetic:fast-model", backup: "synthetic:fast-model-backup" },
+  thinking: { primary: "synthetic:thinking-model", backup: "synthetic:thinking-model-backup" },
+  subagent: { primary: "synthetic:subagent-model", backup: "synthetic:subagent-model-backup" },
+};
+
+describe("ModelInteractionManager", () => {
+  let mockConfigManager: jest.Mocked<ConfigManager>;
+  let mockUi: jest.Mocked<UserInterface>;
+  let mockModelManager: jest.Mocked<ModelManager>;
+  let manager: ModelInteractionManager;
+
+  beforeEach(() => {
+    mockConfigManager = {
+      globalConfigDir: '/mock/global/config',
+      globalConfigPath: '/mock/global/config/config.json',
+      localProjectDir: '/mock/local/project',
+      localConfigPath: '/mock/local/project/config.json',
+      workspaceRoot: '/mock/workspace/root',
+      getConfigType: jest.fn(),
+      getWorkspaceRoot: jest.fn(),
+      initLocalConfig: jest.fn(),
+      migrateToLocal: jest.fn(),
+      saveLocalConfig: jest.fn(),
+      saveConfig: jest.fn(),
+      saveGlobalConfig: jest.fn(),
+      updateConfig: jest.fn(),
+      hasApiKey: jest.fn(),
+      getApiKey: jest.fn(),
+      setApiKey: jest.fn(),
+      hasSyntheticApiKey: jest.fn(),
+      getSyntheticApiKey: jest.fn(),
+      setSyntheticApiKey: jest.fn(),
+      hasMinimaxApiKey: jest.fn(),
+      getMinimaxApiKey: jest.fn(),
+      setMinimaxApiKey: jest.fn(),
+      hasMinimaxGroupId: jest.fn(),
+      getMinimaxGroupId: jest.fn(),
+      setMinimaxGroupId: jest.fn(),
+      isProviderEnabled: jest.fn(),
+      setProviderEnabled: jest.fn(),
+      getDefaultProvider: jest.fn(),
+      setDefaultProvider: jest.fn(),
+      getProviderConfig: jest.fn(),
+      updateProviderConfig: jest.fn(),
+      getEffectiveApiKey: jest.fn(),
+      getAtomicProviderState: jest.fn(),
+      getNetworkDisplay: jest.fn(),
+      getSelectedModel: jest.fn(),
+      setSelectedModel: jest.fn(),
+      getCacheDuration: jest.fn(),
+      setCacheDuration: jest.fn(),
+      isCacheValid: jest.fn(),
+      isFirstRun: jest.fn(),
+      markFirstRunCompleted: jest.fn(),
+      hasSavedModel: jest.fn(),
+      getSavedModel: jest.fn(),
+      setSavedModel: jest.fn(),
+      hasSavedThinkingModel: jest.fn(),
+      getSavedThinkingModel: jest.fn(),
+      setSavedThinkingModel: jest.fn(),
+      hasProviderApiKey: jest.fn(),
+      getModelCombinations: jest.fn(),
+      resetConfig: jest.fn(),
+      getActiveSyspromptPath: jest.fn(),
+      loadSysprompt: jest.fn(),
+      validateSyspromptSize: jest.fn(),
+      saveSysprompt: jest.fn(),
+      clearSysprompt: jest.fn(),
+      getDefaultSyspromptTemplate: jest.fn(),
+      getTokenUsage: jest.fn(),
+      updateTokenUsage: jest.fn(),
+      resetTokenUsage: jest.fn(),
+      loadModelCards: jest.fn(),
+      saveModelCards: jest.fn(),
+      fetchAndSaveModelCards: jest.fn(),
+      updateLastCheck: jest.fn(),
+      setConfig: jest.fn(),
+      needsUpdateCheck: jest.fn(),
+      getRecommendedModels: jest.fn(),
+      get config() {
+        return AppConfigSchema.parse({
+          // Provide some minimal overrides if necessary, or let Zod fill all defaults
+          configVersion: 2,
+          providers: {
+            synthetic: { enabled: true, apiKey: "mock-synthetic-api-key" },
+            minimax: { enabled: true, apiKey: "mock-minimax-api-key" },
+          },
+          selectedModel: "synthetic:claude-3-5-sonnet",
+          selectedThinkingModel: "synthetic:thinking-model",
+          defaultProvider: "synthetic",
+          firstRunCompleted: true,
+        });
+      },
+    };
+    mockUi = {
+      info: jest.fn(),
+      success: jest.fn(),
+      coloredSuccess: jest.fn(),
+      coloredInfo: jest.fn(),
+      coloredWarning: jest.fn(),
+      minimaxWelcome: jest.fn(),
+      highlightInfo: jest.fn(),
+      warning: jest.fn(),
+      error: jest.fn(),
+      prompt: jest.fn(),
+      confirm: jest.fn(),
+      debug: jest.fn(),
+      showModelList: jest.fn(),
+      selectModel: jest.fn(),
+      selectDualModels: jest.fn(),
+      showProgress: jest.fn(),
+      askQuestion: jest.fn(),
+      askPassword: jest.fn(),
+      ask: jest.fn(),
+      table: jest.fn(),
+      showStatus: jest.fn(),
+      showProviderStatus: jest.fn(),
+      showProviderSummary: jest.fn(),
+      showProviderError: jest.fn(),
+      showModelSelectionWithProviders: jest.fn(),
+      clear: jest.fn(),
+      promptForProviderApiKey: jest.fn(),
+      showProviderApiKeySuccess: jest.fn(),
+      showProviderApiKeyError: jest.fn(),
+      showSetupStep: jest.fn(),
+      showSetupStepResult: jest.fn(),
+      showSetupProgress: jest.fn(),
+      showSetupSummary: jest.fn(),
+      showStepError: jest.fn(),
+      showRecoveryOptions: jest.fn(),
+      showProviderChoice: jest.fn(),
+      showProviderConfigured: jest.fn(),
+      showConnectionTestResult: jest.fn(),
+    };
+    mockModelManager = {
+      fetchModels: jest.fn(),
+      fetchFromProvider: jest.fn(),
+      fetchAllProviders: jest.fn(),
+      getEnabledProviders: jest.fn(),
+      getModelCard: jest.fn(),
+      getProviderPriority: jest.fn(),
+      getModels: jest.fn(),
+      searchModels: jest.fn(),
+      getModelById: jest.fn(),
+      clearCache: jest.fn(),
+      clearProviderCache: jest.fn(),
+      getCacheInfo: jest.fn(),
+      getCacheAnalytics: jest.fn(),
+      shouldRefreshCache: jest.fn(),
+      getModelStatistics: jest.fn(),
+      searchModelsWithFilters: jest.fn(),
+      getCategorizedModels: jest.fn(),
+      getModelsByProvider: jest.fn(),
+      refreshProvider: jest.fn(),
+    };
+
+    manager = new ModelInteractionManager(mockConfigManager, mockUi, mockModelManager);
+  });
+
+  const createMockModelInfo = (id: string, name?: string): ModelInfoImpl => {
+    const model = new ModelInfoImpl({
+      id: id,
+      object: "model", // Default object type
+      name: name || id,
+      provider: id.split(":")[0] || "synthetic",
+      // Add other required fields with default or mock values if necessary based on ModelInfoSchema
+      priority: 1,
+      capabilities: {
+        tools: true,
+        json_mode: true,
+        thinking: false,
+        streaming: true,
+        parallel_tools: true,
+      },
+      limits: {
+        context: 100000,
+        max_output: 4000,
+      },
+      speed_tier: "medium",
+    } as any);
+    return model;
+  };
+
+  // Mock models for testing
+  const mockModels = [
+    createMockModelInfo("synthetic:claude-3-5-sonnet"),
+    createMockModelInfo("minimax:abab6-chat"),
+    createMockModelInfo("synthetic:fast-model"),
+    createMockModelInfo("synthetic:subagent-model"),
+    createMockModelInfo("synthetic:thinking-model"),
+  ];
+
+  describe("interactiveThinkingModelSelection", () => {
+    it("should return false if no API key is configured", async () => {
+      mockConfigManager.hasApiKey.mockReturnValue(false);
+      const result = await manager.interactiveThinkingModelSelection();
+      expect(result).toBe(false);
+      expect(mockUi.error).toHaveBeenCalledWith(
+        'No API key configured. Please run "mclaude setup" first.',
+      );
+    });
+
+    it("should return false if no models are available", async () => {
+      mockConfigManager.hasApiKey.mockReturnValue(true);
+      mockModelManager.fetchModels.mockResolvedValue([]);
+      const result = await manager.interactiveThinkingModelSelection();
+      expect(result).toBe(false);
+      expect(mockUi.error).toHaveBeenCalledWith(
+        "No models available. Please check your API key and connection.",
+      );
+    });
+
+    it("should return false if thinking model selection is cancelled", async () => {
+      mockConfigManager.hasApiKey.mockReturnValue(true);
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getModels.mockReturnValue(mockModels);
+      mockUi.selectModel.mockResolvedValue(null);
+      const result = await manager.interactiveThinkingModelSelection();
+      expect(result).toBe(false);
+      expect(mockUi.info).toHaveBeenCalledWith("Thinking model selection cancelled");
+    });
+
+    it("should save the selected thinking model and return true", async () => {
+      mockConfigManager.hasApiKey.mockReturnValue(true);
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getModels.mockReturnValue(mockModels);
+      const selectedModel = createMockModelInfo("synthetic:thinking-model");
+      mockUi.selectModel.mockResolvedValue(selectedModel);
+      mockConfigManager.updateConfig.mockResolvedValue(true);
+
+      const result = await manager.interactiveThinkingModelSelection();
+      expect(result).toBe(true);
+      expect(mockConfigManager.updateConfig).toHaveBeenCalledWith({
+        selectedThinkingModel: selectedModel.id,
+      });
+      expect(mockUi.coloredSuccess).toHaveBeenCalledWith(
+        `Thinking model saved: ${selectedModel.getDisplayName()}`,
+      );
+      expect(mockUi.highlightInfo).toHaveBeenCalled();
+    });
+
+    it("should handle errors during selection", async () => {
+      mockConfigManager.hasApiKey.mockReturnValue(true);
+      mockModelManager.fetchModels.mockRejectedValue(new Error("API Error"));
+
+      const result = await manager.interactiveThinkingModelSelection();
+      expect(result).toBe(false);
+      expect(mockUi.error).toHaveBeenCalledWith(
+        `Error during thinking model selection: API Error`,
+      );
+    });
+  });
+
+  describe("interactiveModelSelection", () => {
+    it("should return false if no providers are available", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { enabled: false, available: false, hasApiKey: false },
+        minimax: { enabled: false, available: false, hasApiKey: false },
+      });
+
+      const result = await manager.interactiveModelSelection();
+      expect(result).toBe(false);
+      expect(mockUi.error).toHaveBeenCalledWith(
+        expect.stringContaining("No providers are available"),
+      );
+    });
+
+    it("should return false if fetching models fails and user cancels retry", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { enabled: true, available: true, hasApiKey: true },
+        minimax: { enabled: false, available: false, hasApiKey: false },
+      });
+      mockModelManager.fetchModels.mockRejectedValue(new Error("Network error"));
+      mockUi.confirm.mockResolvedValue(false);
+
+      const result = await manager.interactiveModelSelection();
+      expect(result).toBe(false);
+      expect(mockUi.error).toHaveBeenCalledWith(
+        "Failed to fetch models: Network error",
+      );
+      expect(mockUi.confirm).toHaveBeenCalledWith("Retry model selection?", true);
+    });
+
+    it("should retry fetching models if it fails and user confirms retry", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { enabled: true, available: true, hasApiKey: true },
+        minimax: { enabled: false, available: false, hasApiKey: false },
+      });
+      mockModelManager.fetchModels
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockResolvedValueOnce(mockModels);
+      mockModelManager.getModels.mockReturnValue(mockModels);
+      mockUi.confirm.mockResolvedValue(true);
+      mockUi.selectDualModels.mockResolvedValue({
+        regular: createMockModelInfo("synthetic:claude-3-5-sonnet"),
+        thinking: null,
+      });
+      mockConfigManager.setSavedModel.mockResolvedValue(true);
+
+      const result = await manager.interactiveModelSelection();
+      expect(result).toBe(true);
+      expect(mockUi.confirm).toHaveBeenCalledTimes(1);
+      expect(mockModelManager.fetchModels).toHaveBeenCalledTimes(2);
+    });
+
+    it("should return false if no models are found", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { enabled: true, available: true, hasApiKey: true },
+        minimax: { enabled: false, available: false, hasApiKey: false },
+      });
+      mockModelManager.fetchModels.mockResolvedValue([]);
+
+      const result = await manager.interactiveModelSelection();
+      expect(result).toBe(false);
+      expect(mockUi.warning).toHaveBeenCalledWith(
+        "No models available from configured providers.",
+      );
+    });
+
+    it("should return false if dual model selection is cancelled", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { enabled: true, available: true, hasApiKey: true },
+        minimax: { enabled: false, available: false, hasApiKey: false },
+      });
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getModels.mockReturnValue(mockModels);
+      mockUi.selectDualModels.mockResolvedValue({ regular: null, thinking: null });
+
+      const result = await manager.interactiveModelSelection();
+      expect(result).toBe(false);
+      expect(mockUi.info).toHaveBeenCalledWith("Model selection cancelled");
+    });
+
+    it("should save selected models and return true", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { enabled: true, available: true, hasApiKey: true },
+        minimax: { enabled: false, available: false, hasApiKey: false },
+      });
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getModels.mockReturnValue(mockModels);
+      const selectedRegular = createMockModelInfo("synthetic:claude-3-5-sonnet");
+      const selectedThinking = createMockModelInfo("synthetic:thinking-model");
+      mockUi.selectDualModels.mockResolvedValue({
+        regular: selectedRegular,
+        thinking: selectedThinking,
+      });
+      mockConfigManager.setSavedModel.mockResolvedValue(true);
+      mockConfigManager.setSavedThinkingModel.mockResolvedValue(true);
+      mockConfigManager.updateConfig.mockResolvedValue(true);
+
+      const result = await manager.interactiveModelSelection();
+      expect(result).toBe(true);
+      expect(mockConfigManager.setSavedModel).toHaveBeenCalledWith(selectedRegular.id);
+      expect(mockConfigManager.setSavedThinkingModel).toHaveBeenCalledWith(
+        selectedThinking.id,
+      );
+      expect(mockUi.coloredSuccess).toHaveBeenCalledWith(
+        `Regular model saved: ${selectedRegular.getDisplayName()}`,
+      );
+      expect(mockUi.coloredSuccess).toHaveBeenCalledWith(
+        `Thinking model saved: ${selectedThinking.getDisplayName()}`,
+      );
+      expect(mockUi.highlightInfo).toHaveBeenCalled();
+    });
+
+    it("should handle errors saving models and retry if confirmed", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { enabled: true, available: true, hasApiKey: true },
+        minimax: { enabled: false, available: false, hasApiKey: false },
+      });
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getModels.mockReturnValue(mockModels);
+      const selectedRegular = createMockModelInfo("synthetic:claude-3-5-sonnet");
+      mockUi.selectDualModels.mockResolvedValue({
+        regular: selectedRegular,
+        thinking: null,
+      });
+      mockConfigManager.setSavedModel.mockRejectedValueOnce(
+        new Error("Save error"),
+      );
+      mockUi.confirm.mockResolvedValueOnce(true); // User retries
+      mockConfigManager.setSavedModel.mockResolvedValueOnce(true); // Retry succeeds
+
+      const result = await manager.interactiveModelSelection();
+      expect(result).toBe(true);
+      expect(mockUi.error).toHaveBeenCalledWith(
+        `Failed to save model selection: Save error`,
+      );
+      expect(mockConfigManager.setSavedModel).toHaveBeenCalledTimes(2); // Initial attempt + retry
+    });
+
+    it("should save combination if requested", async () => {
+      mockConfigManager.getAtomicProviderState.mockReturnValue({
+        synthetic: { enabled: true, available: true, hasApiKey: true },
+        minimax: { enabled: false, available: false, hasApiKey: false },
+      });
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getModels.mockReturnValue(mockModels);
+      const selectedRegular = createMockModelInfo("synthetic:claude-3-5-sonnet");
+      mockUi.selectDualModels.mockResolvedValue({
+        regular: selectedRegular,
+        thinking: null,
+      });
+      mockConfigManager.setSavedModel.mockResolvedValue(true);
+      // Ensure combination1 is undefined for this test
+      mockConfigManager.config.combination1 = undefined;
+
+      const result = await manager.interactiveModelSelection({ saveCombination: "myCombo" });
+      expect(result).toBe(true);
+      expect(mockConfigManager.updateConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          combination1: expect.objectContaining({
+            name: "myCombo",
+            regularModel: selectedRegular.id,
+          }),
+        }),
+      );
+      expect(mockUi.coloredSuccess).toHaveBeenCalledWith(
+        `Model combination "myCombo" saved`,
+      );
+    });
+  });
+
+  describe("showModelInfo", () => {
+    it("should display detailed model info if modelId is provided", async () => {
+      const mockModelCard = {
+        id: "synthetic:test-model",
+        name: "Test Model",
+        aliases: [],
+        provider: "synthetic",
+        roles: ["chat"],
+        priority: 1,
+        preferProvider: undefined,
+        capabilities: { tools: true, json_mode: false, thinking: true, streaming: true, parallel_tools: false },
+        limits: { context: 100000, max_output: 4000 },
+        parameters: [],
+        speed_tier: "medium",
+        verified: undefined,
+      };
+      mockModelManager.getModelCard.mockResolvedValue(mockModelCard as any);
+
+      await manager.showModelInfo("synthetic:test-model");
+      expect(mockUi.info).toHaveBeenCalledWith("Model Card: Test Model");
+      expect(mockUi.info).toHaveBeenCalledWith("ID: synthetic:test-model");
+      expect(mockUi.info).toHaveBeenCalledWith("  Context: 100,000 tokens");
+    });
+
+    it("should display general config info if no modelId is provided", async () => {
+      // Directly modify the mockConfigManager.config for the test
+      mockConfigManager.config.selectedModel = "synthetic:claude-3-5-sonnet";
+      mockConfigManager.config.selectedThinkingModel = "synthetic:thinking-model";
+      mockConfigManager.config.defaultProvider = "synthetic";
+      mockConfigManager.getRecommendedModels.mockReturnValue(DEFAULT_SYNTHETIC_MODELS);
+
+      await manager.showModelInfo();
+      expect(mockUi.info).toHaveBeenCalledWith("Model Information:");
+      expect(mockUi.info).toHaveBeenCalledWith(
+        "Selected Model: synthetic:claude-3-5-sonnet",
+      );
+      expect(mockUi.info).toHaveBeenCalledWith(
+        "Thinking Model: synthetic:thinking-model",
+      );
+      expect(mockUi.info).toHaveBeenCalledWith("Default Provider: synthetic");
+      expect(mockUi.info).toHaveBeenCalledWith("\nRecommended Models:");
+    });
+
+    it("should display default info if model card not found", async () => {
+      mockModelManager.getModelCard.mockResolvedValue(null);
+      // Directly modify the mockConfigManager.config for the test
+      mockConfigManager.config.selectedModel = "synthetic:claude-3-5-sonnet";
+      mockConfigManager.config.selectedThinkingModel = "";
+      mockConfigManager.config.defaultProvider = "synthetic";
+
+      await manager.showModelInfo("non-existent-model");
+      expect(mockUi.info).toHaveBeenCalledWith(
+        "No model card found for: non-existent-model",
+      );
+      expect(mockUi.info).toHaveBeenCalledWith("\nCurrent Configuration:");
+    });
+  });
+
+  describe("listCombinations", () => {
+    it("should display a message if no combinations are found", async () => {
+      mockConfigManager.getModelCombinations.mockReturnValue([]);
+      await manager.listCombinations();
+      expect(mockUi.info).toHaveBeenCalledWith("No saved model combinations found.");
+    });
+
+    it("should list all saved combinations", async () => {
+      mockConfigManager.getModelCombinations.mockReturnValue([
+        { name: "test1", model: "modelA", thinkingModel: "thinkingA" },
+        { name: "test2", model: "modelB" },
+      ]);
+      await manager.listCombinations();
+      expect(mockUi.info).toHaveBeenCalledWith(
+        "1. test1: modelA + thinkingA",
+      );
+      expect(mockUi.info).toHaveBeenCalledWith("2. test2: modelB");
+    });
+  });
+
+  describe("deleteCombination", () => {
+    it("should show a success message", async () => {
+      await manager.deleteCombination("testCombo");
+      expect(mockUi.success).toHaveBeenCalledWith(
+        `Model combination "testCombo" deleted`,
+      );
+    });
+  });
+
+  describe("manageModelCards", () => {
+    it("should update model cards if --update option is true", async () => {
+      mockConfigManager.fetchAndSaveModelCards.mockResolvedValue(true);
+      await manager.manageModelCards({ update: true });
+      expect(mockUi.info).toHaveBeenCalledWith("Updating model cards from GitHub...");
+      expect(mockConfigManager.fetchAndSaveModelCards).toHaveBeenCalled();
+      expect(mockConfigManager.updateLastCheck).toHaveBeenCalled();
+      expect(mockUi.coloredSuccess).toHaveBeenCalledWith(
+        "✓ Model cards updated successfully",
+      );
+    });
+
+    it("should show a warning if model cards update fails", async () => {
+      mockConfigManager.fetchAndSaveModelCards.mockResolvedValue(false);
+      await manager.manageModelCards({ update: true });
+      expect(mockUi.coloredWarning).toHaveBeenCalledWith(
+        "⚠ Failed to update model cards (this is normal if offline)",
+      );
+    });
+
+    it("should display model card info if no update option", async () => {
+      mockConfigManager.loadModelCards.mockResolvedValue({
+        version: "1.0",
+        updated: "2023-01-01",
+        cards: [{ id: "test-card", name: "Test Card", provider: "synthetic" }],
+      });
+      await manager.manageModelCards();
+      expect(mockUi.info).toHaveBeenCalledWith("Model Cards Information:");
+      expect(mockUi.info).toHaveBeenCalledWith("═".repeat(50));
+      expect(mockUi.info).toHaveBeenCalledWith("Version: 1.0");
+      expect(mockUi.info).toHaveBeenCalledWith("Last Updated: 2023-01-01");
+      expect(mockUi.info).toHaveBeenCalledWith("Total Cards: 1");
+      expect(mockUi.info).toHaveBeenCalledWith("\nAvailable Models:");
+      expect(mockUi.info).toHaveBeenCalledWith(" 1. Test Card (general) [synthetic]");
+    });
+
+    it("should display no model cards found if loadModelCards returns null", async () => {
+      mockConfigManager.loadModelCards.mockResolvedValue(null);
+      await manager.manageModelCards();
+      expect(mockUi.info).toHaveBeenCalledWith("No model cards found");
+    });
+  });
+
+  describe("selectModel", () => {
+    it("should return preselected model if provided", async () => {
+      const result = await manager.selectModel("test-model");
+      expect(result).toBe("test-model");
+    });
+
+    it("should return saved model if available", async () => {
+      mockConfigManager.hasSavedModel.mockReturnValue(true);
+      mockConfigManager.getSavedModel.mockReturnValue("saved-model");
+      const result = await manager.selectModel();
+      expect(result).toBe("saved-model");
+    });
+
+    it("should return null and show error if no model selected or saved", async () => {
+      mockConfigManager.hasSavedModel.mockReturnValue(false);
+      const result = await manager.selectModel();
+      expect(result).toBe(null);
+      expect(mockUi.error).toHaveBeenCalledWith(
+        'No model selected. Run "mclaude model" to select a model.',
+      );
+    });
+  });
+
+  describe("selectThinkingModel", () => {
+    it("should return preselected thinking model if provided", async () => {
+      const result = await manager.selectThinkingModel("test-thinking-model");
+      expect(result).toBe("test-thinking-model");
+    });
+
+    it("should return saved thinking model if available", async () => {
+      mockConfigManager.hasSavedThinkingModel.mockReturnValue(true);
+      mockConfigManager.getSavedThinkingModel.mockReturnValue("saved-thinking-model");
+      const result = await manager.selectThinkingModel();
+      expect(result).toBe("saved-thinking-model");
+    });
+
+    it("should return null if no thinking model selected or saved", async () => {
+      mockConfigManager.hasSavedThinkingModel.mockReturnValue(false);
+      const result = await manager.selectThinkingModel();
+      expect(result).toBe(null);
+      expect(mockUi.error).not.toHaveBeenCalled(); // Thinking model is optional
+    });
+  });
+
+  describe("listModels", () => {
+    it("should list models for a specific provider", async () => {
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getModelsByProvider.mockReturnValue([
+        createMockModelInfo("synthetic:claude-3-5-sonnet"),
+      ]);
+
+      await manager.listModels({ provider: "synthetic" });
+      expect(mockUi.info).toHaveBeenCalledWith(
+        "Found 1 models from synthetic:\n",
+      );
+      expect(mockUi.info).toHaveBeenCalledWith(
+        " 1. ✓ synthetic:claude-3-5-sonnet (synthetic)",
+      );
+    });
+
+    it("should list all categorized models if no provider specified", async () => {
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getCategorizedModels.mockReturnValue({
+        Synthetic: [createMockModelInfo("synthetic:claude-3-5-sonnet")],
+        MiniMax: [createMockModelInfo("minimax:abab6-chat")],
+      });
+
+      await manager.listModels({});
+      expect(mockUi.info).toHaveBeenCalledWith("Available Models (2 total):\n");
+      expect(mockUi.info).toHaveBeenCalledWith("Synthetic:");
+      expect(mockUi.info).toHaveBeenCalledWith("MiniMax:");
+    });
+
+    it("should handle invalid provider", async () => {
+      await manager.listModels({ provider: "invalid" as any });
+      expect(mockUi.error).toHaveBeenCalledWith(
+        "Invalid provider: invalid. Valid providers: synthetic, minimax, auto",
+      );
+    });
+
+    it("should handle no models found for a provider", async () => {
+      mockModelManager.fetchModels.mockResolvedValue([]);
+      mockModelManager.getModelsByProvider.mockReturnValue([]);
+      await manager.listModels({ provider: "synthetic" });
+      expect(mockUi.warning).toHaveBeenCalledWith(
+        'No models found for provider "synthetic"',
+      );
+    });
+  });
+
+  describe("searchModels", () => {
+    it("should search models by query for a specific provider", async () => {
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getModelsByProvider.mockReturnValue(mockModels);
+
+      await manager.searchModels("sonnet", { provider: "synthetic" });
+      expect(mockUi.info).toHaveBeenCalledWith(
+        `Searching for "sonnet" in synthetic provider...`,
+      );
+      expect(mockUi.info).toHaveBeenCalledWith(
+        `Found 1 models matching "sonnet" in synthetic:\n`,
+      );
+      expect(mockUi.info).toHaveBeenCalledWith(
+        " 1. ✓ synthetic:claude-3-5-sonnet",
+      );
+    });
+
+    it("should search all models by query if no provider specified", async () => {
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      mockModelManager.getCategorizedModels.mockReturnValue({
+        Synthetic: [createMockModelInfo("synthetic:claude-3-5-sonnet")],
+        MiniMax: [createMockModelInfo("minimax:abab6-chat")],
+      });
+
+      await manager.searchModels("abab", {});
+      expect(mockUi.info).toHaveBeenCalledWith(
+        `Found 1 models matching "abab":\n`,
+      );
+      expect(mockUi.info).toHaveBeenCalledWith(" 1. ✓ minimax:abab6-chat (minimax)");
+    });
+
+    it("should handle invalid provider for search", async () => {
+      await manager.searchModels("query", { provider: "invalid" as any });
+      expect(mockUi.error).toHaveBeenCalledWith(
+        "Invalid provider: invalid. Valid providers: synthetic, minimax, auto",
+      );
+    });
+
+    it("should handle no models found for search", async () => {
+      mockModelManager.fetchModels.mockResolvedValue([]);
+      mockModelManager.getModelsByProvider.mockReturnValue([]);
+      await manager.searchModels("nonexistent", { provider: "synthetic" });
+      expect(mockUi.info).toHaveBeenCalledWith(
+        `No models found matching "nonexistent" in synthetic provider`,
+      );
+    });
+  });
+
+  describe("saveCombination", () => {
+    it("should show a success message for saving a combination", async () => {
+      await manager.saveCombination("my-combo", "model-a", "model-b");
+      expect(mockUi.success).toHaveBeenCalledWith(
+        `Model combination "my-combo" saved with model: model-a + model-b`,
+      );
+    });
+
+    it("should show a success message for saving a combination without thinking model", async () => {
+      await manager.saveCombination("my-combo", "model-a");
+      expect(mockUi.success).toHaveBeenCalledWith(
+        `Model combination "my-combo" saved with model: model-a`,
+      );
+    });
+  });
+
+  describe("checkRecommendedModelAvailability", () => {
+    const recommendedModels = {
+      default: { primary: "synthetic:claude-3-5-sonnet", backup: "synthetic:backup-default" },
+      smallFast: { primary: "synthetic:fast-model", backup: "synthetic:backup-fast" },
+      thinking: { primary: "synthetic:thinking-model", backup: "synthetic:backup-thinking" },
+      subagent: { primary: "synthetic:subagent-model", backup: "synthetic:backup-subagent" },
+    };
+
+    it("should return available recommended models", async () => {
+      mockModelManager.fetchModels.mockResolvedValue(mockModels);
+      const result = await manager.checkRecommendedModelAvailability(
+        recommendedModels,
+      );
+      expect(result).toEqual([
+        "synthetic:claude-3-5-sonnet",
+        "synthetic:fast-model",
+        "synthetic:thinking-model",
+        "synthetic:subagent-model",
+      ]);
+      expect(mockUi.coloredSuccess).toHaveBeenCalledWith(
+        `✓ Found 4 recommended models available`,
+      );
+    });
+
+    it("should use backup models if primary not available", async () => {
+      const modelsWithBackupAvailable = [
+        createMockModelInfo("synthetic:backup-default"),
+        createMockModelInfo("synthetic:fast-model"),
+        createMockModelInfo("synthetic:thinking-model"),
+        createMockModelInfo("synthetic:subagent-model"),
+      ];
+      mockModelManager.fetchModels.mockResolvedValue(modelsWithBackupAvailable);
+
+      const result = await manager.checkRecommendedModelAvailability(
+        recommendedModels,
+      );
+      expect(result).toEqual([
+        "synthetic:backup-default",
+        "synthetic:fast-model",
+        "synthetic:thinking-model",
+        "synthetic:subagent-model",
+      ]);
+    });
+
+    it("should warn if no recommended models are available", async () => {
+      mockModelManager.fetchModels.mockResolvedValue([createMockModelInfo("synthetic:unrelated-model")]);
+      const result = await manager.checkRecommendedModelAvailability(
+        recommendedModels,
+      );
+      expect(result).toEqual([]);
+      expect(mockUi.warning).toHaveBeenCalledWith(
+        "⚠ None of the recommended models are available with current providers",
+      );
+    });
+
+    it("should handle errors during availability check", async () => {
+      mockModelManager.fetchModels.mockRejectedValue(new Error("Network issue"));
+      const result = await manager.checkRecommendedModelAvailability(
+        recommendedModels,
+      );
+      expect(result).toEqual([]);
+      expect(mockUi.warning).toHaveBeenCalledWith(
+        "⚠ Could not check model availability",
+      );
+    });
+  });
+
+  describe("setupModelSelection", () => {
+    const mockRecommended = {
+      default: { primary: "model1", backup: "model1_b" },
+      smallFast: { primary: "model2", backup: "model2_b" },
+      thinking: { primary: "model3", backup: "model3_b" },
+      subagent: { primary: "model4", backup: "model4_b" },
+    };
+
+    beforeEach(() => {
+      mockConfigManager.getRecommendedModels.mockReturnValue(mockRecommended);
+      mockConfigManager.updateConfig.mockResolvedValue(true);
+      mockUi.confirm.mockResolvedValue(true);
+      mockUi.ask.mockResolvedValue("1");
+    });
+
+    it("should display recommended models and ask to use them", async () => {
+      mockConfigManager.getRecommendedModels.mockReturnValue(mockRecommended);
+      mockUi.confirm.mockResolvedValueOnce(true); // Use recommended models
+      manager.checkRecommendedModelAvailability = jest.fn().mockResolvedValue([]); // Mock this internal call
+
+      await manager.setupModelSelection();
+
+      expect(mockUi.info).toHaveBeenCalledWith("\n🎯 Recommended Models:");
+      expect(mockUi.info).toHaveBeenCalledWith(
+        `\n• DEFAULT: ${mockRecommended.default.primary} (backup: ${mockRecommended.default.backup})`,
+      );
+      expect(mockUi.confirm).toHaveBeenCalledWith(
+        "\nUse recommended models? (You can customize them after setup)",
+        true,
+      );
+      expect(mockConfigManager.updateConfig).toHaveBeenCalledWith(
+        expect.objectContaining({
+          selectedModel: mockRecommended.default.primary,
+          selectedThinkingModel: mockRecommended.thinking.primary,
+          firstRunCompleted: true,
+        }),
+      );
+      expect(mockUi.coloredSuccess).toHaveBeenCalledWith("✓ Recommended models saved to configuration");
+    });
+
+    it("should fall back to interactive selection if recommended models are not used", async () => {
+      mockUi.confirm.mockResolvedValueOnce(false); // Do not use recommended models
+      mockUi.confirm.mockResolvedValueOnce(true); // Select models manually
+      manager.checkRecommendedModelAvailability = jest.fn().mockResolvedValue([]); // Mock this internal call
+      manager.interactiveModelSelection = jest.fn().mockResolvedValue(true);
+
+      await manager.setupModelSelection();
+
+      expect(mockUi.confirm).toHaveBeenCalledWith(
+        "Select models manually?",
+        true,
+      );
+      expect(manager.interactiveModelSelection).toHaveBeenCalled();
+      expect(mockUi.warning).not.toHaveBeenCalledWith(
+        expect.stringContaining("Skipping model selection"),
+      );
+    });
+
+    it("should skip model selection if user chooses not to select manually", async () => {
+      mockUi.confirm.mockResolvedValueOnce(false); // Do not use recommended models
+      mockUi.confirm.mockResolvedValueOnce(false); // Do not select models manually
+      manager.checkRecommendedModelAvailability = jest.fn().mockResolvedValue([]); // Mock this internal call
+      manager.interactiveModelSelection = jest.fn();
+
+      await manager.setupModelSelection();
+
+      expect(mockUi.confirm).toHaveBeenCalledWith(
+        "Select models manually?",
+        true,
+      );
+      expect(manager.interactiveModelSelection).not.toHaveBeenCalled();
+      expect(mockUi.info).toHaveBeenCalledWith(
+        "Skipping model selection. You can select models later with 'mclaude models'.",
+      );
+    });
+
+    it("should retry setupModelSelection if interactiveModelSelection fails and user confirms retry", async () => {
+      // Mock for the first setupModelSelection call:
+      mockUi.confirm.mockResolvedValueOnce(false); // Do not use recommended models
+      mockUi.confirm.mockResolvedValueOnce(true);  // Select models manually
+
+      // Mock interactiveModelSelection to fail the first time it's called
+      const interactiveModelSelectionSpy = jest.spyOn(manager, 'interactiveModelSelection');
+      interactiveModelSelectionSpy.mockRejectedValueOnce(new Error("Model selection failed"));
+
+      // Mock the UI confirmation for retrying the *entire setupModelSelection* process (after first failure)
+      mockUi.confirm.mockResolvedValueOnce(true); // User confirms retry for setupModelSelection
+
+      // Mocks for the *recursive* setupModelSelection call:
+      mockUi.confirm.mockResolvedValueOnce(false); // Do not use recommended models (in recursive call)
+      mockUi.confirm.mockResolvedValueOnce(true);  // Select models manually (in recursive call)
+      interactiveModelSelectionSpy.mockResolvedValueOnce(true); // Second call to interactiveModelSelection should succeed
+
+      // Spy on setupModelSelection itself to verify recursion
+      const setupModelSelectionSpy = jest.spyOn(manager, 'setupModelSelection');
+
+      // Call setupModelSelection the first time
+      await manager.setupModelSelection();
+
+      // Expectations
+      expect(mockUi.error).toHaveBeenCalledWith(
+        `Model selection failed: Model selection failed`,
+      );
+      expect(mockUi.confirm).toHaveBeenCalledWith("Try model selection again?", true);
+      expect(setupModelSelectionSpy).toHaveBeenCalledTimes(2); // Verify recursion
+      expect(interactiveModelSelectionSpy).toHaveBeenCalledTimes(2); // Verify interactiveModelSelection called twice
+    });
+
+    it("should warn and continue if interactiveModelSelection fails and user cancels retry", async () => {
+      mockUi.confirm.mockResolvedValueOnce(false); // Do not use recommended models
+      mockUi.confirm.mockResolvedValueOnce(true); // Select models manually
+      manager.checkRecommendedModelAvailability = jest.fn().mockResolvedValue([]); // Mock this internal call
+      manager.interactiveModelSelection = jest.fn().mockRejectedValueOnce(new Error("Model selection failed"));
+      mockUi.confirm.mockResolvedValueOnce(false); // User does not retry setupModelSelection
+
+      await manager.setupModelSelection();
+
+      expect(mockUi.error).toHaveBeenCalledWith(
+        `Model selection failed: Model selection failed`,
+      );
+      expect(mockUi.warning).toHaveBeenCalledWith(
+        "Continuing without model selection. You can complete this later with 'mclaude models'.",
+      );
+    });
+
+    it("should handle error saving recommended models gracefully", async () => {
+      mockConfigManager.getRecommendedModels.mockReturnValue(mockRecommended);
+      mockUi.confirm.mockResolvedValueOnce(true); // Use recommended models
+      manager.checkRecommendedModelAvailability = jest.fn().mockResolvedValue([]); // Mock this internal call
+      mockConfigManager.updateConfig.mockRejectedValueOnce(new Error("Config save failed"));
+
+      await manager.setupModelSelection();
+
+      expect(mockUi.warning).toHaveBeenCalledWith("Failed to save recommended models to config");
+      // It should still proceed past the recommended model saving step
+      expect(mockUi.confirm).toHaveBeenCalledWith(
+        "\nUse recommended models? (You can customize them after setup)",
+        true,
+      );
+      // It should not fall back to manual selection due to saving failure here
+      expect(mockUi.confirm).not.toHaveBeenCalledWith(
+        "Select models manually?",
+        true,
+      );
+    });
+  });
+});
