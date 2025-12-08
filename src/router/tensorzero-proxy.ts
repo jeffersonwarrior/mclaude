@@ -211,19 +211,29 @@ class TensorZeroGateway(BaseHTTPRequestHandler):
                 
                 # If no exact match, try prefix mapping for unprefixed provider models
                 if not model_config:
-                    # Handle models that might be missing synthetic: or minimax: prefixes
+                    # Handle models that might be missing synthetic: prefix or have wrong prefix
                     if ':' in model_name and not model_name.startswith(('synthetic:', 'minimax:')):
-                        # Likely an unprefixed provider model like "hf:zai-org/GLM-4.6"
-                        # Try with synthetic: prefix first (most common case)
-                        prefixed_name = f"synthetic:{model_name}"
+                        # Remove existing prefix (like hf:) and try with synthetic: prefix
+                        if model_name.startswith(('hf:', 'openai:', 'anthropic:')):
+                            # Extract model name after existing prefix
+                            clean_model_name = model_name.split(':', 1)[1]
+                            prefixed_name = f"synthetic:{clean_model_name}"
+                        else:
+                            # Try with synthetic: prefix as-is
+                            prefixed_name = f"synthetic:{model_name}"
+                            
                         for model in ${JSON.stringify(config.models)}:
                             if model['name'].lower() == prefixed_name.lower():
                                 model_config = model
                                 break
                         
-                        # If not found with synthetic:, try minimax: prefix
+                        # If not found with synthetic:, try minimax: prefix  
                         if not model_config:
-                            prefixed_name = f"minimax:{model_name}"
+                            if model_name.startswith(('hf:', 'openai:', 'anthropic:')):
+                                clean_model_name = model_name.split(':', 1)[1]
+                                prefixed_name = f"minimax:{clean_model_name}"
+                            else:
+                                prefixed_name = f"minimax:{model_name}"
                             for model in ${JSON.stringify(config.models)}:
                                 if model['name'].lower() == prefixed_name.lower():
                                     model_config = model
@@ -371,10 +381,10 @@ if __name__ == '__main__':
     while (Date.now() - startTime < timeout) {
       try {
         const axios = require("axios");
-        const response = await axios.get(`http://${host}:${port}/health`, {
+        const response = await axios.get(`http://${host}:${port}/v1/models`, {
           timeout: 2000,
         });
-        if (response.status === 200) {
+        if (response.status === 200 && response.data.data) {
           return;
         }
       } catch (error) {
