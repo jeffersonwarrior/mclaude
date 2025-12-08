@@ -349,7 +349,7 @@ if __name__ == '__main__':
       });
 
       if (this.process) {
-        this.process.on("exit", (code, signal) => {
+        this.process.on("exit", () => {
           this.process = null;
         });
 

@@ -215,7 +215,7 @@ export class ProxyCliManager {
   async killProcessByPort(port: number, verbose: boolean = false): Promise<void> {
     const { spawn } = require('child_process');
     
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       // Use lsof to find processes listening on the port
       const lsof = spawn('lsof', ['-ti', `:${port}`]);
       let output = '';
